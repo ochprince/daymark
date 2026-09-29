@@ -1,0 +1,20 @@
+{
+  "name": "Daymark · 刻度",
+  "short_name": "Daymark",
+  "description": "记录值得纪念的日子，看它已经走过多少天。数据只保存在本机。",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "orientation": "portrait",
+  "background_color": "#08090C",
+  "theme_color": "#08090C",
+  "categories": ["lifestyle", "productivity"],
+  "icons": [
+    { "src": "./icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "./icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
