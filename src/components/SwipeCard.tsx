@@ -46,6 +46,8 @@ export function SwipeCard({
 }: Props) {
   const accent = accentFor(colorIndex)
   const draggedRef = useRef(false)
+  /** 记录按下位置与按下期间的最大移动量：用来区分「点击」和「拖动」 */
+  const pressRef = useRef<{ x: number; y: number; moved: number } | null>(null)
   const reduceMotion = useReducedMotion()
 
   // 位移是唯一状态源：红色填充与删除图标都由它派生
@@ -93,6 +95,7 @@ export function SwipeCard({
 
       <motion.div
         className="card"
+        data-swipe-card="true"
         style={{ ...accentStyle, x }}
         role="button"
         tabIndex={0}
@@ -126,8 +129,31 @@ export function SwipeCard({
             draggedRef.current = false
           }, 420)
         }}
-        onClick={() => {
+        onPointerDown={(pointerEvent) => {
+          // 在 window 上记移动量：拖动时手指下的元素会换，挂在卡片上会漏记
+          const press = { x: pointerEvent.clientX, y: pointerEvent.clientY, moved: 0 }
+          pressRef.current = press
+          const onMove = (moveEvent: PointerEvent) => {
+            const moved = Math.hypot(moveEvent.clientX - press.x, moveEvent.clientY - press.y)
+            if (moved > press.moved) press.moved = moved
+          }
+          // 只在 pointerup 或超时后清理：pointercancel（motion 判定为纵向滚动时会发）
+          // 不能作为结束信号，否则移动量会被清成 0
+          const stop = () => {
+            window.removeEventListener('pointermove', onMove, { capture: true } as EventListenerOptions)
+            window.removeEventListener('pointerup', stop)
+            window.clearTimeout(timer)
+          }
+          window.addEventListener('pointermove', onMove, { passive: true, capture: true })
+          window.addEventListener('pointerup', stop)
+          const timer = window.setTimeout(stop, 1500)
+        }}
+        onClick={(clickEvent) => {
+          const press = pressRef.current
+          pressRef.current = null
           if (draggedRef.current) return
+          // 纵向拖动（滚列表）也算「不是点击」，否则松手会误开编辑
+          if (press && clickEvent.detail > 0 && press.moved > 6) return
           if (revealed) {
             onReveal(null)
             return

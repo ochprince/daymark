@@ -15,6 +15,8 @@ import { PagerHandle } from './components/PagerHandle'
 import { Toast } from './components/Toast'
 import type { ToastState } from './components/Toast'
 import { buildCountdownList, sortEvents, summarize, summarizeCountdowns } from './lib/days'
+import { SLOT_COUNT, pageOfSlot, usePager } from './lib/usePager'
+import { useSharedScroll } from './lib/useSharedScroll'
 import {
   addEvent,
   getEvents,
@@ -34,7 +36,6 @@ import {
   updateCountdown,
 } from './lib/countdowns'
 import { useNow } from './lib/useNow'
-import { usePager } from './lib/usePager'
 import { useTheme } from './lib/useTheme'
 import type { CountdownDraft, CountdownEvent, DayEvent, EventDraft } from './lib/types'
 
@@ -45,7 +46,7 @@ type SheetState =
   | { kind: 'countdown'; mode: 'edit'; event: CountdownEvent }
   | null
 
-/** 轨道上的一页：隐藏时用 inert 让里面的控件退出键盘与辅助技术的可达范围 */
+/** 轨道上的一格：隐藏时用 inert 让里面的控件退出键盘与辅助技术的可达范围 */
 function Page({ hidden, style, children }: { hidden: boolean; style?: MotionStyle; children: ReactNode }) {
   const ref = useRef<HTMLElement | null>(null)
 
@@ -61,6 +62,27 @@ function Page({ hidden, style, children }: { hidden: boolean; style?: MotionStyl
   )
 }
 
+/**
+ * 列表滚动区。循环翻页要求同一页在轨道上存在不止一份 DOM，
+ * 这里让同名的几份共享滚动位置，切回来时不会跳回顶部。
+ */
+function ScrollArea({
+  pageKey,
+  onScroll,
+  children,
+}: {
+  pageKey: string
+  onScroll: (event: UIEvent<HTMLDivElement>) => void
+  children: ReactNode
+}) {
+  const ref = useSharedScroll(pageKey)
+  return (
+    <div className="scroll" ref={ref} onScroll={onScroll}>
+      {children}
+    </div>
+  )
+}
+
 const clamp01 = (value: number) => Math.max(0, Math.min(1, value))
 
 export default function App() {
@@ -73,25 +95,25 @@ export default function App() {
   const eventSummary = useMemo(() => summarize(events, now), [events, now])
   const countdownSummary = useMemo(() => summarizeCountdowns(countdownList), [countdownList])
 
-  const { stageRef, x, width, index, goTo, draggedRef, handleProps } = usePager(2)
+  const { stageRef, x, width, index, activeSlot, goTo, draggedRef, handleProps } = usePager(2)
 
-  // 翻页时的「前后景深」：离屏的那一页淡下去、略微缩小，切页更像翻页而不是生硬平移
-  const travel = (value: number) => clamp01(Math.abs(value) / (width || 1))
-  const pageStyle = {
-    opacity: useTransform(x, (value) => 1 - 0.32 * travel(value)),
-    scale: useTransform(x, (value) => 1 - 0.022 * travel(value)),
+  // 翻页时的景深：离页边界越远（越靠中间）越淡、越小
+  const travelOf = (value: number) => {
+    if (!width) return 0
+    const grid = -value / width
+    return clamp01(Math.abs(grid - Math.round(grid)) * 2)
   }
-  const nextPageStyle = {
-    opacity: useTransform(x, (value) => 1 - 0.32 * (1 - travel(value))),
-    scale: useTransform(x, (value) => 1 - 0.022 * (1 - travel(value))),
+  const pageStyle: MotionStyle = {
+    opacity: useTransform(x, (value) => 1 - 0.32 * travelOf(value)),
+    scale: useTransform(x, (value) => 1 - 0.022 * travelOf(value)),
   }
+
   const [sheet, setSheet] = useState<SheetState>(null)
   const [revealedId, setRevealedId] = useState<string | null>(null)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const { theme, toggleTheme } = useTheme()
 
-  // 顶栏的「已滚动」态跟随列表容器，而不是 window
   const handleListScroll = useCallback((scrollEvent: UIEvent<HTMLDivElement>) => {
     setScrolled(scrollEvent.currentTarget.scrollTop > 8)
   }, [])
@@ -101,7 +123,7 @@ export default function App() {
     return () => document.body.classList.remove('is-locked')
   }, [sheet])
 
-  // 翻页时收起已经滑开的卡片（两页各自保留自己的滚动位置）
+  // 翻页时收起已经滑开的卡片（每页各自保留滚动位置）
   useEffect(() => {
     setRevealedId(null)
   }, [index])
@@ -183,119 +205,100 @@ export default function App() {
       <span>生日、纪念日，写下来就不用再数了</span>
     )
 
+  /** 每页的内容都一样，只是数据源不同；轨道上有几格就渲染几份 */
+  const renderPage = (pageIndex: number) => (
+    <div className="shell">
+      <div className="shell__top">
+        <Hero
+          now={now}
+          title={pageIndex === 0 ? '已经走过的日子' : '还在等待的日子'}
+          stats={pageIndex === 0 ? sinceStats : untilStats}
+          pages={2}
+          active={index}
+          action={
+            <PagerHandle
+              direction={pageIndex === 0 ? 'next' : 'prev'}
+              label={pageIndex === 0 ? '倒数日' : '走过的日子'}
+              onActivate={() => goTo(pageIndex === 0 ? 1 : 0)}
+              draggedRef={draggedRef}
+            />
+          }
+        />
+      </div>
+
+      <ScrollArea pageKey={pageIndex === 0 ? 'since' : 'until'} onScroll={handleListScroll}>
+        {pageIndex === 0 ? (
+          sortedEvents.length > 0 ? (
+            <>
+              <EventList
+                events={sortedEvents}
+                now={now}
+                revealedId={revealedId}
+                onReveal={setRevealedId}
+                onOpen={(event) => {
+                  setRevealedId(null)
+                  setSheet({ kind: 'event', mode: 'edit', event })
+                }}
+                onDelete={handleDeleteEvent}
+              />
+              <div className="foot">
+                <span>点击编辑 · 左滑删除</span>
+                <span>数据保存在本机</span>
+              </div>
+            </>
+          ) : (
+            <EmptyState
+              title="还没有任何刻度"
+              text={'记下一件想坚持的事\n它会一天天长起来'}
+              cta="记录第一个日子"
+              onAdd={openAdd}
+            />
+          )
+        ) : countdownList.length > 0 ? (
+          <>
+            <CountdownList
+              views={countdownList}
+              revealedId={revealedId}
+              onReveal={setRevealedId}
+              onOpen={(view) => {
+                setRevealedId(null)
+                setSheet({ kind: 'countdown', mode: 'edit', event: view.event })
+              }}
+              onDelete={handleDeleteCountdown}
+            />
+            <div className="foot">
+              <span>点击编辑 · 左滑删除</span>
+              <span>数据保存在本机</span>
+            </div>
+          </>
+        ) : (
+          <EmptyState
+            title="还没有倒数日"
+            text={'生日、纪念日、出发那天\n都可以写在这里'}
+            cta="记录第一个倒数日"
+            onAdd={openAdd}
+          />
+        )}
+      </ScrollArea>
+    </div>
+  )
+
   return (
     <>
       {/* 背景层放在 .app 之外：.bg 是 fixed + z-index 0 的定位元素，
           若留在 .app 内部会盖住所有 static 内容 */}
       <Background />
 
-      <div className="app">
+      <div className="app" {...handleProps}>
         <TopBar scrolled={scrolled} theme={theme} onToggleTheme={toggleTheme} />
 
         <div className="stage" ref={stageRef}>
           <motion.div className="pager" style={{ x }}>
-            <Page hidden={index !== 0} style={pageStyle}>
-              <div className="shell">
-                <div className="shell__top" {...handleProps}>
-                <Hero
-                  now={now}
-                  title="已经走过的日子"
-                  stats={sinceStats}
-                  pages={2}
-                  active={index}
-                  action={
-                    <PagerHandle
-                      direction="next"
-                      label="倒数日"
-                      onActivate={() => goTo(1)}
-                      draggedRef={draggedRef}
-                      handleProps={handleProps}
-                    />
-                  }
-                />
-                </div>
-
-                <div className="scroll" onScroll={handleListScroll}>
-                {sortedEvents.length > 0 ? (
-                  <>
-                    <EventList
-                      events={sortedEvents}
-                      now={now}
-                      revealedId={revealedId}
-                      onReveal={setRevealedId}
-                      onOpen={(event) => {
-                        setRevealedId(null)
-                        setSheet({ kind: 'event', mode: 'edit', event })
-                      }}
-                      onDelete={handleDeleteEvent}
-                    />
-                    <div className="foot">
-                      <span>点击编辑 · 左滑删除</span>
-                      <span>数据保存在本机</span>
-                    </div>
-                  </>
-                ) : (
-                  <EmptyState
-                    title="还没有任何刻度"
-                    text={'记下一件想坚持的事\n它会一天天长起来'}
-                    cta="记录第一个日子"
-                    onAdd={openAdd}
-                  />
-                )}
-                </div>
-              </div>
-            </Page>
-
-            <Page hidden={index !== 1} style={nextPageStyle}>
-              <div className="shell">
-                <div className="shell__top" {...handleProps}>
-                <Hero
-                  now={now}
-                  title="还在等待的日子"
-                  stats={untilStats}
-                  pages={2}
-                  active={index}
-                  action={
-                    <PagerHandle
-                      direction="prev"
-                      label="走过的日子"
-                      onActivate={() => goTo(0)}
-                      draggedRef={draggedRef}
-                      handleProps={handleProps}
-                    />
-                  }
-                />
-                </div>
-
-                <div className="scroll" onScroll={handleListScroll}>
-                {countdownList.length > 0 ? (
-                  <>
-                    <CountdownList
-                      views={countdownList}
-                      revealedId={revealedId}
-                      onReveal={setRevealedId}
-                      onOpen={(view) => {
-                        setRevealedId(null)
-                        setSheet({ kind: 'countdown', mode: 'edit', event: view.event })
-                      }}
-                      onDelete={handleDeleteCountdown}
-                    />
-                    <div className="foot">
-                      <span>点击编辑 · 左滑删除</span>
-                      <span>数据保存在本机</span>
-                    </div>
-                  </>
-                ) : (
-                  <EmptyState
-                    title="还没有倒数日"
-                    text={'生日、纪念日、出发那天\n都可以写在这里'}
-                    cta="记录第一个倒数日"
-                    onAdd={openAdd}
-                  />
-                )}
-                </div>
-              </div>
-            </Page>
+            {Array.from({ length: SLOT_COUNT }, (_, slot) => (
+              <Page key={slot} hidden={slot !== activeSlot} style={pageStyle}>
+                {renderPage(pageOfSlot(slot, 2))}
+              </Page>
+            ))}
           </motion.div>
         </div>
 
@@ -310,9 +313,7 @@ export default function App() {
               suggestedColor={suggestEventColor()}
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
-              onDelete={
-                sheet.mode === 'edit' ? () => handleDeleteEvent(sheet.event) : undefined
-              }
+              onDelete={sheet.mode === 'edit' ? () => handleDeleteEvent(sheet.event) : undefined}
             />
           ) : null}
 
@@ -324,9 +325,7 @@ export default function App() {
               suggestedColor={suggestCountdownColor()}
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
-              onDelete={
-                sheet.mode === 'edit' ? () => handleDeleteCountdown(sheet.event) : undefined
-              }
+              onDelete={sheet.mode === 'edit' ? () => handleDeleteCountdown(sheet.event) : undefined}
             />
           ) : null}
         </AnimatePresence>

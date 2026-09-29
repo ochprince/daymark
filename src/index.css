@@ -91,6 +91,8 @@ html {
   height: 100%;
   /* 与主题无关的量：左滑露出的删除区比卡片上下各收进这么多（只比卡片矮一点点） */
   --swipe-inset: 1px;
+  /* 翻页轨道的槽位数：3 格铺满 [-2 页宽, 0]，左右都接得上，实现无限循环 */
+  --slots: 3;
 }
 
 body {
@@ -258,6 +260,20 @@ ul {
   height: 100vh;
   height: 100dvh;
   overflow: hidden;
+  /* 整页都可以左右滑动翻页：纵向仍然交给浏览器（滚动列表），
+     横向由脚本接管；拖动时不选中文字 */
+  touch-action: pan-y;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* 表单里要能正常选中/编辑文字 */
+input,
+textarea,
+.date-input,
+.input {
+  -webkit-user-select: text;
+  user-select: text;
 }
 
 .shell {
@@ -270,13 +286,10 @@ ul {
   margin: 0 auto;
 }
 
-/* 固定的上部区域：也是左右翻页的手势区（纵向留给浏览器） */
+/* 固定的上部区域（标题/日期/统计），不随列表滚动 */
 .shell__top {
   flex: none;
   padding: 0 var(--pad);
-  touch-action: pan-y;
-  -webkit-user-select: none;
-  user-select: none;
 }
 
 /* 只有列表这一块滚动 */
@@ -1115,12 +1128,12 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
   display: flex;
   align-items: stretch;
   height: 100%;
-  width: 200%; /* 两页并排，每页正好一个视口宽 */
+  width: calc(var(--slots) * 100%);
   will-change: transform;
 }
 
 .page {
-  width: 50%;
+  width: calc(100% / var(--slots));
   height: 100%;
   min-height: 0;
   flex: none;
