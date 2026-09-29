@@ -86,6 +86,36 @@ export function SparkIcon({ className }: IconProps) {
   )
 }
 
+export function ChevronRightIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M9.5 5.5 16 12l-6.5 6.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function ChevronLeftIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M14.5 5.5 8 12l6.5 6.5" stroke="currentColor" strokeWidth="1.9" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  )
+}
+
+export function RepeatIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M5 9.2A3.2 3.2 0 0 1 8.2 6h9.3m0 0-2.6-2.6M17.5 6l-2.6 2.6M19 14.8A3.2 3.2 0 0 1 15.8 18H6.5m0 0 2.6 2.6M6.5 18l2.6-2.6"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 /** 品牌标记：三级上升的刻度柱 */
 export function MarkIcon({ className }: IconProps) {
   return (

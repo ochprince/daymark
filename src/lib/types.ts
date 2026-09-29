@@ -16,3 +16,23 @@ export type EventDraft = {
   startedAt: number
   color: number
 }
+
+/** 重复周期：倒数日里，日期已经过去时必须选一种 */
+export type Repeat = 'none' | 'monthly' | 'yearly'
+
+export type CountdownEvent = {
+  id: string
+  title: string
+  /** 首次发生的时刻（毫秒时间戳） */
+  startedAt: number
+  createdAt: number
+  color: number
+  repeat: Repeat
+}
+
+export type CountdownDraft = {
+  title: string
+  startedAt: number
+  color: number
+  repeat: Repeat
+}

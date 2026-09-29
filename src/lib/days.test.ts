@@ -1,15 +1,19 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
 import {
+  buildCountdownList,
   calendarBreakdown,
   daysSince,
+  daysUntil,
   formatSpan,
   milestoneAt,
+  nextOccurrence,
   sortEvents,
   startOfDay,
   summarize,
+  summarizeCountdowns,
 } from './days.ts'
-import type { DayEvent } from './types.ts'
+import type { CountdownEvent, DayEvent, Repeat } from './types.ts'
 
 /** 用本地时间构造时间戳，避免测试受时区影响 */
 function at(year: number, month: number, day: number, hour = 12): number {
@@ -92,4 +96,74 @@ test('summarize 给出总数与最长天数', () => {
   const events = [makeEvent('a', at(2026, 9, 20)), makeEvent('b', at(2020, 1, 1))]
   assert.deepEqual(summarize(events, at(2026, 9, 29)), { count: 2, longest: 2463 })
   assert.deepEqual(summarize([], at(2026, 9, 29)), { count: 0, longest: 0 })
+})
+
+/* ---------------------------- 倒数日 ---------------------------- */
+
+/** 与 nextOccurrence 的返回口径一致：当天 00:00 */
+function day(year: number, month: number, dayOfMonth: number): number {
+  return startOfDay(at(year, month, dayOfMonth))
+}
+
+function makeCountdown(id: string, startedAt: number, repeat: Repeat, createdAt = startedAt): CountdownEvent {
+  return { id, title: id, startedAt, repeat, createdAt, color: 0 }
+}
+
+test('nextOccurrence：不重复或还在未来时就是那一天', () => {
+  const now = at(2026, 9, 30)
+  assert.equal(nextOccurrence(at(2026, 12, 25), 'none', now), day(2026, 12, 25))
+  assert.equal(nextOccurrence(at(2026, 12, 25), 'yearly', now), day(2026, 12, 25))
+  assert.equal(daysUntil(at(2026, 10, 1), now), 1)
+  assert.equal(daysUntil(now, now), 0)
+  assert.equal(daysUntil(at(2026, 9, 1), now), -29)
+})
+
+test('nextOccurrence：按年重复的生日会走到下一个生日', () => {
+  const now = at(2026, 9, 30)
+  assert.equal(nextOccurrence(at(1990, 5, 20), 'yearly', now), day(2027, 5, 20))
+  assert.equal(nextOccurrence(at(2019, 10, 1), 'yearly', now), day(2026, 10, 1))
+  // 今天就是纪念日 → 就是今天
+  assert.equal(nextOccurrence(at(2019, 9, 30), 'yearly', now), day(2026, 9, 30))
+})
+
+test('nextOccurrence：按月重复在月末自动收敛', () => {
+  const now = at(2026, 9, 30)
+  // 1/31 → 2/28 → 3/31 → 4/30 → 5/31 → 6/30 → 7/31 → 8/31 → 9/30
+  assert.equal(nextOccurrence(at(2026, 1, 31), 'monthly', now), day(2026, 9, 30))
+  assert.equal(nextOccurrence(at(2026, 1, 31), 'monthly', at(2026, 8, 15)), day(2026, 8, 31))
+})
+
+test('nextOccurrence：2 月 29 日按年重复会收敛到 2 月 28 日', () => {
+  assert.equal(nextOccurrence(at(2024, 2, 29), 'yearly', at(2025, 6, 1)), day(2026, 2, 28))
+  // 闰年那一年回到 29 日
+  assert.equal(nextOccurrence(at(2024, 2, 29), 'yearly', at(2027, 3, 1)), day(2028, 2, 29))
+})
+
+test('buildCountdownList 按距离正序，越近越靠上', () => {
+  const now = at(2026, 9, 30)
+  const list = buildCountdownList(
+    [
+      makeCountdown('远', at(2027, 6, 1), 'none'),
+      makeCountdown('近', at(2026, 10, 2), 'none'),
+      makeCountdown('生日', at(1990, 5, 20), 'yearly'),
+    ],
+    now,
+  )
+  assert.deepEqual(
+    list.map((view) => view.event.id),
+    ['近', '生日', '远'],
+  )
+  assert.deepEqual(
+    list.map((view) => view.days),
+    [2, 232, 244],
+  )
+})
+
+test('summarizeCountdowns 只统计还没到的', () => {
+  const now = at(2026, 9, 30)
+  const list = buildCountdownList(
+    [makeCountdown('过了', at(2026, 9, 1), 'none'), makeCountdown('一周后', at(2026, 10, 7), 'none')],
+    now,
+  )
+  assert.deepEqual(summarizeCountdowns(list), { count: 2, nearest: 7 })
 })

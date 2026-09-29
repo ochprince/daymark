@@ -2,11 +2,16 @@ import { motion, useReducedMotion } from 'motion/react'
 import { MarkIcon } from './icons'
 
 type Props = {
+  title: string
+  /** 两行正文，用 \n 分隔 */
+  text: string
+  cta: string
   onAdd: () => void
 }
 
-export function EmptyState({ onAdd }: Props) {
+export function EmptyState({ title, text, cta, onAdd }: Props) {
   const reduced = useReducedMotion()
+  const [line1, line2] = text.split('\n')
 
   return (
     <motion.section
@@ -16,15 +21,19 @@ export function EmptyState({ onAdd }: Props) {
       transition={{ type: 'spring', stiffness: 260, damping: 30, delay: 0.06 }}
     >
       <MarkIcon className="empty__mark" />
-      <h2 className="empty__title">还没有任何刻度</h2>
+      <h2 className="empty__title">{title}</h2>
       <p className="empty__text">
-        记录一件想坚持的事，或者一个值得记住的日子。
-        <br />
-        从添加的这一刻起，它会自己一天天长起来。
+        {line1}
+        {line2 ? (
+          <>
+            <br />
+            {line2}
+          </>
+        ) : null}
       </p>
       <div className="empty__cta">
         <button type="button" className="btn btn--primary btn--inline" onClick={onAdd}>
-          记录第一个日子
+          {cta}
         </button>
       </div>
     </motion.section>

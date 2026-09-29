@@ -1,4 +1,4 @@
-import type { DayEvent } from './types'
+import type { CountdownEvent, DayEvent, Repeat } from './types'
 
 export const DAY_MS = 86_400_000
 
@@ -149,4 +149,76 @@ export function summarize(events: readonly DayEvent[], now: number): Summary {
     if (days > longest) longest = days
   }
   return { count: events.length, longest }
+}
+
+/* ------------------------------------------------------------------ *
+ * 倒数日
+ * ------------------------------------------------------------------ */
+
+export type RepeatOption = { value: Repeat; label: string }
+
+export const REPEAT_OPTIONS: readonly RepeatOption[] = [
+  { value: 'none', label: '不重复' },
+  { value: 'monthly', label: '每月' },
+  { value: 'yearly', label: '每年' },
+]
+
+export function repeatOption(repeat: Repeat): RepeatOption {
+  return REPEAT_OPTIONS.find((option) => option.value === repeat) ?? REPEAT_OPTIONS[0]
+}
+
+/**
+ * 周期性事件的下一个时间点（含今天）。
+ * 不重复、或原本就在未来，就直接是那一天。
+ * 按月/按年推进时以「首次那一天」为基准做月末收敛：
+ * 1 月 31 日 + 1 月 = 2 月 28/29 日，2 月 29 日 + 1 年 = 次年 2 月 28 日。
+ */
+export function nextOccurrence(at: number, repeat: Repeat, now: number): number {
+  const base = startOfDay(at)
+  const today = startOfDay(now)
+  if (repeat === 'none' || base >= today) return base
+
+  const stepMonths = repeat === 'monthly' ? 1 : 12
+  let cursor = base
+  let count = 0
+  // 上限 1200 次（月重复 100 年 / 年重复 1200 年），足够覆盖真实数据且不会死循环
+  while (cursor < today && count < 1200) {
+    count += 1
+    cursor = addMonths(new Date(base), stepMonths * count).getTime()
+  }
+  return cursor
+}
+
+/** 距离目标日期还有多少天：今天 = 0，已经过去为负数 */
+export function daysUntil(at: number, now: number): number {
+  return Math.round((startOfDay(at) - startOfDay(now)) / DAY_MS)
+}
+
+export type CountdownView = {
+  event: CountdownEvent
+  /** 下一个时间点 */
+  next: number
+  /** 距离下一个时间点还有多少天（负数表示已经过去） */
+  days: number
+}
+
+/** 按距离正序：越近越靠上，天数越多越靠下 */
+export function buildCountdownList(events: readonly CountdownEvent[], now: number): CountdownView[] {
+  return events
+    .map((event) => {
+      const next = nextOccurrence(event.startedAt, event.repeat, now)
+      return { event, next, days: daysUntil(next, now) }
+    })
+    .sort((a, b) => a.days - b.days || a.event.createdAt - b.event.createdAt)
+}
+
+export type CountdownSummary = { count: number; nearest: number | null }
+
+export function summarizeCountdowns(views: readonly CountdownView[]): CountdownSummary {
+  let nearest: number | null = null
+  for (const view of views) {
+    if (view.days < 0) continue
+    if (nearest === null || view.days < nearest) nearest = view.days
+  }
+  return { count: views.length, nearest }
 }

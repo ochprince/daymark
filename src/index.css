@@ -42,6 +42,9 @@ html[data-theme='dark'] {
   --glow-2: rgba(255, 138, 61, 0.28);
   --glow-3: rgba(59, 130, 246, 0.32);
   --num-ink: var(--text);
+  --segment-on: #3b4152;
+  --segment-on-text: #ffffff;
+  --segment-on-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 10px 20px -14px rgba(0, 0, 0, 1);
 }
 
 html[data-theme='light'] {
@@ -65,6 +68,9 @@ html[data-theme='light'] {
   --glow-2: rgba(255, 168, 92, 0.26);
   --glow-3: rgba(79, 141, 255, 0.2);
   --num-ink: var(--text);
+  --segment-on: #ffffff;
+  --segment-on-text: #14161a;
+  --segment-on-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 8px 18px -14px rgba(24, 26, 34, 0.55);
 }
 
 /* ---------- 基础重置 ---------- */
@@ -358,9 +364,17 @@ ul {
   box-shadow: 0 0 0 3px color-mix(in oklab, var(--brand-1) 18%, transparent);
 }
 
-.hero__title {
+.hero__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
   margin-top: 12px;
-  font-size: clamp(1.65rem, 7.4vw, 1.9rem);
+}
+
+.hero__title {
+  min-width: 0;
+  font-size: clamp(1.55rem, 7vw, 1.8rem);
   line-height: 1.22;
   letter-spacing: -0.035em;
 }
@@ -557,6 +571,12 @@ html[data-theme='dark'] .chip {
   border-color: color-mix(in oklab, var(--accent-to) 40%, transparent);
 }
 
+.chip--muted {
+  color: var(--text-3);
+  background: var(--surface-hi);
+  border-color: var(--line);
+}
+
 html[data-theme='light'] .chip--milestone {
   color: var(--accent-ink);
   background: color-mix(in oklab, var(--accent-to) 22%, transparent);
@@ -568,6 +588,19 @@ html[data-theme='light'] .chip--milestone {
   align-items: baseline;
   gap: 7px;
   margin-top: 6px;
+}
+
+/* 「还有」「已过去」这类前缀，跟在大数字前保持基线对齐 */
+.card__lead {
+  font-size: 15px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--text-2);
+}
+
+.card__sep {
+  color: var(--text-3);
+  opacity: 0.7;
 }
 
 .card__num {
@@ -588,6 +621,12 @@ html[data-theme='light'] .card__num {
   background: none;
   -webkit-text-fill-color: currentColor;
   color: var(--accent-ink);
+}
+
+/* “今天”这类文字态的大字位 */
+.card__num--word {
+  font-size: clamp(2.1rem, 11vw, 2.5rem);
+  letter-spacing: -0.03em;
 }
 
 .card__unit {
@@ -1029,6 +1068,157 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
 .foot kbd {
   font-family: inherit;
   font-size: 11.5px;
+}
+
+/* ---------- 翻页轨道 ---------- */
+.stage {
+  position: relative;
+  width: 100%;
+  overflow: hidden;
+}
+
+.pager {
+  display: flex;
+  align-items: flex-start;
+  width: 200%; /* 两页并排，每页正好一个视口宽 */
+  will-change: transform;
+}
+
+.page {
+  width: 50%;
+  flex: none;
+}
+
+/* ---------- 翻页手柄（箭头） ---------- */
+.pager-handle {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  height: 34px;
+  padding: 0 8px 0 11px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: var(--surface-hi);
+  color: var(--text-2);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  cursor: grab;
+  /* 手势起点：横向拖动由脚本接管，不交给浏览器 */
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+  transition: color 0.2s var(--ease-out), border-color 0.2s var(--ease-out),
+    background 0.2s var(--ease-out);
+}
+
+.pager-handle[data-direction='prev'] {
+  padding: 0 11px 0 8px;
+}
+
+.pager-handle:hover {
+  color: var(--text);
+  border-color: var(--line-strong);
+}
+
+.pager-handle:active {
+  cursor: grabbing;
+}
+
+.pager-handle__chevron {
+  width: 15px;
+  height: 15px;
+}
+
+/* 轻轻来回两下，提示这里可以滑 */
+.pager-handle__chevron {
+  animation: handle-nudge 2.2s var(--ease-out) 0.8s 2;
+}
+
+.pager-handle[data-direction='prev'] .pager-handle__chevron {
+  animation-name: handle-nudge-left;
+}
+
+@keyframes handle-nudge {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(2.5px);
+  }
+}
+
+@keyframes handle-nudge-left {
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+  50% {
+    transform: translateX(-2.5px);
+  }
+}
+
+/* ---------- 分段选择（重复周期） ---------- */
+.segmented {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 4px;
+  padding: 4px;
+  border-radius: 15px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.segmented__item {
+  display: grid;
+  place-items: center;
+  height: 38px;
+  border-radius: 11px;
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--text-2);
+  transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out),
+    box-shadow 0.2s var(--ease-out);
+}
+
+.segmented__item[data-selected='true'] {
+  color: var(--segment-on-text);
+  background: var(--segment-on);
+  box-shadow: var(--segment-on-shadow);
+}
+
+.segmented__item:disabled {
+  opacity: 0.34;
+  cursor: not-allowed;
+}
+
+/* ---------- 翻页指示点 ---------- */
+.pager-dots {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 18px;
+}
+
+.pager-dots__dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 999px;
+  background: var(--text-3);
+  opacity: 0.45;
+  transition: width 0.32s var(--ease-spring), opacity 0.32s var(--ease-out),
+    background 0.32s var(--ease-out);
+}
+
+.pager-dots__dot[data-active='true'] {
+  width: 16px;
+  opacity: 1;
+  background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
 }
 
 /* ---------- 动效偏好 ---------- */

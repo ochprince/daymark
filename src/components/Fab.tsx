@@ -3,9 +3,10 @@ import { PlusIcon } from './icons'
 
 type Props = {
   onClick: () => void
+  label: string
 }
 
-export function Fab({ onClick }: Props) {
+export function Fab({ onClick, label }: Props) {
   const reduced = useReducedMotion()
 
   return (
@@ -13,7 +14,7 @@ export function Fab({ onClick }: Props) {
       <motion.button
         type="button"
         className="fab"
-        aria-label="记录一个日子"
+        aria-label={label}
         onClick={onClick}
         initial={reduced ? false : { opacity: 0, scale: 0.7, y: 12 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
