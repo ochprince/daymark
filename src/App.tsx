@@ -14,7 +14,6 @@ import { PagerHandle } from './components/PagerHandle'
 import { Toast } from './components/Toast'
 import type { ToastState } from './components/Toast'
 import { buildCountdownList, sortEvents, summarize, summarizeCountdowns } from './lib/days'
-import type { CountdownView } from './lib/days'
 import {
   addEvent,
   getEvents,
@@ -113,11 +112,11 @@ export default function App() {
   )
 
   const handleDeleteCountdown = useCallback(
-    (view: CountdownView) => {
-      removeCountdown(view.event.id)
+    (event: CountdownEvent) => {
+      removeCountdown(event.id)
       setRevealedId(null)
       setSheet(null)
-      notifyDeleted(view.event.title, () => restoreCountdown(view.event))
+      notifyDeleted(event.title, () => restoreCountdown(event))
     },
     [notifyDeleted],
   )
@@ -307,7 +306,7 @@ export default function App() {
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
               onDelete={
-                sheet.mode === 'edit' ? () => handleDeleteCountdown({ event: sheet.event, next: 0, days: 0 }) : undefined
+                sheet.mode === 'edit' ? () => handleDeleteCountdown(sheet.event) : undefined
               }
             />
           ) : null}

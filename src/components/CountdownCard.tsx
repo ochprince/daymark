@@ -1,6 +1,7 @@
 import { SwipeCard } from './SwipeCard'
-import { formatDate, milestoneAt, repeatOption } from '../lib/days'
+import { DAY_MS, formatDate, milestoneAt, nextOccurrence, repeatOption } from '../lib/days'
 import type { CountdownView } from '../lib/days'
+import type { CountdownEvent } from '../lib/types'
 import { RepeatIcon, SparkIcon } from './icons'
 
 type Props = {
@@ -8,7 +9,7 @@ type Props = {
   revealed: boolean
   onReveal: (id: string | null) => void
   onOpen: (view: CountdownView) => void
-  onDelete: (view: CountdownView) => void
+  onDelete: (event: CountdownEvent) => void
 }
 
 export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Props) {
@@ -26,7 +27,7 @@ export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Pr
       revealed={revealed}
       onReveal={onReveal}
       onOpen={() => onOpen(view)}
-      onDelete={() => onDelete(view)}
+      onDelete={() => onDelete(event)}
     >
       <div className="card__head">
         <h2 className="card__title">
@@ -68,7 +69,12 @@ export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Pr
 
       <p className="card__foot">
         {days === 0 ? (
-          <em>就是今天</em>
+          // 今天这一天，往后看一次更有用（月重复给下个月，一次性给原定日期）
+          event.repeat !== 'none' ? (
+            <span>下次 {formatDate(nextOccurrence(event.startedAt, event.repeat, view.now + DAY_MS))}</span>
+          ) : (
+            <span>{formatDate(next)}</span>
+          )
         ) : expired ? (
           <span>原定 {formatDate(next)}</span>
         ) : event.repeat !== 'none' ? (

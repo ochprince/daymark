@@ -200,6 +200,8 @@ export type CountdownView = {
   next: number
   /** 距离下一个时间点还有多少天（负数表示已经过去） */
   days: number
+  /** 计算时的当下，用于「今天」这类需要往后看一次的文案 */
+  now: number
 }
 
 /** 按距离正序：越近越靠上，天数越多越靠下 */
@@ -207,7 +209,7 @@ export function buildCountdownList(events: readonly CountdownEvent[], now: numbe
   return events
     .map((event) => {
       const next = nextOccurrence(event.startedAt, event.repeat, now)
-      return { event, next, days: daysUntil(next, now) }
+      return { event, next, days: daysUntil(next, now), now }
     })
     .sort((a, b) => a.days - b.days || a.event.createdAt - b.event.createdAt)
 }

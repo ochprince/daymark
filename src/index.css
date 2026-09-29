@@ -598,11 +598,6 @@ html[data-theme='light'] .chip--milestone {
   color: var(--text-2);
 }
 
-.card__sep {
-  color: var(--text-3);
-  opacity: 0.7;
-}
-
 .card__num {
   font-size: clamp(2.35rem, 12.5vw, 2.9rem);
   font-weight: 520;
