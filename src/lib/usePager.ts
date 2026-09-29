@@ -7,20 +7,30 @@ const SPRING_PAGE = { type: 'spring', visualDuration: 0.42, bounce: 0.12 } as co
 /** 拖到边界外的阻尼系数 */
 const RUBBER = 0.35
 /** 判定甩动的速度阈值（px/s） */
-const FLICK = 450
+const FLICK = 400
+/** 位移超过这个比例就翻页（iOS 是过半，但手机上滑一半太长，用 30% 更跟手） */
+const PAGE_RATIO = 0.3
 /** 小于这个位移视为点击，不算拖动 */
 const DRAG_SLOP = 6
 
 type Sample = { x: number; t: number }
 
 /**
- * 横向翻页：两页并排放在一条轨道上，用手指拖就是直接拖轨道，
- * 松手按「先看速度、再看是否过半」的 iOS 模型吸附到某一页。
- * 手势只挂在传入 handleProps 的元素上（也就是箭头），列表上的滑动不受影响。
+ * 横向翻页轨道：两页并排，整条轨道跟手移动，松手按 iOS 模型吸附
+ * （先看甩动速度，速度不够再看是否过半）。
+ *
+ * 手势挂在 handleProps 指向的元素上——也就是整个上部区域（含翻页手柄），
+ * 列表区域不参与，所以卡片上的左滑仍然只用于删除。
  */
 export function usePager(count: number) {
   const stageRef = useRef<HTMLDivElement | null>(null)
-  const gesture = useRef<{ pointerId: number; startX: number; startValue: number; samples: Sample[] } | null>(null)
+  const gesture = useRef<{
+    pointerId: number
+    startX: number
+    startValue: number
+    samples: Sample[]
+    captured: boolean
+  } | null>(null)
   const draggedRef = useRef(false)
   const [index, setIndex] = useState(0)
   const [width, setWidth] = useState(0)
@@ -53,19 +63,18 @@ export function usePager(count: number) {
   // 页索引或宽度变化（含旋转屏幕）时收敛到正确位置
   useEffect(() => snapTo(index), [index, snapTo])
 
-  const goTo = useCallback(
-    (next: number) => setIndex(Math.max(0, Math.min(count - 1, next))),
-    [count],
-  )
+  const goTo = useCallback((next: number) => setIndex(Math.max(0, Math.min(count - 1, next))), [count])
 
   const onPointerDown = (event: ReactPointerEvent<HTMLElement>) => {
     if (!width) return
-    event.currentTarget.setPointerCapture(event.pointerId)
+    // 先不抢占指针：轻点要能正常落到按钮上（比如翻页手柄），
+    // 等确实开始拖动（超过阈值）再捕获，避免点击被吞掉
     gesture.current = {
       pointerId: event.pointerId,
       startX: event.clientX,
       startValue: x.get(),
       samples: [{ x: event.clientX, t: performance.now() }],
+      captured: false,
     }
     draggedRef.current = false
     x.stop()
@@ -75,11 +84,18 @@ export function usePager(count: number) {
     const active = gesture.current
     if (!active || active.pointerId !== event.pointerId) return
 
+    const dx = event.clientX - active.startX
+    if (!active.captured) {
+      if (Math.abs(dx) <= DRAG_SLOP) return
+      active.captured = true
+      draggedRef.current = true
+      event.currentTarget.setPointerCapture(event.pointerId)
+    }
+
     active.samples.push({ x: event.clientX, t: performance.now() })
     if (active.samples.length > 6) active.samples.shift()
-    if (Math.abs(event.clientX - active.startX) > DRAG_SLOP) draggedRef.current = true
 
-    let next = active.startValue + (event.clientX - active.startX)
+    let next = active.startValue + dx
     const min = -(count - 1) * width
     if (next > 0) next *= RUBBER
     else if (next < min) next = min + (next - min) * RUBBER
@@ -101,8 +117,8 @@ export function usePager(count: number) {
     let target = index
     if (velocity < -FLICK) target = index + 1
     else if (velocity > FLICK) target = index - 1
-    else if (position < base - width / 2) target = index + 1
-    else if (position > base + width / 2) target = index - 1
+    else if (position < base - width * PAGE_RATIO) target = index + 1
+    else if (position > base + width * PAGE_RATIO) target = index - 1
     target = Math.max(0, Math.min(count - 1, target))
 
     setIndex(target)
@@ -116,6 +132,7 @@ export function usePager(count: number) {
   return {
     stageRef,
     x,
+    width,
     index,
     goTo,
     draggedRef,

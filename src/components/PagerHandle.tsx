@@ -6,6 +6,7 @@ type Props = {
   /** 按钮上的文字，指向目标页 */
   label: string
   onActivate: () => void
+  /** 刚刚发生过拖动时，抑制浏览器补发的这次 click */
   draggedRef: MutableRefObject<boolean>
   handleProps: {
     onPointerDown: PointerEventHandler<HTMLElement>
@@ -15,10 +16,7 @@ type Props = {
   }
 }
 
-/**
- * 翻页手柄：既是「点一下翻页」的按钮，也是「从右往左滑」的手势起点。
- * 手势只在这个元素上生效，卡片上的滑动仍然只用来删除。
- */
+/** 翻页手柄：可点，也可以从这里往左右滑（手势区其实覆盖整个上部区域） */
 export function PagerHandle({ direction, label, onActivate, draggedRef, handleProps }: Props) {
   return (
     <button

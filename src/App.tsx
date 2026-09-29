@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react'
-import type { ReactNode } from 'react'
-import { AnimatePresence, motion } from 'motion/react'
+import type { ReactNode, UIEvent } from 'react'
+import type { MotionStyle } from 'motion/react'
+import { AnimatePresence, motion, useTransform } from 'motion/react'
 import { Background } from './components/Background'
 import { TopBar } from './components/TopBar'
 import { Hero } from './components/Hero'
@@ -45,7 +46,7 @@ type SheetState =
   | null
 
 /** 轨道上的一页：隐藏时用 inert 让里面的控件退出键盘与辅助技术的可达范围 */
-function Page({ hidden, children }: { hidden: boolean; children: ReactNode }) {
+function Page({ hidden, style, children }: { hidden: boolean; style?: MotionStyle; children: ReactNode }) {
   const ref = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
@@ -54,11 +55,13 @@ function Page({ hidden, children }: { hidden: boolean; children: ReactNode }) {
   }, [hidden])
 
   return (
-    <section className="page" ref={ref} aria-hidden={hidden}>
+    <motion.section className="page" ref={ref} style={style} aria-hidden={hidden}>
       {children}
-    </section>
+    </motion.section>
   )
 }
+
+const clamp01 = (value: number) => Math.max(0, Math.min(1, value))
 
 export default function App() {
   const now = useNow()
@@ -70,18 +73,27 @@ export default function App() {
   const eventSummary = useMemo(() => summarize(events, now), [events, now])
   const countdownSummary = useMemo(() => summarizeCountdowns(countdownList), [countdownList])
 
-  const { stageRef, x, index, goTo, draggedRef, handleProps } = usePager(2)
+  const { stageRef, x, width, index, goTo, draggedRef, handleProps } = usePager(2)
+
+  // 翻页时的「前后景深」：离屏的那一页淡下去、略微缩小，切页更像翻页而不是生硬平移
+  const travel = (value: number) => clamp01(Math.abs(value) / (width || 1))
+  const pageStyle = {
+    opacity: useTransform(x, (value) => 1 - 0.32 * travel(value)),
+    scale: useTransform(x, (value) => 1 - 0.022 * travel(value)),
+  }
+  const nextPageStyle = {
+    opacity: useTransform(x, (value) => 1 - 0.32 * (1 - travel(value))),
+    scale: useTransform(x, (value) => 1 - 0.022 * (1 - travel(value))),
+  }
   const [sheet, setSheet] = useState<SheetState>(null)
   const [revealedId, setRevealedId] = useState<string | null>(null)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const { theme, toggleTheme } = useTheme()
 
-  useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 8)
-    onScroll()
-    window.addEventListener('scroll', onScroll, { passive: true })
-    return () => window.removeEventListener('scroll', onScroll)
+  // 顶栏的「已滚动」态跟随列表容器，而不是 window
+  const handleListScroll = useCallback((scrollEvent: UIEvent<HTMLDivElement>) => {
+    setScrolled(scrollEvent.currentTarget.scrollTop > 8)
   }, [])
 
   useEffect(() => {
@@ -89,10 +101,9 @@ export default function App() {
     return () => document.body.classList.remove('is-locked')
   }, [sheet])
 
-  // 翻页后回到顶部，并收起已经滑开的卡片
+  // 翻页时收起已经滑开的卡片（两页各自保留自己的滚动位置）
   useEffect(() => {
     setRevealedId(null)
-    window.scrollTo({ top: 0, behavior: 'auto' })
   }, [index])
 
   const dismissToast = useCallback(() => setToast(null), [])
@@ -183,8 +194,9 @@ export default function App() {
 
         <div className="stage" ref={stageRef}>
           <motion.div className="pager" style={{ x }}>
-            <Page hidden={index !== 0}>
+            <Page hidden={index !== 0} style={pageStyle}>
               <div className="shell">
+                <div className="shell__top" {...handleProps}>
                 <Hero
                   now={now}
                   title="已经走过的日子"
@@ -201,7 +213,9 @@ export default function App() {
                     />
                   }
                 />
+                </div>
 
+                <div className="scroll" onScroll={handleListScroll}>
                 {sortedEvents.length > 0 ? (
                   <>
                     <EventList
@@ -223,16 +237,18 @@ export default function App() {
                 ) : (
                   <EmptyState
                     title="还没有任何刻度"
-                    text={'记录一件想坚持的事，或者一个值得记住的日子。\n从添加的这一刻起，它会自己一天天长起来。'}
+                    text={'记下一件想坚持的事\n它会一天天长起来'}
                     cta="记录第一个日子"
                     onAdd={openAdd}
                   />
                 )}
+                </div>
               </div>
             </Page>
 
-            <Page hidden={index !== 1}>
+            <Page hidden={index !== 1} style={nextPageStyle}>
               <div className="shell">
+                <div className="shell__top" {...handleProps}>
                 <Hero
                   now={now}
                   title="还在等待的日子"
@@ -249,7 +265,9 @@ export default function App() {
                     />
                   }
                 />
+                </div>
 
+                <div className="scroll" onScroll={handleListScroll}>
                 {countdownList.length > 0 ? (
                   <>
                     <CountdownList
@@ -270,11 +288,12 @@ export default function App() {
                 ) : (
                   <EmptyState
                     title="还没有倒数日"
-                    text={'写下一个还没到来的日子，比如生日、纪念日、出发那天。\n每年都会回来的日子，记得选上重复周期。'}
+                    text={'生日、纪念日、出发那天\n都可以写在这里'}
                     cta="记录第一个倒数日"
                     onAdd={openAdd}
                   />
                 )}
+                </div>
               </div>
             </Page>
           </motion.div>

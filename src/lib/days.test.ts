@@ -139,6 +139,27 @@ test('nextOccurrence：2 月 29 日按年重复会收敛到 2 月 28 日', () =>
   assert.equal(nextOccurrence(at(2024, 2, 29), 'yearly', at(2027, 3, 1)), day(2028, 2, 29))
 })
 
+test('nextOccurrence：填写的日期在未来时，切换周期同样给出真正的下一次', () => {
+  const now = at(2026, 9, 30)
+  // 填 12/20 选每月 → 从今天往后最近的一个 20 号
+  assert.equal(nextOccurrence(at(2026, 12, 20), 'monthly', now), day(2026, 10, 20))
+  // 填 12/20 选每年 → 从今天往后最近的 12/20
+  assert.equal(nextOccurrence(at(2026, 12, 20), 'yearly', now), day(2026, 12, 20))
+  // 填 2027/3/8 选每月 → 下一个 8 号
+  assert.equal(nextOccurrence(at(2027, 3, 8), 'monthly', now), day(2026, 10, 8))
+  // 填 2027/12/20 选每年 → 最近的一次是今年 12/20
+  assert.equal(nextOccurrence(at(2027, 12, 20), 'yearly', now), day(2026, 12, 20))
+  // 不重复 → 原样，不做任何外推
+  assert.equal(nextOccurrence(at(2027, 3, 8), 'none', now), day(2027, 3, 8))
+})
+
+test('nextOccurrence：每月重复的锚点是「几号」，跨月取最近一次', () => {
+  // 锚点 31 号：9 月只有 30 天，收敛到 9/30
+  assert.equal(nextOccurrence(at(2026, 1, 31), 'monthly', at(2026, 9, 29)), day(2026, 9, 30))
+  // 到了 10 月，下一个 31 号就是 10/31
+  assert.equal(nextOccurrence(at(2026, 1, 31), 'monthly', at(2026, 10, 1)), day(2026, 10, 31))
+})
+
 test('buildCountdownList 按距离正序，越近越靠上', () => {
   const now = at(2026, 9, 30)
   const list = buildCountdownList(

@@ -169,24 +169,51 @@ export function repeatOption(repeat: Repeat): RepeatOption {
 
 /**
  * 周期性事件的下一个时间点（含今天）。
- * 不重复、或原本就在未来，就直接是那一天。
- * 按月/按年推进时以「首次那一天」为基准做月末收敛：
- * 1 月 31 日 + 1 月 = 2 月 28/29 日，2 月 29 日 + 1 年 = 次年 2 月 28 日。
+ *
+ * 锚点是「月+日」而不是「首次那一年那一天」：
+ * - 每年重复：取锚点的月日，从今天往后找最近的一次（如锚点 5/20、今天 9/30 → 次年 5/20）
+ * - 每月重复：取锚点的日，从今天往后找最近的一次（如锚点 20 号、今天 9/30 → 10/20）
+ * 这样即使填写的日期在未来，切换周期也会立刻改变结果，
+ * 而不是永远回显填写的那个日期。
+ *
+ * 月末收敛：锚点 31 号在 30 天的月份落到月末；2/29 在平年落到 2/28。
  */
 export function nextOccurrence(at: number, repeat: Repeat, now: number): number {
-  const base = startOfDay(at)
+  const base = new Date(startOfDay(at))
   const today = startOfDay(now)
-  if (repeat === 'none' || base >= today) return base
+  if (repeat === 'none') return base.getTime()
 
-  const stepMonths = repeat === 'monthly' ? 1 : 12
-  let cursor = base
-  let count = 0
-  // 上限 1200 次（月重复 100 年 / 年重复 1200 年），足够覆盖真实数据且不会死循环
-  while (cursor < today && count < 1200) {
-    count += 1
-    cursor = addMonths(new Date(base), stepMonths * count).getTime()
+  const anchorDay = base.getDate()
+  const anchorMonth = base.getMonth()
+  const todayDate = new Date(today)
+
+  if (repeat === 'yearly') {
+    let year = todayDate.getFullYear()
+    let candidate = dayInMonth(year, anchorMonth, anchorDay)
+    if (candidate < today) candidate = dayInMonth(year + 1, anchorMonth, anchorDay)
+    return candidate
   }
-  return cursor
+
+  let year = todayDate.getFullYear()
+  let month = todayDate.getMonth()
+  let candidate = dayInMonth(year, month, anchorDay)
+  if (candidate < today) {
+    month += 1
+    if (month > 11) {
+      month = 0
+      year += 1
+    }
+    candidate = dayInMonth(year, month, anchorDay)
+  }
+  return candidate
+}
+
+/** 构造某年某月第 day 天的零点，超出该月天数时收敛到月末 */
+function dayInMonth(year: number, month: number, day: number): number {
+  const lastDay = new Date(year, month + 1, 0).getDate()
+  const result = new Date(year, month, Math.min(day, lastDay))
+  result.setHours(0, 0, 0, 0)
+  return result.getTime()
 }
 
 /** 距离目标日期还有多少天：今天 = 0，已经过去为负数 */
