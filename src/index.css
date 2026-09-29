@@ -45,8 +45,6 @@ html[data-theme='dark'] {
   --segment-on: #3b4152;
   --segment-on-text: #ffffff;
   --segment-on-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset, 0 10px 20px -14px rgba(0, 0, 0, 1);
-  /* 左滑露出的删除区比卡片上下各收进这么多，避免红色与卡片边缘齐平 */
-  --swipe-inset: 6px;
 }
 
 html[data-theme='light'] {
@@ -91,6 +89,8 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   height: 100%;
+  /* 与主题无关的量：左滑露出的删除区比卡片上下各收进这么多（只比卡片矮一点点） */
+  --swipe-inset: 1px;
 }
 
 body {
