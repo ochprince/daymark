@@ -39,16 +39,22 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onDelete }: 
 
   return (
     <div className="swipe">
-      <button
-        type="button"
-        className="swipe__action"
-        tabIndex={revealed ? 0 : -1}
-        aria-hidden={!revealed}
-        onClick={() => onDelete(event)}
-      >
-        <TrashIcon />
-        删除
-      </button>
+      {/* 删除层单独裁剪成与卡片同半径的圆角矩形：
+          卡片滑开后，红色会填满卡片圆角让出来的缺口，沿卡片的弧度贴合，
+          而在静止状态下它被卡片完全盖住（两者轮廓一致），不会从圆角缝隙里透出来。 */}
+      <div className="swipe__bleed" data-hidden={!revealed}>
+        <div className="swipe__fill" />
+        <button
+          type="button"
+          className="swipe__action"
+          tabIndex={revealed ? 0 : -1}
+          aria-hidden={!revealed}
+          onClick={() => onDelete(event)}
+        >
+          <TrashIcon />
+          删除
+        </button>
+      </div>
 
       <motion.div
         className="card"
