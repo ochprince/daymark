@@ -395,18 +395,14 @@ ul {
   border-radius: var(--radius-card);
 }
 
-/* 裁剪层：形状与卡片完全一致，只负责把红色限制在这一轮廓内 */
+/* 裁剪层：形状与卡片完全一致，只负责把红色限制在这一轮廓内。
+   红色不参与透明度的显隐——它永远在卡片下面，露多少完全由卡片位移决定，
+   所以从手指移动的第一个像素开始就是连续的（不会“滑到一定程度才突然出现”）。 */
 .swipe__bleed {
   position: absolute;
   inset: 0;
   border-radius: inherit;
   overflow: hidden;
-  transition: opacity 0.18s var(--ease-out);
-}
-
-.swipe__bleed[data-hidden='true'] {
-  opacity: 0;
-  pointer-events: none;
 }
 
 /* 铺满整行：卡片滑开后，红色会填进卡片圆角让出的缺口里，沿弧度贴合 */
@@ -431,6 +427,7 @@ ul {
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.01em;
+  will-change: transform;
 }
 
 .swipe__action svg {
@@ -453,7 +450,8 @@ ul {
   overflow: hidden;
   isolation: isolate;
   touch-action: pan-y;
-  transition: border-color 0.25s var(--ease-out), transform 0.25s var(--ease-out);
+  will-change: transform;
+  transition: border-color 0.25s var(--ease-out);
 }
 
 html[data-theme='light'] .card {
