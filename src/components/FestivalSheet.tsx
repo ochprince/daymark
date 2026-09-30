@@ -11,6 +11,8 @@ type Props = {
   /** 已经在列表里的节日 id */
   selectedIds: ReadonlySet<string>
   onToggle: (festival: Festival, next: number | null) => void
+  /** 整组一起加/删（全选 / 取消全选） */
+  onToggleMany: (entries: Array<{ festival: Festival; next: number | null }>) => void
   onClose: () => void
 }
 
@@ -30,7 +32,7 @@ function daysLabel(days: number | null): string {
  * 节日挑选：分组列出节日，点一下即加入主列表（再点一下移除）。
  * 选中状态直接写在格子上，配合主列表自动滚动，做到所加即所得。
  */
-export function FestivalSheet({ now, selectedIds, onToggle, onClose }: Props) {
+export function FestivalSheet({ now, selectedIds, onToggle, onToggleMany, onClose }: Props) {
   const reduced = useReducedMotion()
   const [justToggled, setJustToggled] = useState<string | null>(null)
 
@@ -49,7 +51,12 @@ export function FestivalSheet({ now, selectedIds, onToggle, onClose }: Props) {
   const selectedCount = selectedIds.size
 
   return (
-    <Sheet label="挑选节日" className="sheet--festival" onClose={onClose}>
+    <Sheet
+      label="挑选节日"
+      className="sheet--festival"
+      overlayClassName="sheet-overlay--peek"
+      onClose={onClose}
+    >
       <header className="festival__head">
         <div className="festival__title-row">
           <h2 className="sheet__title">节日</h2>
@@ -64,9 +71,29 @@ export function FestivalSheet({ now, selectedIds, onToggle, onClose }: Props) {
 
       <div className="festival__body">
         {FESTIVAL_GROUPS.map((group) => {
+          const allSelected = group.items.every((festival) => selectedIds.has(festival.id))
+          const resolve = (festival: Festival) => ({
+            festival,
+            next: resolved.get(festival.id)?.next ?? null,
+          })
           return (
             <section key={group.id} className="festival__group">
-              <h3 className="festival__group-title">{group.title}</h3>
+              <div className="festival__group-head">
+                <h3 className="festival__group-title">{group.title}</h3>
+                <button
+                  type="button"
+                  className="festival__all"
+                  onClick={() =>
+                    onToggleMany(
+                      allSelected
+                        ? group.items.map(resolve)
+                        : group.items.filter((festival) => !selectedIds.has(festival.id)).map(resolve),
+                    )
+                  }
+                >
+                  {allSelected ? '取消全选' : '全选'}
+                </button>
+              </div>
               <div className="festival__grid">
                 {group.items.map((festival) => {
                   const info = resolved.get(festival.id)

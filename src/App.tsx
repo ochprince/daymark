@@ -127,7 +127,12 @@ export default function App() {
 
   useEffect(() => {
     document.body.classList.toggle('is-locked', sheet !== null)
-    return () => document.body.classList.remove('is-locked')
+    // 节日弹层：列表底部留出弹层那么高的空间，新加的卡片才滚得上来、看得见
+    document.body.classList.toggle('is-peeking', sheet?.kind === 'festival')
+    return () => {
+      document.body.classList.remove('is-locked')
+      document.body.classList.remove('is-peeking')
+    }
   }, [sheet])
 
   // 翻页时收起已经滑开的卡片（每页各自保留滚动位置）
@@ -207,12 +212,25 @@ export default function App() {
     [countdowns],
   )
 
-  /** 把主列表滚到刚加的那张卡片（弹层还盖着时先滚好，收起即可见） */
+  /**
+   * 把主列表滚到刚加的那张卡片。
+   * 弹层还盖着，所以列表底部留了空间（见 .is-peeking .scroll），
+   * 这里直接把滚动容器滚到卡片位置，不用 scrollIntoView（它挑不到可见的那份 DOM）。
+   */
   const scrollToCountdownCard = useCallback((id: string) => {
     window.setTimeout(() => {
-      const node = document.querySelector(`[data-card-id="${id}"]`)
-      node?.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'smooth' })
-    }, 90)
+      const nodes = Array.from(document.querySelectorAll<HTMLElement>(`[data-card-id="${id}"]`))
+      const node =
+        nodes.find((item) => {
+          const rect = item.getBoundingClientRect()
+          return rect.left > -8 && rect.left < window.innerWidth
+        }) ?? nodes[0]
+      const scroller = node?.closest<HTMLElement>('.scroll')
+      if (!node || !scroller) return
+      const top =
+        node.getBoundingClientRect().top - scroller.getBoundingClientRect().top + scroller.scrollTop - 8
+      scroller.scrollTo({ top: Math.max(0, top), behavior: 'smooth' })
+    }, 130)
   }, [])
 
   /** 选中即加入（保持时序），再点一下移除 */
@@ -232,6 +250,32 @@ export default function App() {
         festivalId: festival.id,
       })
       scrollToCountdownCard(created.id)
+    },
+    [countdowns, scrollToCountdownCard],
+  )
+
+  /** 整组一起加/删（全选 / 取消全选） */
+  const toggleFestivalMany = useCallback(
+    (entries: Array<{ festival: Festival; next: number | null }>) => {
+      let anchor: { id: string; next: number } | null = null
+      for (const entry of entries) {
+        const existing = countdowns.find((item) => item.festivalId === entry.festival.id)
+        if (existing) {
+          removeCountdown(existing.id)
+          continue
+        }
+        if (entry.next === null) continue
+        const created = addCountdown({
+          title: entry.festival.name,
+          startedAt: entry.next,
+          color: suggestCountdownColor(),
+          repeat: 'yearly',
+          festivalId: entry.festival.id,
+        })
+        // 一批加完只滚一次，滚到这批里最早发生的那个
+        if (!anchor || entry.next < anchor.next) anchor = { id: created.id, next: entry.next }
+      }
+      if (anchor) scrollToCountdownCard(anchor.id)
     },
     [countdowns, scrollToCountdownCard],
   )
@@ -380,6 +424,7 @@ export default function App() {
               now={now}
               selectedIds={festivalIds}
               onToggle={toggleFestival}
+              onToggleMany={toggleFestivalMany}
               onClose={() => setSheet(null)}
             />
           ) : null}

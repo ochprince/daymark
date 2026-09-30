@@ -50,7 +50,7 @@
 - **iOS 键盘**：底部弹层用 `visualViewport` 的 `height / offsetTop` 跟随软键盘，避免被键盘盖住（`src/lib/useVisualViewport.ts`）。
 - **主题切换**：支持 View Transitions API 时用圆形擦除过渡，不支持则直接切换；`prefers-reduced-motion` 下全部动效关闭。
 - **配色**：8 组精选强调色，深色主题用渐变文字，浅色主题换成同色系的实心墨色，保证对比度。
-- **节日日期**：农历节日（春节、中秋、腊月节日……）用一份从 ICU Chinese 日历导出的离线表（`src/lib/lunar-dates.ts`，覆盖 2026–2051），运行时不再依赖平台的农历实现；复活节走 computus，清明用 21 世纪适用的节气近似式，母亲节/感恩节这类按「某月第 n 个星期几」算。
+- **节日日期**：农历节日（春节、中秋、腊月节日……）用一份离线表（`src/lib/lunar-dates.ts`，覆盖农历 2024–2098），运行时不再依赖平台的农历实现；表由 `scripts/gen-lunar-dates.py` 用 lunardate 生成并抽查官方日期（**不要改用浏览器 ICU**：2027 春节 ICU 给 02-07，官方是 02-06，2030 年同样差一天）；复活节走 computus，清明用 21 世纪适用的节气近似式，母亲节/感恩节这类按「某月第 n 个星期几」算。
 - **节日为什么记得住**：倒数日事件存 `festivalId`，下一次发生按节日规则重算（`nextOccurrence` 第四参），所以农历节日、复活节这类每年日期都在变的节日，跨年也不会算歪；手动改过日期就自动摘掉这个字段。
 
 ## 目录结构
@@ -92,6 +92,13 @@ daymark/
 | `npm install` | 安装依赖 |
 | `npm run dev` | 本地开发，http://localhost:5190 |
 | `npm test` | 跑日期与节日的单元测试（26 个用例） |
+
+重新生成农历表（改了覆盖范围时）：
+
+```bash
+pip install lunardate
+python3 scripts/gen-lunar-dates.py
+```
 | `npm run build` | 类型检查 + 生产构建到 `dist/` |
 | `npm run preview` | 预览构建产物 |
 | `npm run typecheck` | 只做类型检查 |

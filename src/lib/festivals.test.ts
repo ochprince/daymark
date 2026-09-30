@@ -27,11 +27,15 @@ test('节日目录：三组，中国传统的排在最前', () => {
 
 test('农历节日查表正确（春节/中秋/端午/腊八）', () => {
   assert.equal(dateOf('spring-festival', 2026), '2026-02-17')
-  assert.equal(dateOf('spring-festival', 2027), '2027-02-07')
+  // 2027 春节是官方历法的 2 月 6 日；浏览器 ICU 的 Chinese 日历给 02-07，
+  // 差一天的坑就靠这条守着（见 scripts/gen-lunar-dates.py 的说明）
+  assert.equal(dateOf('spring-festival', 2027), '2027-02-06')
   assert.equal(dateOf('spring-festival', 2028), '2028-01-26')
+  assert.equal(dateOf('spring-festival', 2030), '2030-02-03')
   assert.equal(dateOf('mid-autumn', 2026), '2026-09-25')
   assert.equal(dateOf('dragon-boat', 2026), '2026-06-19')
   assert.equal(dateOf('lantern', 2026), '2026-03-03')
+  assert.equal(dateOf('lantern', 2027), '2027-02-20')
 })
 
 test('腊月节日落在下一个公历年', () => {
@@ -42,7 +46,7 @@ test('腊月节日落在下一个公历年', () => {
 
 test('除夕是当年春节的前一天', () => {
   assert.equal(dateOf('chuxi', 2026), '2026-02-16')
-  assert.equal(dateOf('chuxi', 2027), '2027-02-06')
+  assert.equal(dateOf('chuxi', 2027), '2027-02-05')
 })
 
 test('公历固定节日与清明', () => {
@@ -85,8 +89,8 @@ test('下一次发生：含当天，跨年也能算', () => {
   const newYear = festivalById('new-year')!
   assert.equal(daysToFestival(newYear, at(2026, 9, 30)), 93)
   const spring = festivalById('spring-festival')!
-  assert.equal(daysToFestival(spring, at(2026, 9, 30)), 130)
-  assert.equal(nextFestivalDate(spring, at(2026, 9, 30)), at(2027, 2, 7, 0))
+  assert.equal(daysToFestival(spring, at(2026, 9, 30)), 129)
+  assert.equal(nextFestivalDate(spring, at(2026, 9, 30)), at(2027, 2, 6, 0))
 })
 
 test('记忆日：圣诞当天算 0 天，第二天算下一年', () => {

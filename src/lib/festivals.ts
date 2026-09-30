@@ -3,7 +3,8 @@ import { LUNAR_FESTIVAL_DATES } from './lunar-dates'
 /**
  * 节日的日期规则：
  *  - solar      公历固定日期
- *  - lunar      农历（查离线表，超出表的范围用 Intl 的 Chinese 日历现算）
+ *  - lunar      农历（查离线表；超出表的范围才退回 Intl 的 Chinese 日历现算，
+ *                注意 ICU 个别年份会与官方历法差一天，见 scripts/gen-lunar-dates.py）
  *  - nth-weekday 某月第 n 个星期 x（母亲节、感恩节这类）
  *  - easter     复活节（西方教会 computus）
  *  - qingming   清明（节气，用 21 世纪适用的近似式）

@@ -852,6 +852,23 @@ html[data-theme='light'] .card__num {
   -webkit-backdrop-filter: blur(10px) saturate(140%);
 }
 
+/* 节日弹层打开时：列表底部留出弹层高度的空间（即勾即见靠它把新卡片滚上来） */
+.is-peeking .scroll {
+  padding-bottom: calc(440px + env(safe-area-inset-bottom));
+}
+
+/* 节日弹层专用遮罩：不模糊，主列表直接看得见，做到「即勾即见」 */
+.sheet-overlay--peek {
+  background: linear-gradient(
+    to bottom,
+    color-mix(in oklab, #000 2%, transparent) 0%,
+    color-mix(in oklab, #000 12%, transparent) 42%,
+    color-mix(in oklab, #000 32%, transparent) 100%
+  );
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
 .sheet {
   width: 100%;
   max-width: var(--shell-max);
@@ -1399,8 +1416,8 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
   flex-direction: column;
   overflow: hidden;
   padding: 10px 0 calc(18px + env(safe-area-inset-bottom));
-  max-height: 520px;
-  max-height: min(64dvh, 540px);
+  max-height: 388px;
+  max-height: min(46dvh, 400px);
 }
 
 .sheet--festival .sheet__head {
@@ -1454,22 +1471,42 @@ html[data-theme='dark'] .festival__tally {
   margin-top: 16px;
 }
 
-.festival__group-title {
+.festival__group-head {
   position: sticky;
   top: 0;
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: 7px;
+  justify-content: space-between;
+  gap: 12px;
   margin: 0 -16px 10px;
-  padding: 8px 22px;
+  padding: 6px 22px;
+  background: color-mix(in oklab, var(--surface) 88%, transparent);
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+.festival__group-title {
+  min-width: 0;
   font-size: 13px;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text-2);
-  background: color-mix(in oklab, var(--surface) 86%, transparent);
-  backdrop-filter: blur(14px) saturate(160%);
-  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+/* 极简文字按钮，选中整组 */
+.festival__all {
+  flex: none;
+  padding: 5px 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  color: var(--brand-2);
+  transition: opacity 0.16s var(--ease-out);
+}
+
+.festival__all:active {
+  opacity: 0.5;
 }
 
 /* 手机上一行两个，屏幕再宽一点自动变三个 */
