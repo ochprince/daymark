@@ -23,8 +23,11 @@ type Props = {
 
 /** 完全滑开的位移，与 index.css 的 --swipe-reveal 保持同一数值 */
 const REVEAL_X = -92
-/** 拖动缓冲区：留出余量后，手指甩过头也不会撞上硬边界 */
-const DRAG_FLOOR = -240
+/**
+ * 拖动下限 = 删除按钮的宽度：滑到刚好露出按钮就停住，
+ * 再往左不会继续拉出更多红色（只有一点回弹），和 iOS 一样。
+ */
+const DRAG_FLOOR = REVEAL_X
 /** 松手收敛的弹簧：对齐 Apple 的「响应 0.35s、轻微回弹」 */
 const SPRING_SNAP = { type: 'spring', visualDuration: 0.35, bounce: 0.18 } as const
 
@@ -104,9 +107,9 @@ export function SwipeCard({
         drag="x"
         dragDirectionLock
         dragConstraints={{ left: DRAG_FLOOR, right: 0 }}
-        // 右侧阻尼为 0：卡片不能往右拖（往右会露出底下的红色）。
-        // 左侧留一点回弹，拖到底时有「到头了」的手感。
-        dragElastic={{ left: 0.06, right: 0 }}
+        // 右侧阻尼 0：卡片不能往右拖（往右会露出底下的红色）。
+        // 左侧只留极小回弹：到按钮宽度就是「到头了」，不会拉出更多红色。
+        dragElastic={{ left: 0.03, right: 0 }}
         dragMomentum={false}
         whileTap={{ scale: 0.988 }}
         onDragStart={() => {
