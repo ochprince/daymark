@@ -1061,17 +1061,31 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
 }
 
 /* ---------- 轻提示 ---------- */
-.toast {
+/* 撤销提示贴在左下角：右下角是新增按钮，放中间或右侧都会挡到它 */
+.toast-wrap {
   position: fixed;
-  left: 50%;
-  bottom: calc(24px + env(safe-area-inset-bottom));
+  left: 0;
+  right: 0;
+  bottom: 0;
   z-index: 70;
-  transform: translateX(-50%);
+  display: flex;
+  justify-content: flex-start;
+  width: 100%;
+  max-width: var(--shell-max);
+  margin: 0 auto;
+  padding: 0 var(--pad) calc(24px + env(safe-area-inset-bottom));
+  pointer-events: none;
+}
+
+.toast {
+  pointer-events: auto;
+  transform-origin: left bottom;
   display: flex;
   align-items: center;
   gap: 14px;
   width: max-content;
-  max-width: min(92vw, 420px);
+  /* 右侧绕过悬浮的新增按钮（58px + 间距），两者不会叠在一起 */
+  max-width: calc(100% - 58px - 16px);
   padding: 12px 12px 12px 16px;
   border-radius: 15px;
   border: 1px solid var(--line-strong);
