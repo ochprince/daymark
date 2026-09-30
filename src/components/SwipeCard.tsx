@@ -104,6 +104,7 @@ export function SwipeCard({
         tabIndex={0}
         aria-haspopup="dialog"
         aria-label={ariaLabel}
+        data-card-id={id}
         drag="x"
         dragDirectionLock
         dragConstraints={{ left: DRAG_FLOOR, right: 0 }}

@@ -12,6 +12,8 @@ import { Fab } from './components/Fab'
 import { EventSheet } from './components/EventSheet'
 import { CountdownSheet } from './components/CountdownSheet'
 import { PagerHandle } from './components/PagerHandle'
+import { AddMenu } from './components/AddMenu'
+import { FestivalSheet } from './components/FestivalSheet'
 import { Toast } from './components/Toast'
 import type { ToastState } from './components/Toast'
 import { buildCountdownList, sortEvents, summarize, summarizeCountdowns } from './lib/days'
@@ -35,11 +37,16 @@ import {
   suggestColor as suggestCountdownColor,
   updateCountdown,
 } from './lib/countdowns'
+import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
 import { useTheme } from './lib/useTheme'
 import type { CountdownDraft, CountdownEvent, DayEvent, EventDraft } from './lib/types'
 
 type SheetState =
+  /** 新增入口的浮动选项框 */
+  | { kind: 'menu' }
+  /** 节日挑选 */
+  | { kind: 'festival' }
   | { kind: 'event'; mode: 'add' }
   | { kind: 'event'; mode: 'edit'; event: DayEvent }
   | { kind: 'countdown'; mode: 'add' }
@@ -179,7 +186,12 @@ export default function App() {
       }
     } else if (sheet?.kind === 'countdown') {
       if (sheet.mode === 'edit') {
-        updateCountdown(sheet.event.id, draft as CountdownDraft)
+        // 手动改过日期就清掉 festivalId，让填写的日期重新说了算
+        const dateChanged = (draft as CountdownDraft).startedAt !== sheet.event.startedAt
+        updateCountdown(sheet.event.id, {
+          ...(draft as CountdownDraft),
+          festivalId: dateChanged ? undefined : sheet.event.festivalId,
+        })
         setToast({ id: Date.now(), message: '已保存修改' })
       } else {
         const created = addCountdown(draft as CountdownDraft)
@@ -189,8 +201,44 @@ export default function App() {
     setSheet(null)
   }
 
+  /** 已经在列表里的节日 */
+  const festivalIds = useMemo(
+    () => new Set(countdowns.map((item) => item.festivalId).filter((id): id is string => Boolean(id))),
+    [countdowns],
+  )
+
+  /** 把主列表滚到刚加的那张卡片（弹层还盖着时先滚好，收起即可见） */
+  const scrollToCountdownCard = useCallback((id: string) => {
+    window.setTimeout(() => {
+      const node = document.querySelector(`[data-card-id="${id}"]`)
+      node?.scrollIntoView({ block: 'start', inline: 'nearest', behavior: 'smooth' })
+    }, 90)
+  }, [])
+
+  /** 选中即加入（保持时序），再点一下移除 */
+  const toggleFestival = useCallback(
+    (festival: Festival, next: number | null) => {
+      const existing = countdowns.find((item) => item.festivalId === festival.id)
+      if (existing) {
+        removeCountdown(existing.id)
+        return
+      }
+      if (next === null) return
+      const created = addCountdown({
+        title: festival.name,
+        startedAt: next,
+        color: suggestCountdownColor(),
+        repeat: 'yearly',
+        festivalId: festival.id,
+      })
+      scrollToCountdownCard(created.id)
+    },
+    [countdowns, scrollToCountdownCard],
+  )
+
   const openAdd = useCallback(() => {
-    setSheet(index === 0 ? { kind: 'event', mode: 'add' } : { kind: 'countdown', mode: 'add' })
+    // 倒数日页：先弹选项框（节日 / 自定义）；走过的日子页没有节日可挑
+    setSheet(index === 0 ? { kind: 'event', mode: 'add' } : { kind: 'menu' })
   }, [index])
 
   const sinceStats =
@@ -313,9 +361,29 @@ export default function App() {
           </motion.div>
         </div>
 
-        <Fab onClick={openAdd} label={index === 0 ? '记录一个日子' : '记录一个倒数日'} />
+        <Fab onClick={openAdd} label={index === 0 ? '记录一个日子' : '新增倒数日'} />
 
         <AnimatePresence initial={false}>
+          {sheet?.kind === 'menu' ? (
+            <AddMenu
+              key="add-menu"
+              onClose={() => setSheet(null)}
+              onPick={(choice) =>
+                setSheet(choice === 'festival' ? { kind: 'festival' } : { kind: 'countdown', mode: 'add' })
+              }
+            />
+          ) : null}
+
+          {sheet?.kind === 'festival' ? (
+            <FestivalSheet
+              key="festival"
+              now={now}
+              selectedIds={festivalIds}
+              onToggle={toggleFestival}
+              onClose={() => setSheet(null)}
+            />
+          ) : null}
+
           {sheet?.kind === 'event' ? (
             <EventSheet
               key={sheet.mode === 'edit' ? sheet.event.id : 'event-add'}

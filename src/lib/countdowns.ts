@@ -17,6 +17,7 @@ function isValid(value: unknown): value is CountdownEvent {
     typeof candidate.createdAt === 'number' &&
     Number.isFinite(candidate.createdAt) &&
     typeof candidate.color === 'number' &&
+    (candidate.festivalId === undefined || typeof candidate.festivalId === 'string') &&
     REPEATS.includes(candidate.repeat as Repeat)
   )
 }
@@ -44,6 +45,7 @@ export function addCountdown(draft: CountdownDraft): CountdownEvent {
     startedAt: draft.startedAt,
     color: draft.color,
     repeat: draft.repeat,
+    ...(draft.festivalId ? { festivalId: draft.festivalId } : {}),
   })
 }
 
@@ -53,5 +55,8 @@ export function updateCountdown(id: string, patch: Partial<CountdownDraft>): voi
     ...(patch.startedAt !== undefined ? { startedAt: patch.startedAt } : {}),
     ...(patch.color !== undefined ? { color: patch.color } : {}),
     ...(patch.repeat !== undefined ? { repeat: patch.repeat } : {}),
+    // 显式传 festivalId（哪怕是 undefined）才动这个字段：
+    // 手动改过日期时传 undefined 把它清掉，让日期重新说了算。
+    ...(Object.prototype.hasOwnProperty.call(patch, 'festivalId') ? { festivalId: patch.festivalId } : {}),
   })
 }

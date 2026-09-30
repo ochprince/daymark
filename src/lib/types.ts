@@ -28,6 +28,11 @@ export type CountdownEvent = {
   createdAt: number
   color: number
   repeat: Repeat
+  /**
+   * 来自「节日」列表时记下节日 id：农历节日、复活节、母亲节这类
+   * 每年日期都在变的节日，下一次发生要按节日规则算，而不是按填写的月日。
+   */
+  festivalId?: string
 }
 
 export type CountdownDraft = {
@@ -35,4 +40,5 @@ export type CountdownDraft = {
   startedAt: number
   color: number
   repeat: Repeat
+  festivalId?: string
 }

@@ -1,0 +1,77 @@
+name: Deploy preview (feat branches)
+
+# 分支预览：主站仍然发布在 /daymark/（来自 main），
+# 当前分支发布到 /daymark/preview/，审核通过后再合并回 main。
+on:
+  push:
+    branches: [feat/festival]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      # 主站内容：始终取 main，保证预览不影响线上正式版
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+          path: main
+
+      # 预览内容：当前分支
+      - uses: actions/checkout@v4
+        with:
+          ref: feat/festival
+          path: preview
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build main site (/)
+        working-directory: main
+        run: |
+          npm ci
+          npm run build
+
+      - name: Build preview (/preview/)
+        working-directory: preview
+        env:
+          VITE_PREVIEW: '1'
+        run: |
+          npm ci
+          npm test
+          npm run build -- --base=/daymark/preview/
+
+      - name: Assemble site
+        run: |
+          mkdir -p _site
+          cp -r main/dist/. _site/
+          mkdir -p _site/preview
+          cp -r preview/dist/. _site/preview/
+
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

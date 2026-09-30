@@ -124,3 +124,32 @@ export function MarkIcon({ className }: IconProps) {
     </svg>
   )
 }
+
+/** 节日：一颗主星带两颗小星 */
+export function FestivalIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M11.2 3.5 13 8.1l4.6 1.8-4.6 1.8-1.8 4.6-1.8-4.6L4.8 9.9 9.4 8.1l1.8-4.6Z"
+        fill="currentColor"
+      />
+      <path d="M18.4 14.2l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8.8-2Z" fill="currentColor" opacity="0.7" />
+      <path d="M6.4 15.1l.55 1.4 1.4.55-1.4.55L6.4 19l-.55-1.4-1.4-.55 1.4-.55.55-1.4Z" fill="currentColor" opacity="0.55" />
+    </svg>
+  )
+}
+
+/** 自定义：铅笔 */
+export function PencilIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M4.6 19.4l.9-3.9L15.7 5.3a2 2 0 0 1 2.8 0l.2.2a2 2 0 0 1 0 2.8L8.5 18.5l-3.9.9Z"
+        stroke="currentColor"
+        strokeWidth="1.7"
+        strokeLinejoin="round"
+      />
+      <path d="M14.4 6.6l3 3" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" />
+    </svg>
+  )
+}

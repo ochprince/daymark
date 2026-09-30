@@ -14,10 +14,12 @@ type Props = {
   label: string
   onClose: () => void
   children: ReactNode
+  /** 额外修饰类名（例如节日弹层的固定头部 + 内部滚动） */
+  className?: string
 }
 
 /** 底部弹层外壳：遮罩、下拉关闭、Esc、软键盘跟随。表单内容由调用方传入。 */
-export function Sheet({ label, onClose, children }: Props) {
+export function Sheet({ label, onClose, children, className }: Props) {
   const dragControls = useDragControls()
   const viewport = useVisualViewport(true)
 
@@ -46,7 +48,7 @@ export function Sheet({ label, onClose, children }: Props) {
       onClick={onClose}
     >
       <motion.div
-        className="sheet"
+        className={className ? `sheet ${className}` : 'sheet'}
         role="dialog"
         aria-modal="true"
         aria-label={label}
