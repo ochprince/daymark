@@ -1062,7 +1062,9 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
 
 /* ---------- 轻提示 ---------- */
 /* 撤销提示贴在左下角：右下角是新增按钮，放中间或右侧都会挡到它。
-   外层高度与 .fab-wrap 取同一组数值（22 + 58），里面的气泡垂直居中，
+   用 grid 的同名区域把多个气泡叠在同一格：上一个还在退场时，
+   新气泡不会被并排挤到右边（flex 行布局会挤，之前就是这个 bug）。
+   外层高度与 .fab-wrap 取同一组数值（22 + 58），气泡在里面垂直居中，
    于是气泡的中线和新增按钮的中线在同一条水平线上。 */
 .toast-wrap {
   position: fixed;
@@ -1070,9 +1072,11 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
   right: 0;
   bottom: 0;
   z-index: 70;
-  display: flex;
+  display: grid;
+  grid-template-columns: 100%;
+  grid-template-areas: 'toast';
   align-items: center;
-  justify-content: flex-start;
+  justify-items: start;
   width: 100%;
   max-width: var(--shell-max);
   margin: 0 auto;
@@ -1082,6 +1086,7 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
 }
 
 .toast {
+  grid-area: toast;
   pointer-events: auto;
   transform-origin: left bottom;
   display: flex;
