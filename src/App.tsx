@@ -217,7 +217,6 @@ export default function App() {
           active={index}
           action={
             <PagerHandle
-              direction={pageIndex === 0 ? 'next' : 'prev'}
               label={pageIndex === 0 ? '倒数日' : '走过的日子'}
               onActivate={() => goTo(pageIndex === 0 ? 1 : 0)}
               draggedRef={draggedRef}

@@ -1160,10 +1160,6 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
     background 0.2s var(--ease-out);
 }
 
-.pager-handle[data-direction='prev'] {
-  padding: 0 11px 0 8px;
-}
-
 .pager-handle:hover {
   color: var(--text);
   border-color: var(--line-strong);
@@ -1179,10 +1175,6 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
   animation: handle-nudge 2.2s var(--ease-out) 0.8s 2;
 }
 
-.pager-handle[data-direction='prev'] .pager-handle__chevron {
-  animation-name: handle-nudge-left;
-}
-
 @keyframes handle-nudge {
   0%,
   100% {
@@ -1190,16 +1182,6 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
   }
   50% {
     transform: translateX(2.5px);
-  }
-}
-
-@keyframes handle-nudge-left {
-  0%,
-  100% {
-    transform: translateX(0);
-  }
-  50% {
-    transform: translateX(-2.5px);
   }
 }
 
