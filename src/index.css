@@ -857,16 +857,16 @@ html[data-theme='light'] .card__num {
   padding-bottom: calc(440px + env(safe-area-inset-bottom));
 }
 
-/* 节日弹层专用遮罩：不模糊，主列表直接看得见，做到「即勾即见」 */
+/* 节日弹层专用遮罩：保留毛玻璃，但把压暗调轻，让主列表能透出来（即勾即见） */
 .sheet-overlay--peek {
   background: linear-gradient(
     to bottom,
-    color-mix(in oklab, #000 2%, transparent) 0%,
-    color-mix(in oklab, #000 12%, transparent) 42%,
-    color-mix(in oklab, #000 32%, transparent) 100%
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.13) 45%,
+    rgba(0, 0, 0, 0.24) 100%
   );
-  backdrop-filter: none;
-  -webkit-backdrop-filter: none;
+  backdrop-filter: blur(5px) saturate(130%);
+  -webkit-backdrop-filter: blur(5px) saturate(130%);
 }
 
 .sheet {
@@ -1415,18 +1415,18 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  padding: 10px 0 calc(18px + env(safe-area-inset-bottom));
-  max-height: 388px;
-  max-height: min(46dvh, 400px);
+  padding: 6px 0 calc(14px + env(safe-area-inset-bottom));
+  max-height: 400px;
+  max-height: min(56dvh, 420px);
 }
 
 .sheet--festival .sheet__head {
   padding: 0 22px;
-  margin: 2px 0 10px;
+  margin: 0 0 6px;
 }
 
 .festival__head {
-  padding: 0 22px 12px;
+  padding: 0 22px 10px;
 }
 
 .festival__title-row {
@@ -1458,7 +1458,7 @@ html[data-theme='dark'] .festival__tally {
   overflow-y: auto;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  padding: 0 16px 14px;
+  padding: 0 16px 12px;
   scrollbar-width: none;
 }
 
@@ -1479,8 +1479,8 @@ html[data-theme='dark'] .festival__tally {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin: 0 -16px 10px;
-  padding: 6px 22px;
+  margin: 0 -16px 9px;
+  padding: 4px 22px;
   background: color-mix(in oklab, var(--surface) 88%, transparent);
   backdrop-filter: blur(14px) saturate(160%);
   -webkit-backdrop-filter: blur(14px) saturate(160%);
@@ -1519,9 +1519,9 @@ html[data-theme='dark'] .festival__tally {
 .fchip {
   display: flex;
   flex-direction: column;
-  gap: 5px;
+  gap: 4px;
   min-width: 0;
-  padding: 11px 12px 12px;
+  padding: 10px 12px 11px;
   border-radius: 15px;
   border: 1px solid var(--line-strong);
   background: var(--surface-2);
