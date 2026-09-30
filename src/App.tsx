@@ -242,7 +242,6 @@ export default function App() {
               />
               <div className="foot">
                 <span>点击编辑 · 左滑删除</span>
-                <span>数据保存在本机</span>
               </div>
             </>
           ) : (
@@ -267,7 +266,6 @@ export default function App() {
             />
             <div className="foot">
               <span>点击编辑 · 左滑删除</span>
-              <span>数据保存在本机</span>
             </div>
           </>
         ) : (

@@ -104,7 +104,9 @@ export function SwipeCard({
         drag="x"
         dragDirectionLock
         dragConstraints={{ left: DRAG_FLOOR, right: 0 }}
-        dragElastic={0.08}
+        // 右侧阻尼为 0：卡片不能往右拖（往右会露出底下的红色）。
+        // 左侧留一点回弹，拖到底时有「到头了」的手感。
+        dragElastic={{ left: 0.06, right: 0 }}
         dragMomentum={false}
         whileTap={{ scale: 0.988 }}
         onDragStart={() => {

@@ -1,8 +1,8 @@
 import { SwipeCard } from './SwipeCard'
-import { DAY_MS, formatDate, milestoneAt, nextOccurrence, repeatOption } from '../lib/days'
+import { DAY_MS, formatDate, nextOccurrence, repeatOption } from '../lib/days'
 import type { CountdownView } from '../lib/days'
 import type { CountdownEvent } from '../lib/types'
-import { RepeatIcon, SparkIcon } from './icons'
+import { RepeatIcon } from './icons'
 
 type Props = {
   view: CountdownView
@@ -15,7 +15,6 @@ type Props = {
 export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Props) {
   const { event, next, days } = view
   const repeat = repeatOption(event.repeat)
-  const milestone = days > 0 ? milestoneAt(days) : null
   const expired = days < 0
   const number = Math.abs(days)
 
@@ -34,12 +33,8 @@ export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Pr
           <span className="card__dot" />
           <span>{event.title}</span>
         </h2>
-        {milestone !== null ? (
-          <span className="chip chip--milestone">
-            <SparkIcon />
-            还有 {milestone} 天
-          </span>
-        ) : event.repeat !== 'none' ? (
+        {/* 倒数日页不放里程碑徽标：那和大字「还有 N 天」是同一句话 */}
+        {event.repeat !== 'none' ? (
           <span className="chip">
             <RepeatIcon />
             {repeat.label}
