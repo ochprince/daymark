@@ -31,8 +31,10 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return
 
   if (request.mode === 'navigate') {
+    // no-store：绕过浏览器的 HTTP 缓存，刷新时一定拿到最新 HTML，
+    // 否则新版本要等 max-age 过期才生效（用户会以为改动没上线）。
     event.respondWith(
-      fetch(request)
+      fetch(request, { cache: 'no-store' })
         .then((response) => {
           const copy = response.clone()
           caches.open(CACHE).then((cache) => cache.put(request, copy))
