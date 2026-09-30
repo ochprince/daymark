@@ -69,8 +69,10 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # 用独立的环境名：仓库的 github-pages 环境把部署分支限制为 main，
+    # 预览分支借用它会被策略挡下（部署失败）。Pages 站点本身是同一个。
     environment:
-      name: github-pages
+      name: github-pages-preview
       url: ${{ steps.deployment.outputs.page_url }}
     steps:
       - id: deployment
