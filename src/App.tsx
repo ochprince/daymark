@@ -128,6 +128,20 @@ export default function App() {
     setRevealedId(null)
   }, [index])
 
+  // 滑开删除后点其它任何地方 = 放弃这次删除，卡片归位。
+  // 按下的位置在那一行内部（卡片本身、删除按钮）时不处理，交给它们自己。
+  useEffect(() => {
+    if (!revealedId) return
+    const onPointerDown = (event: PointerEvent) => {
+      const target = event.target as HTMLElement | null
+      if (target?.closest('.swipe')) return
+      setRevealedId(null)
+    }
+    // 捕获阶段：先于这一下的其它处理，先把滑开状态收掉
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
+  }, [revealedId])
+
   const dismissToast = useCallback(() => setToast(null), [])
 
   const notifyDeleted = useCallback((title: string, undo: () => void) => {
