@@ -89,6 +89,15 @@ html {
   -webkit-text-size-adjust: 100%;
   text-size-adjust: 100%;
   height: 100%;
+  /* 弹层遮罩：所有弹层（节日、自定义、新增、浮动选项框）共用同一套毛玻璃，
+     只轻轻压暗，让底下的页面始终能透出来，保持同一种观感 */
+  --scrim: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0.05) 0%,
+    rgba(0, 0, 0, 0.13) 45%,
+    rgba(0, 0, 0, 0.24) 100%
+  );
+  --scrim-blur: blur(5px) saturate(130%);
   /* 与主题无关的量：左滑露出的删除区比卡片上下各收进这么多（只比卡片矮一点点） */
   --swipe-inset: 1px;
   /* 翻页轨道的槽位数：3 格铺满 [-2 页宽, 0]，左右都接得上，实现无限循环 */
@@ -847,26 +856,14 @@ html[data-theme='light'] .card__num {
   display: flex;
   align-items: flex-end;
   justify-content: center;
-  background: var(--overlay);
-  backdrop-filter: blur(10px) saturate(140%);
-  -webkit-backdrop-filter: blur(10px) saturate(140%);
+  background: var(--scrim);
+  backdrop-filter: var(--scrim-blur);
+  -webkit-backdrop-filter: var(--scrim-blur);
 }
 
 /* 节日弹层打开时：列表底部留出弹层高度的空间（即勾即见靠它把新卡片滚上来） */
 .is-peeking .scroll {
   padding-bottom: calc(440px + env(safe-area-inset-bottom));
-}
-
-/* 节日弹层专用遮罩：保留毛玻璃，但把压暗调轻，让主列表能透出来（即勾即见） */
-.sheet-overlay--peek {
-  background: linear-gradient(
-    to bottom,
-    rgba(0, 0, 0, 0.05) 0%,
-    rgba(0, 0, 0, 0.13) 45%,
-    rgba(0, 0, 0, 0.24) 100%
-  );
-  backdrop-filter: blur(5px) saturate(130%);
-  -webkit-backdrop-filter: blur(5px) saturate(130%);
 }
 
 .sheet {
@@ -1327,9 +1324,9 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
   flex-direction: column;
   justify-content: flex-end;
   align-items: center;
-  background: color-mix(in oklab, #000 38%, transparent);
-  backdrop-filter: blur(6px) saturate(120%);
-  -webkit-backdrop-filter: blur(6px) saturate(120%);
+  background: var(--scrim);
+  backdrop-filter: var(--scrim-blur);
+  -webkit-backdrop-filter: var(--scrim-blur);
 }
 
 .menu-shell {

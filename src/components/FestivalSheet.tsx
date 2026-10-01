@@ -51,12 +51,7 @@ export function FestivalSheet({ now, selectedIds, onToggle, onToggleMany, onClos
   const selectedCount = selectedIds.size
 
   return (
-    <Sheet
-      label="挑选节日"
-      className="sheet--festival"
-      overlayClassName="sheet-overlay--peek"
-      onClose={onClose}
-    >
+    <Sheet label="挑选节日" className="sheet--festival" onClose={onClose}>
       <header className="festival__head">
         <div className="festival__title-row">
           <h2 className="sheet__title">节日</h2>

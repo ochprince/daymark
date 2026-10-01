@@ -16,12 +16,10 @@ type Props = {
   children: ReactNode
   /** 额外修饰类名（例如节日弹层的固定头部 + 内部滚动） */
   className?: string
-  /** 遮罩的额外修饰类名（节日弹层要透出后面的列表，不用模糊） */
-  overlayClassName?: string
 }
 
 /** 底部弹层外壳：遮罩、下拉关闭、Esc、软键盘跟随。表单内容由调用方传入。 */
-export function Sheet({ label, onClose, children, className, overlayClassName }: Props) {
+export function Sheet({ label, onClose, children, className }: Props) {
   const dragControls = useDragControls()
   const viewport = useVisualViewport(true)
 
@@ -41,7 +39,7 @@ export function Sheet({ label, onClose, children, className, overlayClassName }:
 
   return (
     <motion.div
-      className={overlayClassName ? `sheet-overlay ${overlayClassName}` : 'sheet-overlay'}
+      className="sheet-overlay"
       style={overlayStyle}
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
