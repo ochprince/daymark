@@ -12,8 +12,10 @@ permissions:
   pages: write
   id-token: write
 
+# 与 deploy-pages.yml 分开的并发组：两边共用 pages 组的话，
+# 分支推送会把正在跑的 main 部署直接取消掉（版本发布被跳过）
 concurrency:
-  group: pages
+  group: pages-preview
   cancel-in-progress: true
 
 jobs:
