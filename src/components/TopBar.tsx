@@ -1,6 +1,9 @@
 import { MarkIcon, MoonIcon, SunIcon } from './icons'
 import type { Theme } from '../lib/useTheme'
 
+/** 分支预览构建（VITE_PREVIEW=1）时标记出来 */
+const PREVIEW = import.meta.env.VITE_PREVIEW === '1'
+
 type Props = {
   scrolled: boolean
   theme: Theme
@@ -16,6 +19,8 @@ export function TopBar({ scrolled, theme, onToggleTheme }: Props) {
           <span className="brand__name">
             Daymark<span>刻度</span>
           </span>
+          {/* 分支预览版才显示，方便和线上正式版区分 */}
+          {PREVIEW ? <span className="brand__preview">预览</span> : null}
         </div>
         <button
           type="button"

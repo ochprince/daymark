@@ -1,3 +1,4 @@
+import { festivalById, nextFestivalDate } from './festivals'
 import type { CountdownEvent, DayEvent, Repeat } from './types'
 
 export const DAY_MS = 86_400_000
@@ -178,10 +179,19 @@ export function repeatOption(repeat: Repeat): RepeatOption {
  *
  * 月末收敛：锚点 31 号在 30 天的月份落到月末；2/29 在平年落到 2/28。
  */
-export function nextOccurrence(at: number, repeat: Repeat, now: number): number {
+export function nextOccurrence(at: number, repeat: Repeat, now: number, festivalId?: string): number {
   const base = new Date(startOfDay(at))
   const today = startOfDay(now)
   if (repeat === 'none') return base.getTime()
+
+  // 节日：日期由节日规则决定（农历、复活节、第 n 个星期几……），不能用填写的月日
+  if (repeat === 'yearly' && festivalId) {
+    const festival = festivalById(festivalId)
+    if (festival) {
+      const next = nextFestivalDate(festival, now)
+      if (next !== null) return next
+    }
+  }
 
   const anchorDay = base.getDate()
   const anchorMonth = base.getMonth()
@@ -235,7 +245,7 @@ export type CountdownView = {
 export function buildCountdownList(events: readonly CountdownEvent[], now: number): CountdownView[] {
   return events
     .map((event) => {
-      const next = nextOccurrence(event.startedAt, event.repeat, now)
+      const next = nextOccurrence(event.startedAt, event.repeat, now, event.festivalId)
       return { event, next, days: daysUntil(next, now), now }
     })
     .sort((a, b) => a.days - b.days || a.event.createdAt - b.event.createdAt)
