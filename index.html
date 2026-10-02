@@ -22,12 +22,20 @@
     <script>
       /* 主题在首帧之前落定，避免闪白/闪黑 */
       (function () {
+        var root = document.documentElement
         try {
-          var stored = localStorage.getItem('daymark.theme.v1')
+          var stored = localStorage.getItem('daymark.theme.v2')
+          var mode = stored === 'system' || stored === 'light' || stored === 'dark' ? stored : 'system'
           var system = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-          document.documentElement.dataset.theme = stored === 'dark' || stored === 'light' ? stored : system
+          var theme = mode === 'system' ? system : mode
+          root.dataset.theme = theme
+          root.dataset.themeMode = mode
+          root.style.colorScheme = theme
+          var meta = document.querySelector('meta[name="theme-color"]')
+          if (meta) meta.setAttribute('content', theme === 'light' ? '#F7F5F2' : '#08090C')
         } catch (error) {
-          document.documentElement.dataset.theme = 'dark'
+          root.dataset.theme = 'dark'
+          root.dataset.themeMode = 'system'
         }
       })()
     </script>
