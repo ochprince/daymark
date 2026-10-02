@@ -39,7 +39,7 @@ import {
 } from './lib/countdowns'
 import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
-import { useTheme } from './lib/useTheme'
+import { THEME_MODE_TOAST, useTheme } from './lib/useTheme'
 import type { CountdownDraft, CountdownEvent, DayEvent, EventDraft } from './lib/types'
 
 type SheetState =
@@ -119,7 +119,7 @@ export default function App() {
   const [revealedId, setRevealedId] = useState<string | null>(null)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [scrolled, setScrolled] = useState(false)
-  const { theme, toggleTheme } = useTheme()
+  const { mode: themeMode, cycleTheme } = useTheme()
 
   const handleListScroll = useCallback((scrollEvent: UIEvent<HTMLDivElement>) => {
     setScrolled(scrollEvent.currentTarget.scrollTop > 8)
@@ -393,7 +393,15 @@ export default function App() {
       <Background />
 
       <div className="app" {...handleProps}>
-        <TopBar scrolled={scrolled} theme={theme} onToggleTheme={toggleTheme} />
+        <TopBar
+          scrolled={scrolled}
+          mode={themeMode}
+          onCycleTheme={(origin) => {
+            // 轮换：跟随系统 → 浅色 → 深色，切完用气泡说明当前状态
+            const next = cycleTheme(origin)
+            setToast({ id: Date.now(), message: THEME_MODE_TOAST[next] })
+          }}
+        />
 
         <div className="stage" ref={stageRef}>
           <motion.div className="pager" style={{ x }}>

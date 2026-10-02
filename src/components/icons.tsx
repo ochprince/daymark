@@ -43,6 +43,23 @@ export function MoonIcon({ className }: IconProps) {
   )
 }
 
+/** 主题跟随系统（Auto）：和圆形图标同一套笔画风格的一个 A */
+export function AutoIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      {/* 斜向笔画视觉上偏细，比太阳/月亮粗一档 */}
+      <path
+        d="M5.8 19.2 12 4.8l6.2 14.4"
+        stroke="currentColor"
+        strokeWidth="1.85"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path d="M8.1 14.7h7.8" stroke="currentColor" strokeWidth="1.85" strokeLinecap="round" />
+    </svg>
+  )
+}
+
 export function TrashIcon({ className }: IconProps) {
   return (
     <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">

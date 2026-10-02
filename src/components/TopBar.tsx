@@ -1,16 +1,26 @@
-import { MarkIcon, MoonIcon, SunIcon } from './icons'
-import type { Theme } from '../lib/useTheme'
+import { AutoIcon, MarkIcon, MoonIcon, SunIcon } from './icons'
+import { THEME_MODE_LABEL } from '../lib/useTheme'
+import type { ThemeMode } from '../lib/useTheme'
 
 /** 分支预览构建（VITE_PREVIEW=1）时标记出来 */
 const PREVIEW = import.meta.env.VITE_PREVIEW === '1'
 
-type Props = {
-  scrolled: boolean
-  theme: Theme
-  onToggleTheme: (origin: { x: number; y: number }) => void
+/** 图标跟着偏好走：跟随系统用 A（Auto），固定浅色/深色用太阳和月亮 */
+const ICONS: Record<ThemeMode, typeof SunIcon> = {
+  system: AutoIcon,
+  light: SunIcon,
+  dark: MoonIcon,
 }
 
-export function TopBar({ scrolled, theme, onToggleTheme }: Props) {
+type Props = {
+  scrolled: boolean
+  mode: ThemeMode
+  onCycleTheme: (origin: { x: number; y: number }) => void
+}
+
+export function TopBar({ scrolled, mode, onCycleTheme }: Props) {
+  const Icon = ICONS[mode]
+
   return (
     <header className="topbar" data-scrolled={scrolled}>
       <div className="topbar__inner">
@@ -25,17 +35,18 @@ export function TopBar({ scrolled, theme, onToggleTheme }: Props) {
         <button
           type="button"
           className="icon-btn"
-          aria-label={theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'}
+          data-theme-mode={mode}
+          aria-label={`主题：${THEME_MODE_LABEL[mode]}，点击切换`}
           onClick={(event) => {
             const rect = event.currentTarget.getBoundingClientRect()
             const isKeyboard = event.detail === 0
-            onToggleTheme({
+            onCycleTheme({
               x: isKeyboard ? rect.left + rect.width / 2 : event.clientX,
               y: isKeyboard ? rect.top + rect.height / 2 : event.clientY,
             })
           }}
         >
-          {theme === 'dark' ? <MoonIcon className="icon-18" /> : <SunIcon className="icon-18" />}
+          <Icon className="icon-18" />
         </button>
       </div>
     </header>
