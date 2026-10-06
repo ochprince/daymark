@@ -1660,6 +1660,18 @@ html[data-theme='light'] .fchip {
   transform: none;
 }
 
+/* 历史视图：内容撑到与编辑视图同高，返回 / 历史来回切不会忽高忽低 */
+.sheet__body--fill {
+  display: flex;
+  flex-direction: column;
+}
+
+.sheet__body--fill .history {
+  flex: 1;
+  min-height: 0;
+  max-height: none;
+}
+
 /* ---------- 历史列表 ---------- */
 .sheet__nav {
   display: flex;

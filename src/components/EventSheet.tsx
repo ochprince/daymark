@@ -35,6 +35,9 @@ export function EventSheet({
   const [view, setView] = useState<'edit' | 'history'>('edit')
   /** 历史列表里左滑露出来的那一条 */
   const [revealedStreak, setRevealedStreak] = useState<string | null>(null)
+  /** 编辑视图量下来的内容高度：历史视图撑到同高，来回切换不会忽高忽低 */
+  const contentRef = useRef<HTMLDivElement>(null)
+  const [measured, setMeasured] = useState<number | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -43,6 +46,14 @@ export function EventSheet({
       inputRef.current?.focus({ preventScroll: true })
     }, 240)
     return () => window.clearTimeout(timer)
+  }, [view])
+
+  useEffect(() => {
+    if (view !== 'edit') return
+    const element = contentRef.current
+    if (!element) return
+    const height = element.getBoundingClientRect().height
+    if (height > 0) setMeasured((prev) => (prev !== null && Math.abs(prev - height) < 1 ? prev : height))
   }, [view])
 
   const startedAt = parseDateInput(dateValue, today)
@@ -64,6 +75,11 @@ export function EventSheet({
       label={view === 'history' ? '历史' : mode === 'add' ? '记录一个日子' : '编辑这个日子'}
       onClose={onClose}
     >
+      <div
+        className={view === 'history' ? 'sheet__body sheet__body--fill' : 'sheet__body'}
+        ref={contentRef}
+        style={view === 'history' && measured ? { minHeight: measured } : undefined}
+      >
       {view === 'history' ? (
         <>
           <div className="sheet__nav">
@@ -207,6 +223,7 @@ export function EventSheet({
           </form>
         </>
       )}
+      </div>
     </Sheet>
   )
 }
