@@ -5,7 +5,7 @@ import { SwipeCard } from './SwipeCard'
 import { ChevronLeftIcon } from './icons'
 import { dateInputValue, daysSince, formatDate, parseDateInput, todayStart } from '../lib/days'
 import { closeStreak, sortStreaks, summarizeStreaks } from '../lib/streaks'
-import type { DayEvent, EventDraft, Streak } from '../lib/types'
+import type { DayEvent, EventDraft } from '../lib/types'
 
 type Props = {
   mode: 'add' | 'edit'
@@ -14,8 +14,8 @@ type Props = {
   onClose: () => void
   onSubmit: (draft: EventDraft) => void
   onDelete?: () => void
-  /** 左滑删掉一段历史，可撤销 */
-  onDeleteStreak?: (streak: Streak) => void
+  /** 左滑删掉一段历史（按下标，重复条目也能精确删一条），可撤销 */
+  onDeleteStreak?: (index: number) => void
 }
 
 export function EventSheet({
@@ -95,8 +95,10 @@ export function EventSheet({
               : '每段是坚持到被重置那天的天数。'}
           </p>
           <div className="history">
-            {history.map((streak) => {
-              const rowId = `${streak.endedAt}-${streak.days}`
+            {history.map((streak, index) => {
+              // key 只按内容生成会和「同一天结束、天数相同」的重复条目撞车，
+              // 撞车时 React 会把两条当成同一个元素（滑开一条两条一起动），所以要带序号
+              const rowId = `streak-${index}`
               return (
                 <SwipeCard
                   key={rowId}
@@ -108,7 +110,7 @@ export function EventSheet({
                   onReveal={setRevealedStreak}
                   onDelete={() => {
                     setRevealedStreak(null)
-                    onDeleteStreak?.(streak)
+                    onDeleteStreak?.(index)
                   }}
                 >
                   <span className="history__days">
@@ -148,18 +150,6 @@ export function EventSheet({
                 <label className="field__label" htmlFor="event-title">
                   事件名称
                 </label>
-                {mode === 'edit' && history.length > 0 ? (
-                  <button
-                    type="button"
-                    className="field__link"
-                    onClick={() => {
-                      setRevealedStreak(null)
-                      setView('history')
-                    }}
-                  >
-                    历史
-                  </button>
-                ) : null}
               </div>
               <div className="field__row">
                 <input
@@ -187,9 +177,26 @@ export function EventSheet({
               </div>
             </div>
 
-            <label className="field">
-              <span className="field__label">起始日期</span>
+            <div className="field">
+              <div className="field__head">
+                <label className="field__label" htmlFor="event-start">
+                  起始日期
+                </label>
+                {mode === 'edit' && history.length > 0 ? (
+                  <button
+                    type="button"
+                    className="field__link"
+                    onClick={() => {
+                      setRevealedStreak(null)
+                      setView('history')
+                    }}
+                  >
+                    历史
+                  </button>
+                ) : null}
+              </div>
               <input
+                id="event-start"
                 className="date-input"
                 type="date"
                 value={dateValue}
@@ -201,7 +208,7 @@ export function EventSheet({
                   ? `${formatDate(startedAt)} 起算 · 已经过去 ${days} 天`
                   : `今天（${formatDate(startedAt)}）起算 · 天数从 0 开始`}
               </span>
-            </label>
+            </div>
 
             <div className="field">
               <span className="field__label">标记颜色</span>

@@ -40,7 +40,8 @@ import {
 import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
 import { THEME_MODE_TOAST, useTheme } from './lib/useTheme'
-import type { CountdownDraft, CountdownEvent, DayEvent, EventDraft, Streak } from './lib/types'
+import { sortStreaks } from './lib/streaks'
+import type { CountdownDraft, CountdownEvent, DayEvent, EventDraft } from './lib/types'
 
 type SheetState =
   /** 新增入口的浮动选项框 */
@@ -170,17 +171,15 @@ export default function App() {
     [notifyDeleted],
   )
 
-  /** 左滑删掉一段历史：只改这条记录的 history，可撤销 */
-  const handleDeleteStreak = useCallback((event: DayEvent, streak: Streak) => {
-    const previous = event.history ?? []
-    updateEvent(event.id, {
-      history: previous.filter(
-        (item) => !(item.endedAt === streak.endedAt && item.days === streak.days),
-      ),
-    })
+  /** 左滑删掉一段历史：按下标精确删一条（天数与结束日相同的重复条目也能只删掉其中一条），可撤销 */
+  const handleDeleteStreak = useCallback((event: DayEvent, index: number) => {
+    const previous = sortStreaks(event.history ?? [])
+    const removed = previous[index]
+    if (!removed) return
+    updateEvent(event.id, { history: previous.filter((_, itemIndex) => itemIndex !== index) })
     setToast({
       id: Date.now(),
-      message: `已删除 ${streak.days} 天这段`,
+      message: `已删除 ${removed.days} 天这段`,
       action: { label: '撤销', run: () => updateEvent(event.id, { history: previous }) },
     })
   }, [])
@@ -475,10 +474,10 @@ export default function App() {
               onDelete={sheet.mode === 'edit' ? () => handleDeleteEvent(sheet.event) : undefined}
               onDeleteStreak={
                 sheet.mode === 'edit'
-                  ? (streak) =>
+                  ? (index) =>
                       handleDeleteStreak(
                         events.find((item) => item.id === sheet.event.id) ?? sheet.event,
-                        streak,
+                        index,
                       )
                   : undefined
               }
