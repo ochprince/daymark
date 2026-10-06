@@ -91,8 +91,8 @@ export function EventSheet({
           </div>
           <p className="sheet__sub">
             {summary.count > 1
-              ? `共 ${summary.count} 段 · 最长 ${summary.longest} 天 · 合计 ${summary.total} 天，按重置时间从近到远。`
-              : '按重置时间从近到远，每段是坚持到被重置那天的天数。'}
+              ? `共 ${summary.count} 段 · 最长 ${summary.longest} 天 · 合计 ${summary.total} 天`
+              : '每段是坚持到被重置那天的天数。'}
           </p>
           <div className="history">
             {history.map((streak) => {
