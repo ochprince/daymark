@@ -183,8 +183,15 @@ export default function App() {
   const handleSubmit = (draft: EventDraft | CountdownDraft) => {
     if (sheet?.kind === 'event') {
       if (sheet.mode === 'edit') {
-        updateEvent(sheet.event.id, draft as EventDraft)
-        setToast({ id: Date.now(), message: '已保存修改' })
+        const next = draft as EventDraft
+        // 重置过（起始日改到今天）就会多出一段历史，提示里说明一下
+        const added =
+          (next.history?.length ?? 0) > (sheet.event.history?.length ?? 0) ? next.history![0] : null
+        updateEvent(sheet.event.id, next)
+        setToast({
+          id: Date.now(),
+          message: added ? `已重置，之前 ${added.days} 天记进历史了` : '已保存修改',
+        })
       } else {
         const created = addEvent(draft as EventDraft)
         setToast({ id: Date.now(), message: `「${created.title}」开始计时` })

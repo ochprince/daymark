@@ -1,5 +1,6 @@
 import { createStore } from './store'
 import { todayStart } from './days'
+import { normalizeStreaks } from './streaks'
 import type { DayEvent, EventDraft } from './types'
 
 const STORAGE_KEY = 'daymark.events.v1'
@@ -21,7 +22,12 @@ function isValid(value: unknown): value is DayEvent {
 const events = createStore<DayEvent>({
   key: STORAGE_KEY,
   isValid,
-  normalize: (event) => ({ ...event, title: event.title.slice(0, 40), color: Math.trunc(event.color) }),
+  normalize: (event) => ({
+    ...event,
+    title: event.title.slice(0, 40),
+    color: Math.trunc(event.color),
+    ...(event.history ? { history: normalizeStreaks(event.history) } : {}),
+  }),
   defaults: () => ({ title: '', startedAt: todayStart(Date.now()), color: 0 }),
 })
 
@@ -40,6 +46,7 @@ export function updateEvent(id: string, patch: Partial<EventDraft>): void {
     ...(patch.title !== undefined ? { title: patch.title.trim().slice(0, 40) } : {}),
     ...(patch.startedAt !== undefined ? { startedAt: patch.startedAt } : {}),
     ...(patch.color !== undefined ? { color: patch.color } : {}),
+    ...(patch.history !== undefined ? { history: normalizeStreaks(patch.history) } : {}),
   })
 }
 

@@ -1610,3 +1610,126 @@ html[data-theme='light'] .fchip {
 .fchip[data-selected='true'] .fchip__days {
   color: color-mix(in oklab, var(--brand-2) 74%, var(--text));
 }
+
+/* ---------- 事件名称行：输入框 + 重置 ---------- */
+.field__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.field__link {
+  padding: 4px 2px;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--brand-2);
+  transition: opacity 0.16s var(--ease-out);
+}
+
+.field__link:active {
+  opacity: 0.5;
+}
+
+.field__row {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.field__row .input {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 重置：跟输入框同高的小按钮 */
+.btn--ghost {
+  flex: none;
+  height: 52px;
+  padding: 0 16px;
+  border-radius: var(--radius-field);
+  border: 1px solid var(--line-strong);
+  background: var(--surface-hi);
+  color: var(--text-2);
+  font-size: 14px;
+}
+
+.btn--ghost:disabled {
+  opacity: 0.4;
+  transform: none;
+}
+
+/* ---------- 历史列表 ---------- */
+.sheet__nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+}
+
+.sheet__nav .sheet__title {
+  margin: 0;
+}
+
+.btn--back {
+  flex: none;
+  height: 34px;
+  padding: 0 10px 0 4px;
+  border-radius: 10px;
+  color: var(--brand-2);
+  font-size: 14px;
+}
+
+.icon-16 {
+  width: 16px;
+  height: 16px;
+}
+
+.history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: 44dvh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  margin: 2px -2px 0;
+  padding: 2px;
+  scrollbar-width: none;
+}
+
+.history::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+
+.history__row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 13px 15px;
+  border-radius: var(--radius-field);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.history__days {
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+}
+
+.history__unit {
+  margin-left: 3px;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--text-3);
+}
+
+.history__date {
+  font-size: 12.5px;
+  color: var(--text-3);
+  font-variant-numeric: tabular-nums;
+}

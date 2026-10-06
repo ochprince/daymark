@@ -9,12 +9,23 @@ export type DayEvent = {
   createdAt: number
   /** 调色板索引 */
   color: number
+  /** 重置过的历史：每段从起始日坚持到被重置那天为止，最新的排最前 */
+  history?: Streak[]
+}
+
+/** 一段坚持记录：坚持了 days 天，在 endedAt 那天（本地 00:00）被重置 */
+export type Streak = {
+  /** 封存时卡片上的天数 */
+  days: number
+  /** 完成时间 —— 被重置的那一天 */
+  endedAt: number
 }
 
 export type EventDraft = {
   title: string
   startedAt: number
   color: number
+  history?: Streak[]
 }
 
 /** 重复周期：倒数日里，日期已经过去时必须选一种 */
