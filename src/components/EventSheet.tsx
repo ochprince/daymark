@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Sheet } from './Sheet'
 import { Swatches } from './Swatches'
+import { SwipeCard } from './SwipeCard'
 import { ChevronLeftIcon } from './icons'
 import { dateInputValue, daysSince, formatDate, parseDateInput, todayStart } from '../lib/days'
 import { closeStreak, sortStreaks, summarizeStreaks } from '../lib/streaks'
-import type { DayEvent, EventDraft } from '../lib/types'
+import type { DayEvent, EventDraft, Streak } from '../lib/types'
 
 type Props = {
   mode: 'add' | 'edit'
@@ -13,15 +14,27 @@ type Props = {
   onClose: () => void
   onSubmit: (draft: EventDraft) => void
   onDelete?: () => void
+  /** 左滑删掉一段历史，可撤销 */
+  onDeleteStreak?: (streak: Streak) => void
 }
 
-export function EventSheet({ mode, event, suggestedColor, onClose, onSubmit, onDelete }: Props) {
+export function EventSheet({
+  mode,
+  event,
+  suggestedColor,
+  onClose,
+  onSubmit,
+  onDelete,
+  onDeleteStreak,
+}: Props) {
   const today = useMemo(() => todayStart(Date.now()), [])
   const [title, setTitle] = useState(event?.title ?? '')
   const [dateValue, setDateValue] = useState(() => dateInputValue(event ? event.startedAt : today))
   const [color, setColor] = useState(event ? event.color : suggestedColor)
   // 弹层里两种视图：编辑表单 / 历史列表（带返回）
   const [view, setView] = useState<'edit' | 'history'>('edit')
+  /** 历史列表里左滑露出来的那一条 */
+  const [revealedStreak, setRevealedStreak] = useState<string | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
 
   useEffect(() => {
@@ -65,17 +78,32 @@ export function EventSheet({ mode, event, suggestedColor, onClose, onSubmit, onD
               ? `共 ${summary.count} 段 · 最长 ${summary.longest} 天 · 合计 ${summary.total} 天，按重置时间从近到远。`
               : '按重置时间从近到远，每段是坚持到被重置那天的天数。'}
           </p>
-          <ul className="history">
-            {history.map((streak) => (
-              <li className="history__row" key={`${streak.endedAt}-${streak.days}`}>
-                <span className="history__days">
-                  {streak.days}
-                  <span className="history__unit">天</span>
-                </span>
-                <span className="history__date">{formatDate(streak.endedAt)} 结束</span>
-              </li>
-            ))}
-          </ul>
+          <div className="history">
+            {history.map((streak) => {
+              const rowId = `${streak.endedAt}-${streak.days}`
+              return (
+                <SwipeCard
+                  key={rowId}
+                  id={rowId}
+                  className="history__row"
+                  ariaLabel={`${streak.days} 天，${formatDate(streak.endedAt)} 结束`}
+                  colorIndex={event?.color ?? 0}
+                  revealed={revealedStreak === rowId}
+                  onReveal={setRevealedStreak}
+                  onDelete={() => {
+                    setRevealedStreak(null)
+                    onDeleteStreak?.(streak)
+                  }}
+                >
+                  <span className="history__days">
+                    {streak.days}
+                    <span className="history__unit">天</span>
+                  </span>
+                  <span className="history__date">{formatDate(streak.endedAt)} 结束</span>
+                </SwipeCard>
+              )
+            })}
+          </div>
         </>
       ) : (
         <>
@@ -105,7 +133,14 @@ export function EventSheet({ mode, event, suggestedColor, onClose, onSubmit, onD
                   事件名称
                 </label>
                 {mode === 'edit' && history.length > 0 ? (
-                  <button type="button" className="field__link" onClick={() => setView('history')}>
+                  <button
+                    type="button"
+                    className="field__link"
+                    onClick={() => {
+                      setRevealedStreak(null)
+                      setView('history')
+                    }}
+                  >
                     历史
                   </button>
                 ) : null}

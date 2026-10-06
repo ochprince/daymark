@@ -40,7 +40,7 @@ import {
 import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
 import { THEME_MODE_TOAST, useTheme } from './lib/useTheme'
-import type { CountdownDraft, CountdownEvent, DayEvent, EventDraft } from './lib/types'
+import type { CountdownDraft, CountdownEvent, DayEvent, EventDraft, Streak } from './lib/types'
 
 type SheetState =
   /** 新增入口的浮动选项框 */
@@ -169,6 +169,21 @@ export default function App() {
     },
     [notifyDeleted],
   )
+
+  /** 左滑删掉一段历史：只改这条记录的 history，可撤销 */
+  const handleDeleteStreak = useCallback((event: DayEvent, streak: Streak) => {
+    const previous = event.history ?? []
+    updateEvent(event.id, {
+      history: previous.filter(
+        (item) => !(item.endedAt === streak.endedAt && item.days === streak.days),
+      ),
+    })
+    setToast({
+      id: Date.now(),
+      message: `已删除 ${streak.days} 天这段`,
+      action: { label: '撤销', run: () => updateEvent(event.id, { history: previous }) },
+    })
+  }, [])
 
   const handleDeleteCountdown = useCallback(
     (event: CountdownEvent) => {
@@ -448,11 +463,25 @@ export default function App() {
             <EventSheet
               key={sheet.mode === 'edit' ? sheet.event.id : 'event-add'}
               mode={sheet.mode}
-              event={sheet.mode === 'edit' ? sheet.event : undefined}
+              event={
+                sheet.mode === 'edit'
+                  ? // 取实时数据：历史条目删除 / 撤销后弹层要立刻反映
+                    (events.find((item) => item.id === sheet.event.id) ?? sheet.event)
+                  : undefined
+              }
               suggestedColor={suggestEventColor()}
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
               onDelete={sheet.mode === 'edit' ? () => handleDeleteEvent(sheet.event) : undefined}
+              onDeleteStreak={
+                sheet.mode === 'edit'
+                  ? (streak) =>
+                      handleDeleteStreak(
+                        events.find((item) => item.id === sheet.event.id) ?? sheet.event,
+                        streak,
+                      )
+                  : undefined
+              }
             />
           ) : null}
 

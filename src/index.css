@@ -1704,12 +1704,16 @@ html[data-theme='light'] .fchip {
 }
 
 .history__row {
+  /* 必须有定位：否则绝对定位的删除层会盖在行上面，手势收不到指针事件 */
+  position: relative;
   display: flex;
   align-items: baseline;
   justify-content: space-between;
   gap: 12px;
-  padding: 13px 15px;
-  border-radius: var(--radius-field);
+  width: 100%;
+  padding: 15px 18px;
+  /* 和历史条目左滑露出的红色同半径，滑开时红色才贴合 */
+  border-radius: var(--radius-card);
   border: 1px solid var(--line);
   background: var(--surface-2);
 }
