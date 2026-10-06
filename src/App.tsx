@@ -40,6 +40,7 @@ import {
 import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
 import { THEME_MODE_TOAST, useTheme } from './lib/useTheme'
+import { sortStreaks } from './lib/streaks'
 import type { CountdownDraft, CountdownEvent, DayEvent, EventDraft } from './lib/types'
 
 type SheetState =
@@ -170,6 +171,19 @@ export default function App() {
     [notifyDeleted],
   )
 
+  /** 左滑删掉一段历史：按下标精确删一条（天数与结束日相同的重复条目也能只删掉其中一条），可撤销 */
+  const handleDeleteStreak = useCallback((event: DayEvent, index: number) => {
+    const previous = sortStreaks(event.history ?? [])
+    const removed = previous[index]
+    if (!removed) return
+    updateEvent(event.id, { history: previous.filter((_, itemIndex) => itemIndex !== index) })
+    setToast({
+      id: Date.now(),
+      message: `已删除 ${removed.days} 天这段`,
+      action: { label: '撤销', run: () => updateEvent(event.id, { history: previous }) },
+    })
+  }, [])
+
   const handleDeleteCountdown = useCallback(
     (event: CountdownEvent) => {
       removeCountdown(event.id)
@@ -183,8 +197,15 @@ export default function App() {
   const handleSubmit = (draft: EventDraft | CountdownDraft) => {
     if (sheet?.kind === 'event') {
       if (sheet.mode === 'edit') {
-        updateEvent(sheet.event.id, draft as EventDraft)
-        setToast({ id: Date.now(), message: '已保存修改' })
+        const next = draft as EventDraft
+        // 重置过（起始日改到今天）就会多出一段历史，提示里说明一下
+        const added =
+          (next.history?.length ?? 0) > (sheet.event.history?.length ?? 0) ? next.history![0] : null
+        updateEvent(sheet.event.id, next)
+        setToast({
+          id: Date.now(),
+          message: added ? `已重置，之前 ${added.days} 天记进历史了` : '已保存修改',
+        })
       } else {
         const created = addEvent(draft as EventDraft)
         setToast({ id: Date.now(), message: `「${created.title}」开始计时` })
@@ -441,11 +462,25 @@ export default function App() {
             <EventSheet
               key={sheet.mode === 'edit' ? sheet.event.id : 'event-add'}
               mode={sheet.mode}
-              event={sheet.mode === 'edit' ? sheet.event : undefined}
+              event={
+                sheet.mode === 'edit'
+                  ? // 取实时数据：历史条目删除 / 撤销后弹层要立刻反映
+                    (events.find((item) => item.id === sheet.event.id) ?? sheet.event)
+                  : undefined
+              }
               suggestedColor={suggestEventColor()}
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
               onDelete={sheet.mode === 'edit' ? () => handleDeleteEvent(sheet.event) : undefined}
+              onDeleteStreak={
+                sheet.mode === 'edit'
+                  ? (index) =>
+                      handleDeleteStreak(
+                        events.find((item) => item.id === sheet.event.id) ?? sheet.event,
+                        index,
+                      )
+                  : undefined
+              }
             />
           ) : null}
 

@@ -4,7 +4,7 @@ name: Deploy preview (feat branches)
 # 当前分支发布到 /daymark/preview/，审核通过后再合并回 main。
 on:
   push:
-    branches: [feat/festival]
+    branches: ['feat/**']
   workflow_dispatch:
 
 permissions:
@@ -31,7 +31,7 @@ jobs:
       # 预览内容：当前分支
       - uses: actions/checkout@v4
         with:
-          ref: feat/festival
+          ref: ${{ github.ref_name }}
           path: preview
 
       - uses: actions/setup-node@v4

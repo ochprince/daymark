@@ -16,8 +16,11 @@ type Props = {
   colorIndex: number
   revealed: boolean
   onReveal: (id: string | null) => void
-  onOpen: () => void
+  /** 点击打开。历史条目这种没有可打开内容的就不传，点一下改为露出删除 */
+  onOpen?: () => void
   onDelete: () => void
+  /** 内层容器的类名，默认 card；历史条目换成紧凑的行样式 */
+  className?: string
   children: ReactNode
 }
 
@@ -35,7 +38,7 @@ const clampAction = (value: number) => Math.min(-REVEAL_X, Math.max(0, value - R
 
 /**
  * 卡片外壳：负责左滑露出删除、点击打开、拖动跟手与松手吸附。
- * 走过的日子 / 倒数日两种卡片共用同一套手势实现。
+ * 走过的日子 / 倒数日两种卡片、以及编辑弹层里的历史条目共用同一套手势实现。
  */
 export function SwipeCard({
   id,
@@ -45,6 +48,7 @@ export function SwipeCard({
   onReveal,
   onOpen,
   onDelete,
+  className,
   children,
 }: Props) {
   const accent = accentFor(colorIndex)
@@ -77,6 +81,19 @@ export function SwipeCard({
     '--accent-ink': accent.ink,
   } as CSSProperties
 
+  /** 点击 / 回车：已经露出来就收回，有可打开的内容就打开，否则露出删除 */
+  const activate = useCallback(() => {
+    if (revealed) {
+      onReveal(null)
+      return
+    }
+    if (onOpen) {
+      onOpen()
+      return
+    }
+    onReveal(id)
+  }, [id, onOpen, onReveal, revealed])
+
   return (
     <div className="swipe">
       {/* 删除层裁剪成与卡片同半径的圆角矩形：红色沿卡片弧度贴合，
@@ -97,12 +114,12 @@ export function SwipeCard({
       </div>
 
       <motion.div
-        className="card"
+        className={className ?? 'card'}
         data-swipe-card="true"
         style={{ ...accentStyle, x }}
-        role="button"
+        role={onOpen ? 'button' : 'listitem'}
         tabIndex={0}
-        aria-haspopup="dialog"
+        aria-haspopup={onOpen ? 'dialog' : undefined}
         aria-label={ariaLabel}
         data-card-id={id}
         drag="x"
@@ -160,20 +177,12 @@ export function SwipeCard({
           if (draggedRef.current) return
           // 纵向拖动（滚列表）也算「不是点击」，否则松手会误开编辑
           if (press && clickEvent.detail > 0 && press.moved > 6) return
-          if (revealed) {
-            onReveal(null)
-            return
-          }
-          onOpen()
+          activate()
         }}
         onKeyDown={(keyEvent) => {
           if (keyEvent.key !== 'Enter' && keyEvent.key !== ' ') return
           keyEvent.preventDefault()
-          if (revealed) {
-            onReveal(null)
-            return
-          }
-          onOpen()
+          activate()
         }}
       >
         {children}
