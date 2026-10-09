@@ -14,7 +14,7 @@ type Props = {
   onClose: () => void
   onSubmit: (draft: EventDraft) => void
   onDelete?: () => void
-  /** 左滑删掉一段历史（按下标，重复条目也能精确删一条），可撤销 */
+  /** 左滑删掉一轮历史（按下标，重复条目也能精确删一条），可撤销 */
   onDeleteStreak?: (index: number) => void
 }
 
@@ -64,7 +64,7 @@ export function EventSheet({
   const history = useMemo(() => sortStreaks(event?.history ?? []), [event])
   const summary = useMemo(() => summarizeStreaks(history), [history])
 
-  // 起始日被改到今天 = 清零：保存时把之前那段坚持封存进历史
+  // 起始日被改到今天 = 清零：保存时把之前那一轮坚持封存进历史
   const archived =
     mode === 'edit' && event && days === 0 && startedAt !== event.startedAt
       ? closeStreak(event.startedAt, Date.now())
@@ -91,8 +91,8 @@ export function EventSheet({
           </div>
           <p className="sheet__sub">
             {summary.count > 1
-              ? `共 ${summary.count} 段 · 最长 ${summary.longest} 天 · 合计 ${summary.total} 天`
-              : '每段是坚持到被重置那天的天数。'}
+              ? `共 ${summary.count} 轮 · 最长 ${summary.longest} 天 · 合计 ${summary.total} 天`
+              : '每一轮是坚持到被重置那天的天数。'}
           </p>
           <div className="history">
             {history.map((streak, index) => {
@@ -185,13 +185,14 @@ export function EventSheet({
                 {mode === 'edit' && history.length > 0 ? (
                   <button
                     type="button"
-                    className="field__link"
+                    className="field__chip"
                     onClick={() => {
                       setRevealedStreak(null)
                       setView('history')
                     }}
                   >
-                    历史
+                    <span className="field__chip-dot" />
+                    历史 · {history.length} 轮
                   </button>
                 ) : null}
               </div>

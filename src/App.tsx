@@ -171,7 +171,7 @@ export default function App() {
     [notifyDeleted],
   )
 
-  /** 左滑删掉一段历史：按下标精确删一条（天数与结束日相同的重复条目也能只删掉其中一条），可撤销 */
+  /** 左滑删掉一轮历史：按下标精确删一条（天数与结束日相同的重复条目也能只删掉其中一条），可撤销 */
   const handleDeleteStreak = useCallback((event: DayEvent, index: number) => {
     const previous = sortStreaks(event.history ?? [])
     const removed = previous[index]
@@ -179,7 +179,7 @@ export default function App() {
     updateEvent(event.id, { history: previous.filter((_, itemIndex) => itemIndex !== index) })
     setToast({
       id: Date.now(),
-      message: `已删除 ${removed.days} 天这段`,
+      message: `已删除 ${removed.days} 天这一轮`,
       action: { label: '撤销', run: () => updateEvent(event.id, { history: previous }) },
     })
   }, [])
@@ -198,13 +198,13 @@ export default function App() {
     if (sheet?.kind === 'event') {
       if (sheet.mode === 'edit') {
         const next = draft as EventDraft
-        // 重置过（起始日改到今天）就会多出一段历史，提示里说明一下
+        // 重置过（起始日改到今天）就会多出一轮历史，提示里说明一下
         const added =
           (next.history?.length ?? 0) > (sheet.event.history?.length ?? 0) ? next.history![0] : null
         updateEvent(sheet.event.id, next)
         setToast({
           id: Date.now(),
-          message: added ? `已重置，之前 ${added.days} 天记进历史了` : '已保存修改',
+          message: added ? `已重置，上一轮 ${added.days} 天记进历史了` : '已保存修改',
         })
       } else {
         const created = addEvent(draft as EventDraft)
