@@ -1,5 +1,5 @@
 import { SwipeCard } from './SwipeCard'
-import { DAY_MS, formatDate, nextOccurrence, repeatOption } from '../lib/days'
+import { DAY_MS, formatDate, formatWeekday, nextOccurrence, repeatOption } from '../lib/days'
 import type { CountdownView } from '../lib/days'
 import type { CountdownEvent } from '../lib/types'
 import { RepeatIcon } from './icons'
@@ -17,6 +17,11 @@ export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Pr
   const repeat = repeatOption(event.repeat)
   const expired = days < 0
   const number = Math.abs(days)
+  /** 周期性事件的下一次：每周带上星期几，一眼能对上 */
+  const formatNext = (timestamp: number) =>
+    event.repeat === 'weekly'
+      ? `${formatWeekday(timestamp)} · ${formatDate(timestamp)}`
+      : formatDate(timestamp)
 
   return (
     <SwipeCard
@@ -66,14 +71,16 @@ export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Pr
         {days === 0 ? (
           // 今天这一天，往后看一次更有用（月重复给下个月，一次性给原定日期）
           event.repeat !== 'none' ? (
-            <span>下次 {formatDate(nextOccurrence(event.startedAt, event.repeat, view.now + DAY_MS))}</span>
+            <span>
+              下次 {formatNext(nextOccurrence(event.startedAt, event.repeat, view.now + DAY_MS))}
+            </span>
           ) : (
             <span>{formatDate(next)}</span>
           )
         ) : expired ? (
           <span>原定 {formatDate(next)}</span>
         ) : event.repeat !== 'none' ? (
-          <span>下次 {formatDate(next)}</span>
+          <span>下次 {formatNext(next)}</span>
         ) : (
           <span>{formatDate(next)}</span>
         )}

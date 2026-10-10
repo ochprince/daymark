@@ -29,7 +29,7 @@ export type EventDraft = {
 }
 
 /** 重复周期：倒数日里，日期已经过去时必须选一种 */
-export type Repeat = 'none' | 'monthly' | 'yearly'
+export type Repeat = 'none' | 'weekly' | 'monthly' | 'yearly'
 
 export type CountdownEvent = {
   id: string

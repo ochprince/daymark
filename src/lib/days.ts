@@ -160,6 +160,7 @@ export type RepeatOption = { value: Repeat; label: string }
 
 export const REPEAT_OPTIONS: readonly RepeatOption[] = [
   { value: 'none', label: '不重复' },
+  { value: 'weekly', label: '每周' },
   { value: 'monthly', label: '每月' },
   { value: 'yearly', label: '每年' },
 ]
@@ -171,9 +172,10 @@ export function repeatOption(repeat: Repeat): RepeatOption {
 /**
  * 周期性事件的下一个时间点（含今天）。
  *
- * 锚点是「月+日」而不是「首次那一年那一天」：
+ * 锚点是「月+日」（或每周的「星期几」）而不是「首次那一年那一天」：
  * - 每年重复：取锚点的月日，从今天往后找最近的一次（如锚点 5/20、今天 9/30 → 次年 5/20）
  * - 每月重复：取锚点的日，从今天往后找最近的一次（如锚点 20 号、今天 9/30 → 10/20）
+ * - 每周重复：取锚点的星期几，从今天往后找最近的一次（如锚点周三、今天周二 → 明天）
  * 这样即使填写的日期在未来，切换周期也会立刻改变结果，
  * 而不是永远回显填写的那个日期。
  *
@@ -193,9 +195,18 @@ export function nextOccurrence(at: number, repeat: Repeat, now: number, festival
     }
   }
 
+  const todayDate = new Date(today)
+
+  // 每周：锚点是「星期几」，从今天往后找最近的那一天（今天就是的话就是今天）
+  if (repeat === 'weekly') {
+    const delta = (base.getDay() - todayDate.getDay() + 7) % 7
+    return startOfDay(
+      new Date(todayDate.getFullYear(), todayDate.getMonth(), todayDate.getDate() + delta).getTime(),
+    )
+  }
+
   const anchorDay = base.getDate()
   const anchorMonth = base.getMonth()
-  const todayDate = new Date(today)
 
   if (repeat === 'yearly') {
     let year = todayDate.getFullYear()

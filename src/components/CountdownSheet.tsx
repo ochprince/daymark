@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react'
 import { useEffect, useRef, useState } from 'react'
 import { Sheet } from './Sheet'
 import { Swatches } from './Swatches'
@@ -58,7 +59,7 @@ export function CountdownSheet({ mode, event, suggestedColor, onClose, onSubmit,
   return (
     <Sheet label={mode === 'add' ? '记录一个倒数日' : '编辑这个倒数日'} onClose={onClose}>
       <h2 className="sheet__title">{mode === 'add' ? '记录一个倒数日' : '编辑这个倒数日'}</h2>
-      <p className="sheet__sub">填一个未来的日子，它会告诉你还有多少天；生日、纪念日这类每年都会回来的日子，选上重复周期就行。</p>
+      <p className="sheet__sub">填一个未来的日子，它会告诉你还有多少天；每周的例会、生日纪念日这类会定期回来的日子，选上重复周期就行。</p>
 
       <form
         className="form"
@@ -95,7 +96,12 @@ export function CountdownSheet({ mode, event, suggestedColor, onClose, onSubmit,
 
         <div className="field">
           <span className="field__label">重复周期</span>
-          <div className="segmented" role="radiogroup" aria-label="重复周期">
+          <div
+            className="segmented"
+            role="radiogroup"
+            aria-label="重复周期"
+            style={{ '--segment-count': REPEAT_OPTIONS.length } as CSSProperties}
+          >
             {REPEAT_OPTIONS.map((option) => (
               <button
                 key={option.value}

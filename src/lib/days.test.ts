@@ -126,6 +126,21 @@ test('nextOccurrence：按年重复的生日会走到下一个生日', () => {
   assert.equal(nextOccurrence(at(2019, 9, 30), 'yearly', now), day(2026, 9, 30))
 })
 
+test('nextOccurrence：按周重复取锚点的星期几', () => {
+  const now = at(2026, 9, 30) // 星期三
+  // 锚点也是星期三 → 就是今天
+  assert.equal(nextOccurrence(at(2026, 9, 23), 'weekly', now), day(2026, 9, 30))
+  assert.equal(daysUntil(nextOccurrence(at(2026, 9, 23), 'weekly', now), now), 0)
+  // 锚点是星期四 → 明天
+  assert.equal(nextOccurrence(at(2026, 9, 24), 'weekly', now), day(2026, 10, 1))
+  // 锚点是星期二 → 下周二（永远落在 0-6 天内，不会出现「已过去」）
+  const next = nextOccurrence(at(2026, 9, 29), 'weekly', now)
+  assert.equal(next, day(2026, 10, 6))
+  assert.equal(daysUntil(next, now), 6)
+  // 填的未来日期不影响：锚点只看星期几
+  assert.equal(nextOccurrence(at(2026, 10, 21), 'weekly', now), day(2026, 9, 30))
+})
+
 test('nextOccurrence：按月重复在月末自动收敛', () => {
   const now = at(2026, 9, 30)
   // 1/31 → 2/28 → 3/31 → 4/30 → 5/31 → 6/30 → 7/31 → 8/31 → 9/30

@@ -4,7 +4,7 @@ import type { CountdownDraft, CountdownEvent, Repeat } from './types'
 
 const STORAGE_KEY = 'daymark.countdowns.v1'
 
-const REPEATS: Repeat[] = ['none', 'monthly', 'yearly']
+const REPEATS: Repeat[] = ['none', 'weekly', 'monthly', 'yearly']
 
 function isValid(value: unknown): value is CountdownEvent {
   if (typeof value !== 'object' || value === null) return false

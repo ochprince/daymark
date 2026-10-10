@@ -1236,7 +1236,8 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
 /* ---------- 分段选择（重复周期） ---------- */
 .segmented {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  /* 列数跟着选项数量走：写死 3 列的话，加进第 4 个（每周）就会换行 */
+  grid-template-columns: repeat(var(--segment-count, 3), 1fr);
   gap: 4px;
   padding: 4px;
   border-radius: 15px;
