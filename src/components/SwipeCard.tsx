@@ -18,6 +18,11 @@ type Props = {
   onReveal: (id: string | null) => void
   /** 点击打开。历史条目这种没有可打开内容的就不传，点一下改为露出删除 */
   onOpen?: () => void
+  /**
+   * 长按。打卡卡片点击 = 记一次，编辑只能走长按，
+   * 所以这里需要一个「按住不动 0.45 秒」的入口。
+   */
+  onLongPress?: () => void
   onDelete: () => void
   /** 内层容器的类名，默认 card；历史条目换成紧凑的行样式 */
   className?: string
@@ -47,12 +52,15 @@ export function SwipeCard({
   revealed,
   onReveal,
   onOpen,
+  onLongPress,
   onDelete,
   className,
   children,
 }: Props) {
   const accent = accentFor(colorIndex)
   const draggedRef = useRef(false)
+  /** 长按已经触发过：抑制随之而来的那次 click，否则会又记一次 */
+  const longPressedRef = useRef(false)
   /** 记录按下位置与按下期间的最大移动量：用来区分「点击」和「拖动」 */
   const pressRef = useRef<{ x: number; y: number; moved: number } | null>(null)
   const reduceMotion = useReducedMotion()
@@ -162,18 +170,32 @@ export function SwipeCard({
           }
           // 只在 pointerup 或超时后清理：pointercancel（motion 判定为纵向滚动时会发）
           // 不能作为结束信号，否则移动量会被清成 0
+          let longTimer = 0
           const stop = () => {
             window.removeEventListener('pointermove', onMove, { capture: true } as EventListenerOptions)
             window.removeEventListener('pointerup', stop)
             window.clearTimeout(timer)
+            window.clearTimeout(longTimer)
           }
           window.addEventListener('pointermove', onMove, { passive: true, capture: true })
           window.addEventListener('pointerup', stop)
           const timer = window.setTimeout(stop, 1500)
+          // 长按：按住 0.45 秒且中途没怎么移动才算，移动超过 6px（想滑）就取消
+          longTimer = window.setTimeout(() => {
+            if (!onLongPress || press.moved > 6 || draggedRef.current) return
+            longPressedRef.current = true
+            onLongPress()
+          }, 450)
         }}
         onClick={(clickEvent) => {
           const press = pressRef.current
           pressRef.current = null
+          if (longPressedRef.current) {
+            // 长按后的这次 click 丢掉，也不能让它去打开/记录
+            longPressedRef.current = false
+            draggedRef.current = false
+            return
+          }
           if (draggedRef.current) return
           // 纵向拖动（滚列表）也算「不是点击」，否则松手会误开编辑
           if (press && clickEvent.detail > 0 && press.moved > 6) return

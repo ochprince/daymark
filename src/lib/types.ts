@@ -53,3 +53,23 @@ export type CountdownDraft = {
   repeat: Repeat
   festivalId?: string
 }
+
+/** 打卡周期：决定计数什么时候归零、历史按什么粒度分桶 */
+export type CheckInCadence = 'daily' | 'weekly' | 'monthly'
+
+export type CheckInEvent = {
+  id: string
+  /** 事件名称，比如「喝水」 */
+  title: string
+  createdAt: number
+  color: number
+  cadence: CheckInCadence
+  /** 每天的打卡次数：键是本地日期 yyyy-mm-dd，值是当天点了几下 */
+  days: Record<string, number>
+}
+
+export type CheckInDraft = {
+  title: string
+  color: number
+  cadence: CheckInCadence
+}

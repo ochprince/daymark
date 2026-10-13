@@ -18,10 +18,15 @@ const DRAG_SLOP = 6
 const OCCUPIED = '[data-swipe-card], .swipe__action, .sheet-overlay, .toast, .fab'
 
 /**
- * 轨道上的槽位数。位置 x 保持在 [-2 个页宽, 0]，共 3 个页宽范围，
- * 3 格正好铺满并且左右都有一格接得上。
+ * 轨道上的槽位数 = 页数 + 1。
+ *
+ * 位置 x 保持在 [-页数 个页宽, 0]，所以可见的那一格可能是第 0 格、也可能是第「页数」格，
+ * 一共需要「页数 + 1」格才铺得满、且左右都接得上。
+ * 写死成 3 是两页时代的常数：加到第三页时，翻过最后一页会走到不存在的第 4 格，屏幕一片空白。
  */
-export const SLOT_COUNT = 3
+export function slotCountFor(count: number): number {
+  return count + 1
+}
 
 /** 第 slot 格放哪一页：内容沿轨道周期排列 */
 export function pageOfSlot(slot: number, count: number): number {
@@ -113,13 +118,14 @@ export function usePager(count: number) {
   // 正对屏幕的槽位序号
   useEffect(() => {
     if (!width) return
+    const slots = slotCountFor(count)
     const update = (value: number) => {
-      const slot = Math.max(0, Math.min(SLOT_COUNT - 1, Math.round(-value / width)))
+      const slot = Math.max(0, Math.min(slots - 1, Math.round(-value / width)))
       setActiveSlot((previous) => (previous === slot ? previous : slot))
     }
     update(x.get())
     return x.on('change', update)
-  }, [width, x])
+  }, [count, width, x])
 
   // 屏幕尺寸变化后重新对齐当前页
   useEffect(() => {

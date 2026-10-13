@@ -716,6 +716,167 @@ html[data-theme='light'] .card__num {
   opacity: 0.85;
 }
 
+/* ---------- 打卡卡片 ---------- */
+.checkin {
+  position: relative;
+  display: block;
+}
+
+/* 大数字的容器：进出场两个数字要能叠在同一位置做「翻牌」 */
+.checkin__num {
+  position: relative;
+  display: inline-flex;
+  align-items: baseline;
+}
+
+/* 脚注中间的小圆点分隔 */
+.checkin__sep {
+  display: inline-block;
+  width: 3px;
+  height: 3px;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.4;
+}
+
+/* 特效层：铺满卡片，不参与命中。卡片本身 overflow: hidden，效果不会跑出去 */
+.checkin__fx {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+/* 一次打卡的特效锚点：手指按下的位置 */
+.checkin__at {
+  position: absolute;
+  display: block;
+  width: 0;
+  height: 0;
+}
+
+/* 从指尖漾开的一圈光 */
+.checkin__ripple {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 460px;
+  height: 460px;
+  margin: -230px 0 0 -230px;
+  border-radius: 50%;
+  background: radial-gradient(
+    closest-side,
+    var(--accent-from),
+    color-mix(in oklab, var(--accent-to) 40%, transparent) 52%,
+    transparent 74%
+  );
+}
+
+/* 数字炸开的一圈细环 */
+.checkin__ring {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 96px;
+  height: 96px;
+  margin: -48px 0 0 -48px;
+  border-radius: 50%;
+  border: 2px solid var(--accent-to);
+  box-shadow: 0 0 20px -6px var(--accent-to);
+}
+
+/* +1 往上飘 */
+.checkin__ghost {
+  position: absolute;
+  left: 0;
+  top: 0;
+  margin: -11px 0 0 -14px;
+  min-width: 28px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 640;
+  letter-spacing: 0.01em;
+  color: var(--accent-ink);
+  text-shadow: 0 2px 12px color-mix(in oklab, var(--accent-to) 55%, transparent);
+}
+
+/* 里程碑：一圈飞出去的小亮点 */
+.checkin__spark {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 6px;
+  height: 6px;
+  margin: -3px 0 0 -3px;
+  border-radius: 50%;
+  background: var(--accent-to);
+  box-shadow: 0 0 12px 1px var(--accent-to);
+}
+
+/* 里程碑：整张卡闪一下 */
+.checkin__flash {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 90% at 50% 100%, var(--accent-from), transparent 70%);
+  mix-blend-mode: screen;
+}
+
+html[data-theme='light'] .checkin__flash {
+  mix-blend-mode: multiply;
+  opacity: 0.3;
+}
+
+/* ---------- 打卡历史 ---------- */
+.checkin-history {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 14px;
+  max-height: min(52dvh, 420px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.checkin-history__row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: var(--radius-field);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+}
+
+.checkin-history__when {
+  font-size: 13.5px;
+  color: var(--text-2);
+}
+
+.checkin-history__count {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 3px;
+  font-size: 12px;
+  color: var(--text-2);
+}
+
+.checkin-history__count b {
+  font-size: 17px;
+  font-weight: 620;
+  color: var(--text);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.checkin-history__empty {
+  margin-top: 20px;
+  text-align: center;
+  font-size: 13.5px;
+  color: var(--text-2);
+  opacity: 0.8;
+}
+
 /* ---------- 空状态 ---------- */
 .empty {
   margin-top: 12px;
