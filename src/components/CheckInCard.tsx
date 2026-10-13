@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { SwipeCard } from './SwipeCard'
+import { PencilIcon } from './icons'
 import {
   buildHistory,
   countInPeriod,
@@ -11,6 +12,9 @@ import {
   streakPeriods,
 } from '../lib/checkins'
 import type { CheckInEvent } from '../lib/types'
+
+/** 蓄力时长：按住这么久才记一次。太短会误触，太长会烦 */
+const CHARGE_MS = 2000
 
 /** 次数踩到这些数字时来一次更大的庆祝（和天数里程碑一样，只是换成了次数） */
 const COUNT_MILESTONES = [3, 5, 10, 15, 20, 30, 50, 66, 88, 100, 150, 200, 300, 365, 500, 1000]
@@ -33,14 +37,23 @@ type Props = {
   now: number
   revealed: boolean
   onReveal: (id: string | null) => void
-  /** 点一下：记一次 */
+  /** 蓄满力：记一次 */
   onTap: (event: CheckInEvent) => void
   onOpenHistory: (event: CheckInEvent) => void
-  /** 长按：编辑 */
   onEdit: (event: CheckInEvent) => void
   onDelete: (event: CheckInEvent) => void
 }
 
+/**
+ * 打卡卡片：**按住两秒**才算记一次。
+ *
+ * 按下开始蓄力（卡片自下而上亮起 + 底部进度条 + 数字微微长大），
+ * 中途松手就退回去、不记数——双击、滑列表、手滑点一下都不会误记；
+ * 蓄满才 +1，同时炸开特效并轻微震动。
+ *
+ * 蓄力动画全部交给 CSS 的 2 秒 transition，JS 只在「按下」和「蓄满」两个时刻各跑一次，
+ * 不做逐帧 setState。
+ */
 export function CheckInCard({
   event,
   now,
@@ -57,18 +70,20 @@ export function CheckInCard({
   const streak = streakPeriods(event, now)
   const reduceMotion = useReducedMotion()
 
+  const [charging, setCharging] = useState(false)
   const [bursts, setBursts] = useState<Burst[]>([])
   const pointRef = useRef({ x: 0, y: 0 })
+  const timerRef = useRef(0)
   const lastCount = useRef(count)
 
   /**
    * 数字变大 = 刚刚记了一次，在手指按下的位置放特效。
-   * 认「数字变化」而不是认「点击」：拖动、长按都不会误触发。
+   * 认「数字变化」而不是认「点击」：拖动、中途松手都不会误触发。
    */
   useEffect(() => {
     const delta = count - lastCount.current
     lastCount.current = count
-    if (delta <= 0 || reduceMotion) return
+    if (delta <= 0) return
     const burst = {
       id: ++burstSeed,
       x: pointRef.current.x,
@@ -77,54 +92,88 @@ export function CheckInCard({
     }
     setBursts((list) => [...list.slice(-4), burst])
     // 轻微震动（iOS Safari 没有这个 API，会自动跳过）
-    navigator.vibrate?.(burst.milestone ? [12, 40, 22] : 8)
-    // 定时收走这一次的特效：不依赖动画回调，快速连点时也不会越积越多
+    navigator.vibrate?.(burst.milestone ? [12, 40, 22] : 16)
+    // 定时收走这一次的特效：不依赖动画回调，连续打卡时也不会越积越多
     const timer = window.setTimeout(() => {
       setBursts((list) => list.filter((item) => item.id !== burst.id))
-    }, 900)
+    }, 1000)
     return () => window.clearTimeout(timer)
-  }, [count, reduceMotion])
+  }, [count])
+
+  // 卡片被滑走 / 页面切走时别把定时器留下，否则会在后台补记一次
+  useEffect(() => () => window.clearTimeout(timerRef.current), [])
+
+  const beginCharge = (pointerEvent: React.PointerEvent<HTMLDivElement>) => {
+    if (pointerEvent.pointerType === 'mouse' && pointerEvent.button !== 0) return
+    const rect = pointerEvent.currentTarget.getBoundingClientRect()
+    pointRef.current = {
+      x: pointerEvent.clientX - rect.left,
+      y: pointerEvent.clientY - rect.top,
+    }
+    window.clearTimeout(timerRef.current)
+    setCharging(true)
+    timerRef.current = window.setTimeout(() => {
+      setCharging(false)
+      onTap(event)
+    }, CHARGE_MS)
+  }
+
+  const endCharge = () => {
+    window.clearTimeout(timerRef.current)
+    setCharging(false)
+  }
 
   return (
     <SwipeCard
       id={event.id}
       colorIndex={event.color}
-      ariaLabel={`${event.title}，${periodNoun(event.cadence)}已记 ${count} 次`}
+      ariaLabel={`${event.title}，${periodNoun(event.cadence)}已记 ${count} 次，按住两秒再记一次`}
       revealed={revealed}
       onReveal={onReveal}
-      onOpen={() => onTap(event)}
-      onLongPress={() => onEdit(event)}
+      // 点一下不再记数：记一次只能靠按住蓄力，这里什么都不做
+      onOpen={() => undefined}
       onDelete={() => onDelete(event)}
     >
       <div
         className="checkin"
-        onPointerDown={(pointerEvent) => {
-          const rect = pointerEvent.currentTarget.getBoundingClientRect()
-          pointRef.current = {
-            x: pointerEvent.clientX - rect.left,
-            y: pointerEvent.clientY - rect.top,
-          }
-        }}
+        data-charging={charging}
+        onPointerDown={beginCharge}
+        onPointerUp={endCharge}
+        onPointerCancel={endCharge}
+        onPointerLeave={endCharge}
+        onClick={(clickEvent) => clickEvent.stopPropagation()}
       >
         <div className="card__head">
           <h2 className="card__title">
             <span className="card__dot" />
             <span>{event.title}</span>
           </h2>
-          {history.length > 0 ? (
+          <div className="card__tools">
+            {history.length > 0 ? (
+              <button
+                type="button"
+                className="field__chip"
+                onClick={(clickEvent) => {
+                  clickEvent.stopPropagation()
+                  onOpenHistory(event)
+                }}
+              >
+                <span className="field__chip-dot" />
+                历史 · {history.length} {periodUnit(event.cadence)}
+              </button>
+            ) : null}
             <button
               type="button"
-              className="field__chip"
+              className="card__icon"
+              aria-label={`编辑「${event.title}」`}
               onClick={(clickEvent) => {
-                // 别让它冒泡成「记一次」
                 clickEvent.stopPropagation()
-                onOpenHistory(event)
+                onEdit(event)
               }}
             >
-              <span className="field__chip-dot" />
-              历史 · {history.length} {periodUnit(event.cadence)}
+              <PencilIcon />
             </button>
-          ) : null}
+          </div>
         </div>
 
         <div className="card__count">
@@ -157,29 +206,39 @@ export function CheckInCard({
           {streak >= 2 ? (
             <>
               <span className="checkin__sep" />
-              <span>连续 {streak} {periodUnit(event.cadence)}</span>
+              <span>
+                连续 {streak} {periodUnit(event.cadence)}
+              </span>
             </>
           ) : null}
         </p>
 
-        {/* 特效层：全部限制在卡片内部（卡片本身 overflow: hidden），不参与命中 */}
+        {/* 蓄力：自下而上亮起来的能量层 + 底部进度条（进度由 CSS 的 2 秒 transition 驱动） */}
+        <span className="checkin__energy" aria-hidden="true" />
+        <span className="checkin__bar" aria-hidden="true">
+          <span className="checkin__bar-fill" />
+        </span>
+
+        {/* 蓄满那一刻的特效层：全部限制在卡片内部（卡片本身 overflow: hidden），不参与命中 */}
         <div className="checkin__fx" aria-hidden="true">
           {bursts.map((burst) => (
             <span key={burst.id} className="checkin__at" style={{ left: burst.x, top: burst.y }}>
               {/* 从指尖扩散开的一圈光 */}
               <motion.span
                 className="checkin__ripple"
-                initial={{ scale: 0.12, opacity: 0.5 }}
+                initial={{ scale: 0.12, opacity: 0.55 }}
                 animate={{ scale: 1, opacity: 0 }}
                 transition={{ duration: 0.62, ease: [0.22, 1, 0.36, 1] }}
               />
               {/* 数字上炸开的一圈细环 */}
-              <motion.span
-                className="checkin__ring"
-                initial={{ scale: 0.5, opacity: 0.9 }}
-                animate={{ scale: burst.milestone ? 2.1 : 1.5, opacity: 0 }}
-                transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
-              />
+              {reduceMotion ? null : (
+                <motion.span
+                  className="checkin__ring"
+                  initial={{ scale: 0.5, opacity: 0.9 }}
+                  animate={{ scale: burst.milestone ? 2.1 : 1.5, opacity: 0 }}
+                  transition={{ duration: 0.72, ease: [0.16, 1, 0.3, 1] }}
+                />
+              )}
               {/* +1 往上飘 */}
               <motion.span
                 className="checkin__ghost"
