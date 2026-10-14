@@ -158,19 +158,18 @@ export function CheckInCard({
             <span>{event.title}</span>
           </h2>
           <div className="card__tools">
-            {history.length > 0 ? (
-              <button
-                type="button"
-                className="field__chip"
-                onClick={(clickEvent) => {
-                  clickEvent.stopPropagation()
-                  onOpenHistory(event)
-                }}
-              >
-                <span className="field__chip-dot" />
-                历史 · {history.length} {periodUnit(event.cadence)}
-              </button>
-            ) : null}
+            {/* 入口常驻：刚建的事一件还没记完时也要能看到它，否则入口等于藏起来了 */}
+            <button
+              type="button"
+              className="field__chip"
+              onClick={(clickEvent) => {
+                clickEvent.stopPropagation()
+                onOpenHistory(event)
+              }}
+            >
+              <span className="field__chip-dot" />
+              {history.length > 0 ? `历史 · ${history.length} ${periodUnit(event.cadence)}` : '历史'}
+            </button>
             <button
               type="button"
               className="card__icon"
