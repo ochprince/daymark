@@ -76,6 +76,29 @@ const PAGES = [
 
 const PAGE_COUNT = PAGES.length
 
+/** 停在哪一页：存的是页面 key 而不是序号，以后加页/换序都不会串 */
+const PAGE_KEY = 'daymark.page.v1'
+
+function readSavedPage(): number {
+  try {
+    const saved = localStorage.getItem(PAGE_KEY)
+    if (!saved) return 0
+    const found = PAGES.findIndex((page) => page.key === saved)
+    return found >= 0 ? found : 0
+  } catch {
+    return 0
+  }
+}
+
+function savePage(index: number) {
+  try {
+    const page = PAGES[index]
+    if (page) localStorage.setItem(PAGE_KEY, page.key)
+  } catch {
+    /* 隐私模式下写不进去就算了，下次回到第一页 */
+  }
+}
+
 type SheetState =
   /** 新增入口的浮动选项框 */
   | { kind: 'menu' }
@@ -146,7 +169,16 @@ export default function App() {
     return { count: checkIns.length, today }
   }, [checkIns, now])
 
-  const { stageRef, x, width, index, activeSlot, goTo, draggedRef, handleProps } = usePager(PAGE_COUNT)
+  // 刷新后回到刷新前的那一页，而不是总是第一页
+  const [startPage] = useState(readSavedPage)
+  const { stageRef, x, width, index, activeSlot, goTo, draggedRef, handleProps } = usePager(
+    PAGE_COUNT,
+    startPage,
+  )
+
+  useEffect(() => {
+    savePage(index)
+  }, [index])
 
   // 翻页时的景深：离页边界越远（越靠中间）越淡、越小
   const travelOf = (value: number) => {

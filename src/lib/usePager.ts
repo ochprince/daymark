@@ -46,7 +46,7 @@ type Sample = { x: number; t: number }
  * 手势挂在整个页面上（handleProps），但只要按下的位置落在卡片内部，
  * 就让位给卡片的左滑删除，两边不会一起动。
  */
-export function usePager(count: number) {
+export function usePager(count: number, initialIndex = 0) {
   const stageRef = useRef<HTMLDivElement | null>(null)
   const gesture = useRef<{
     pointerId: number
@@ -58,9 +58,10 @@ export function usePager(count: number) {
     captured: boolean
   } | null>(null)
   const draggedRef = useRef(false)
-  const [index, setIndex] = useState(0)
+  // 初始页由调用方给（刷新前停在哪一页就回到哪一页）；宽度量出来后会照它对齐，不会先闪第 1 页
+  const [index, setIndex] = useState(initialIndex)
   /** 正对屏幕的槽位序号（给其它槽位加 inert） */
-  const [activeSlot, setActiveSlot] = useState(0)
+  const [activeSlot, setActiveSlot] = useState(initialIndex)
   const [width, setWidth] = useState(0)
   const x = useMotionValue(0)
 
