@@ -414,7 +414,7 @@ export default function App() {
         <span>今天记了 {checkInSummary.today} 次</span>
       </>
     ) : (
-      <span>按住两秒记一次，它会替你数着</span>
+      <span>按住半秒记一次，它会替你数着</span>
     )
 
   /** 每页的结构一样，只是数据源与文案不同；轨道上有几格就渲染几份 */
@@ -512,13 +512,13 @@ export default function App() {
                 onDelete={handleDeleteCheckIn}
               />
               <div className="foot">
-                <span>按住两秒记一次 · 铅笔编辑 · 左滑删除</span>
+                <span>按住半秒记一次 · 铅笔编辑 · 左滑删除</span>
               </div>
             </>
           ) : (
             <EmptyState
               title="还没有要打卡的事"
-              text={'喝水、跑步、读书这类\n按住两秒记一次的事'}
+              text={'喝水、跑步、读书这类\n按住半秒记一次的事'}
               cta="记录第一件事"
               onAdd={openAdd}
             />

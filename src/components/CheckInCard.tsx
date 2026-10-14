@@ -13,8 +13,8 @@ import {
 } from '../lib/checkins'
 import type { CheckInEvent } from '../lib/types'
 
-/** 蓄力时长：按住这么久才记一次。太短会误触，太长会烦 */
-const CHARGE_MS = 2000
+/** 蓄力时长：按住这么久才记一次 */
+const CHARGE_MS = 500
 
 /** 次数踩到这些数字时来一次更大的庆祝（和天数里程碑一样，只是换成了次数） */
 const COUNT_MILESTONES = [3, 5, 10, 15, 20, 30, 50, 66, 88, 100, 150, 200, 300, 365, 500, 1000]
@@ -45,13 +45,13 @@ type Props = {
 }
 
 /**
- * 打卡卡片：**按住两秒**才算记一次。
+ * 打卡卡片：**按住半秒**才算记一次。
  *
- * 按下开始蓄力（卡片自下而上亮起 + 底部进度条 + 数字微微长大），
- * 中途松手就退回去、不记数——双击、滑列表、手滑点一下都不会误记；
+ * 按下开始蓄力（底部光晕亮起 + 标题旁圆点亮出进度环），
+ * 中途松手就退回去、不记数——滑列表、手滑点一下都不会误记；
  * 蓄满才 +1，同时炸开特效并轻微震动。
  *
- * 蓄力动画全部交给 CSS 的 2 秒 transition，JS 只在「按下」和「蓄满」两个时刻各跑一次，
+ * 蓄力动画全部交给 CSS 的 transition，JS 只在「按下」和「蓄满」两个时刻各跑一次，
  * 不做逐帧 setState。
  */
 export function CheckInCard({
@@ -127,7 +127,7 @@ export function CheckInCard({
     <SwipeCard
       id={event.id}
       colorIndex={event.color}
-      ariaLabel={`${event.title}，${periodNoun(event.cadence)}已记 ${count} 次，按住两秒再记一次`}
+      ariaLabel={`${event.title}，${periodNoun(event.cadence)}已记 ${count} 次，按住半秒再记一次`}
       revealed={revealed}
       onReveal={onReveal}
       // 点一下不再记数：记一次只能靠按住蓄力，这里什么都不做

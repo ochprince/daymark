@@ -40,7 +40,7 @@ export function CheckInSheet({ mode, event, suggestedColor, onClose, onSubmit, o
   return (
     <Sheet label={mode === 'add' ? '记一件要打卡的事' : '编辑这件事'} onClose={onClose}>
       <h2 className="sheet__title">{mode === 'add' ? '记一件要打卡的事' : '编辑这件事'}</h2>
-      <p className="sheet__sub">想多做几次的事写在这里，做一次按住两秒记一下，它会替你数着。</p>
+      <p className="sheet__sub">想多做几次的事写在这里，做一次按住半秒记一下，它会替你数着。</p>
 
       <form
         className="form"

@@ -769,10 +769,10 @@ html[data-theme='light'] .card__num {
   transition: opacity 0.36s var(--ease-out);
 }
 
-/* 按住时缓慢亮起来，不是线性的机械感 */
+/* 按住时亮起来，缓入缓出 */
 .checkin[data-charging='true'] .checkin__energy {
   opacity: 1;
-  transition: opacity 1.7s cubic-bezier(0.4, 0, 0.6, 1);
+  transition: opacity 0.42s cubic-bezier(0.4, 0, 0.6, 1);
 }
 
 /* 标题旁的小圆点：蓄力时从它长出一圈进度环。
@@ -820,10 +820,10 @@ html[data-theme='light'] .card__num {
   transition: stroke-dashoffset 0.28s var(--ease-out);
 }
 
-/* 两秒闭合，曲线带一点缓入缓出 */
+/* 半秒闭合，曲线带一点缓入缓出 */
 .card__dot-wrap[data-charging='true'] .charge-ring__bar {
   stroke-dashoffset: 0;
-  transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.6, 1);
+  transition: stroke-dashoffset 0.5s cubic-bezier(0.4, 0, 0.6, 1);
 }
 
 /* 大数字的容器：进出场两个数字要能叠在同一位置做「翻牌」 */
