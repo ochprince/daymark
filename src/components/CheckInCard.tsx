@@ -49,7 +49,7 @@ type Props = {
  *
  * 按下开始蓄力（底部光晕亮起 + 标题旁圆点亮出进度环），
  * 中途松手就退回去、不记数——滑列表、手滑点一下都不会误记；
- * 蓄满才 +1，同时炸开一圈火花并轻微震动（次数踩到里程碑时飞得更远）。
+ * 蓄满才 +1，同时在手指按下的位置炸开一圈火花（里程碑时飞得更远）。
  *
  * 蓄力动画全部交给 CSS 的 transition，JS 只在「按下」和「蓄满」两个时刻各跑一次，
  * 不做逐帧 setState。
@@ -74,21 +74,20 @@ export function CheckInCard({
   const [bursts, setBursts] = useState<Burst[]>([])
   const pointRef = useRef({ x: 0, y: 0 })
   const timerRef = useRef(0)
-  const lastCount = useRef(count)
 
   /**
-   * 数字变大 = 刚刚记了一次，在手指按下的位置放特效。
-   * 认「数字变化」而不是认「点击」：拖动、中途松手都不会误触发。
+   * 放一次特效：手指按下的位置。
+   *
+   * 触发点是「蓄力填满」，不是「数字变了」——数字变没变是推导出来的，
+   * 只要哪一环没重算（旧数据、时间戳没刷新、外部改了存储），特效就会静默消失，
+   * 看起来就是「这条卡片按了没反应」。蓄满是个明确事件，只在真的记上一次时发生。
    */
-  useEffect(() => {
-    const delta = count - lastCount.current
-    lastCount.current = count
-    if (delta <= 0) return
+  const fireBurst = (nextCount: number) => {
     const burst = {
       id: ++burstSeed,
       x: pointRef.current.x,
       y: pointRef.current.y,
-      milestone: COUNT_MILESTONES.includes(count),
+      milestone: COUNT_MILESTONES.includes(nextCount),
     }
     setBursts((list) => [...list.slice(-4), burst])
     // 轻微震动（iOS Safari 没有这个 API，会自动跳过）
@@ -98,7 +97,7 @@ export function CheckInCard({
       setBursts((list) => list.filter((item) => item.id !== burst.id))
     }, 1000)
     return () => window.clearTimeout(timer)
-  }, [count])
+  }
 
   // 卡片被滑走 / 页面切走时别把定时器留下，否则会在后台补记一次
   useEffect(() => () => window.clearTimeout(timerRef.current), [])
@@ -116,6 +115,8 @@ export function CheckInCard({
     setCharging(true)
     timerRef.current = window.setTimeout(() => {
       setCharging(false)
+      // 先放特效再回调：回调会让卡片重排/重渲染，先放不会被时序影响
+      fireBurst(count + 1)
       onTap(event)
     }, CHARGE_MS)
   }
