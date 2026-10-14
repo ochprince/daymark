@@ -233,17 +233,15 @@ export function summarizePeriods(periods: readonly CheckInPeriod[]): CheckInSumm
 }
 
 /** 列表排序：今天动过的排前面，其次按最近一次打卡时间 */
+/**
+ * 列表顺序：按创建时间，先建的排在上面，顺序恒定。
+ *
+ * 以前按「最近一次打卡的那天」排：今天一记就窜到最前，等几张卡片都成了「今天」
+ * 之后比的又变成创建时间——表现出来就是「有时候会跳、有时候次数涨了也不动」。
+ * 一个用来打卡的清单，位置老是自己换没有意义，所以改成不动。
+ */
 export function sortCheckIns(events: readonly CheckInEvent[]): CheckInEvent[] {
-  const latest = (event: CheckInEvent): number => {
-    let newest = 0
-    for (const [key, count] of Object.entries(event.days)) {
-      if (count <= 0) continue
-      const ts = parseDayKey(key)
-      if (!Number.isNaN(ts) && ts > newest) newest = ts
-    }
-    return newest
-  }
-  return [...events].sort((a, b) => latest(b) - latest(a) || a.createdAt - b.createdAt)
+  return [...events].sort((a, b) => a.createdAt - b.createdAt)
 }
 
 /** 连续打卡的周期数（含当前周期，当前没打就往前数） */

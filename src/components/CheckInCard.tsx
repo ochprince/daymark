@@ -49,7 +49,7 @@ type Props = {
  *
  * 按下开始蓄力（底部光晕亮起 + 标题旁圆点亮出进度环），
  * 中途松手就退回去、不记数——滑列表、手滑点一下都不会误记；
- * 蓄满才 +1，同时炸开特效并轻微震动。
+ * 蓄满才 +1，同时炸开一圈火花并轻微震动（次数踩到里程碑时飞得更远）。
  *
  * 蓄力动画全部交给 CSS 的 transition，JS 只在「按下」和「蓄满」两个时刻各跑一次，
  * 不做逐帧 setState。
@@ -105,10 +105,12 @@ export function CheckInCard({
 
   const beginCharge = (pointerEvent: React.PointerEvent<HTMLDivElement>) => {
     if (pointerEvent.pointerType === 'mouse' && pointerEvent.button !== 0) return
+    // 特效锚点收在卡片内：贴着边缘按的时候，烟花不会有一半被卡片裁掉
     const rect = pointerEvent.currentTarget.getBoundingClientRect()
+    const clamp = (value: number, max: number) => Math.min(Math.max(value, 20), Math.max(20, max - 20))
     pointRef.current = {
-      x: pointerEvent.clientX - rect.left,
-      y: pointerEvent.clientY - rect.top,
+      x: clamp(pointerEvent.clientX - rect.left, rect.width),
+      y: clamp(pointerEvent.clientY - rect.top, rect.height),
     }
     window.clearTimeout(timerRef.current)
     setCharging(true)
@@ -254,35 +256,38 @@ export function CheckInCard({
                 +1
               </motion.span>
 
-              {burst.milestone ? (
-                <>
-                  {SPARK_ANGLES.map((angle, index) => {
-                    const radians = (angle * Math.PI) / 180
-                    const distance = index % 2 === 0 ? 52 : 38
-                    return (
-                      <motion.span
-                        key={angle}
-                        className="checkin__spark"
-                        initial={{ x: 0, y: 0, opacity: 0, scale: 0.3 }}
-                        animate={{
-                          x: Math.cos(radians) * distance,
-                          y: Math.sin(radians) * distance,
-                          opacity: [0, 1, 0],
-                          scale: [0.3, 1, 0.4],
-                        }}
-                        transition={{ duration: 0.68, delay: index * 0.014, ease: [0.22, 1, 0.36, 1] }}
-                      />
-                    )
-                  })}
-                  {/* 整张卡闪一下 */}
+              {/* 每次蓄满都炸一圈火花；踩到里程碑时飞得更远、卡片闪得更亮 */}
+              {SPARK_ANGLES.map((angle, index) => {
+                const radians = (angle * Math.PI) / 180
+                const distance = burst.milestone
+                  ? index % 2 === 0
+                    ? 62
+                    : 46
+                  : index % 2 === 0
+                    ? 44
+                    : 32
+                return (
                   <motion.span
-                    className="checkin__flash"
-                    initial={{ opacity: 0.42 }}
-                    animate={{ opacity: 0 }}
-                    transition={{ duration: 0.62, ease: 'easeOut' }}
+                    key={angle}
+                    className="checkin__spark"
+                    initial={{ x: 0, y: 0, opacity: 0, scale: 0.3 }}
+                    animate={{
+                      x: Math.cos(radians) * distance,
+                      y: Math.sin(radians) * distance,
+                      opacity: [0, 1, 0],
+                      scale: [0.3, 1, 0.4],
+                    }}
+                    transition={{ duration: 0.68, delay: index * 0.014, ease: [0.22, 1, 0.36, 1] }}
                   />
-                </>
-              ) : null}
+                )
+              })}
+              {/* 整张卡闪一下 */}
+              <motion.span
+                className="checkin__flash"
+                initial={{ opacity: burst.milestone ? 0.42 : 0.22 }}
+                animate={{ opacity: 0 }}
+                transition={{ duration: 0.62, ease: 'easeOut' }}
+              />
             </span>
           ))}
         </div>

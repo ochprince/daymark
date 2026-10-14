@@ -145,11 +145,21 @@ test('streakPeriods：连续周期数（当前没打就往回数）', () => {
   assert.equal(streakPeriods(weekly, at(2026, 9, 30)), 2)
 })
 
-test('sortCheckIns：最近打过的排前面', () => {
+test('sortCheckIns：按创建时间，先后顺序恒定', () => {
   const a = { ...make('daily', { '2026-09-20': 1 }), id: 'a', createdAt: 1 }
   const b = { ...make('daily', { '2026-09-30': 1 }), id: 'b', createdAt: 2 }
   const c = { ...make('daily', {}), id: 'c', createdAt: 3 }
-  assert.deepEqual(sortCheckIns([a, b, c]).map((e) => e.id), ['b', 'a', 'c'])
+  assert.deepEqual(sortCheckIns([a, b, c]).map((e) => e.id), ['a', 'b', 'c'])
+})
+
+test('sortCheckIns：今天补记一次也不会跳到最前', () => {
+  const a = { ...make('daily', {}), id: 'a', createdAt: 1 }
+  const b = { ...make('daily', {}), id: 'b', createdAt: 2 }
+  const before = sortCheckIns([a, b]).map((e) => e.id)
+  // b 今天记了一次（days 变了），顺序不该动
+  const bAfter = { ...b, days: { '2026-09-30': 1 } }
+  assert.deepEqual(before, ['a', 'b'])
+  assert.deepEqual(sortCheckIns([a, bAfter]).map((e) => e.id), ['a', 'b'])
 })
 
 test('periodLabel：历史条目的时间说法', () => {
