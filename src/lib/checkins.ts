@@ -9,6 +9,9 @@ const CADENCES: CheckInCadence[] = ['daily', 'weekly', 'monthly']
 /** 历史最多保留多少个周期，防止记录无限膨胀（每天一次 ≈ 8 个月，每月一次 ≈ 20 年） */
 const MAX_PERIODS = 240
 
+/** 同一天最多留这么多个时刻，防止异常数据把存储撑爆 */
+const MAX_TIMES_PER_DAY = 500
+
 /* ------------------------------------------------------------------ *
  * 日期与周期
  * ------------------------------------------------------------------ */
@@ -145,6 +148,45 @@ export function countToday(event: CheckInEvent, now: number): number {
   return Math.max(0, Math.trunc(event.days[dayKey(now)] ?? 0))
 }
 
+/** 某一天记下的所有时刻（毫秒，升序）。老数据没有时刻表，返回空数组 */
+export function timesOf(event: CheckInEvent, key: string): number[] {
+  const list = event.times?.[key]
+  return Array.isArray(list) ? list : []
+}
+
+/** 时刻 → 「09:12」 */
+export function formatClock(ts: number): string {
+  const date = new Date(ts)
+  return `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`
+}
+
+export type CheckInDay = {
+  /** yyyy-mm-dd */
+  key: string
+  /** 本地当天 00:00 */
+  start: number
+  count: number
+  /** 这一天的每次打卡时刻，升序 */
+  times: number[]
+}
+
+/** 某个周期里每一天的明细（带时刻），日期升序 */
+export function daysInPeriod(
+  event: CheckInEvent,
+  cadence: CheckInCadence,
+  from: number,
+): CheckInDay[] {
+  const end = nextPeriodStart(cadence, from)
+  const result: CheckInDay[] = []
+  for (const [key, count] of Object.entries(event.days)) {
+    if (!Number.isFinite(count) || count <= 0) continue
+    const ts = parseDayKey(key)
+    if (Number.isNaN(ts) || ts < from || ts >= end) continue
+    result.push({ key, start: ts, count: Math.trunc(count), times: timesOf(event, key) })
+  }
+  return result.sort((a, b) => a.start - b.start)
+}
+
 export type CheckInPeriod = {
   /** 周期起点（本地 00:00） */
   start: number
@@ -154,9 +196,14 @@ export type CheckInPeriod = {
 
 /**
  * 历史：把每天的记录按周期汇总，最近的在前。
- * 不包含「当前正在进行」的那个周期——卡片上已经在显示了。
+ * 默认不包含「当前正在进行」的周期（卡片上已经在显示总数了），
+ * includeCurrent 打开后会带进来——看「今天几点喝的」要靠它。
  */
-export function buildHistory(event: CheckInEvent, now: number): CheckInPeriod[] {
+export function buildHistory(
+  event: CheckInEvent,
+  now: number,
+  includeCurrent = false,
+): CheckInPeriod[] {
   const current = periodStart(event.cadence, now)
   const buckets = new Map<number, number>()
   for (const [key, count] of Object.entries(event.days)) {
@@ -164,7 +211,8 @@ export function buildHistory(event: CheckInEvent, now: number): CheckInPeriod[] 
     const ts = parseDayKey(key)
     if (Number.isNaN(ts)) continue
     const start = periodStart(event.cadence, ts)
-    if (start >= current) continue
+    if (start > current) continue
+    if (start === current && !includeCurrent) continue
     buckets.set(start, (buckets.get(start) ?? 0) + Math.trunc(count))
   }
   return [...buckets.entries()]
@@ -248,6 +296,26 @@ function pruneDays(days: Record<string, number>, cadence: CheckInCadence): Recor
   return result
 }
 
+/** 时刻表和次数表同进同退：日期键只保留次数表里还活着的那些 */
+function cleanTimes(
+  input: unknown,
+  days: Record<string, number>,
+  cadence: CheckInCadence,
+): Record<string, number[]> {
+  const result: Record<string, number[]> = {}
+  if (typeof input !== 'object' || input === null) return result
+  const kept = pruneDays(days, cadence)
+  for (const [key, value] of Object.entries(input as Record<string, unknown>)) {
+    if (!(key in kept) || !Array.isArray(value)) continue
+    const list = value
+      .filter((item): item is number => typeof item === 'number' && Number.isFinite(item) && item > 0)
+      .sort((a, b) => a - b)
+      .slice(-MAX_TIMES_PER_DAY)
+    if (list.length > 0) result[key] = list
+  }
+  return result
+}
+
 function isValid(value: unknown): value is CheckInEvent {
   if (typeof value !== 'object' || value === null) return false
   const candidate = value as Partial<CheckInEvent>
@@ -266,13 +334,17 @@ function isValid(value: unknown): value is CheckInEvent {
 const checkins = createStore<CheckInEvent>({
   key: STORAGE_KEY,
   isValid,
-  normalize: (event) => ({
-    ...event,
-    title: event.title.slice(0, 40),
-    color: Math.trunc(event.color),
-    days: cleanDays(event.days, event.cadence),
-  }),
-  defaults: () => ({ title: '', color: 0, cadence: 'daily' as CheckInCadence, days: {} }),
+  normalize: (event) => {
+    const days = cleanDays(event.days, event.cadence)
+    return {
+      ...event,
+      title: event.title.slice(0, 40),
+      color: Math.trunc(event.color),
+      days,
+      times: cleanTimes(event.times, days, event.cadence),
+    }
+  },
+  defaults: () => ({ title: '', color: 0, cadence: 'daily' as CheckInCadence, days: {}, times: {} }),
 })
 
 export const subscribe = checkins.subscribe
@@ -287,6 +359,7 @@ export function addCheckIn(draft: CheckInDraft): CheckInEvent {
     color: draft.color,
     cadence: draft.cadence,
     days: {},
+    times: {},
   })
 }
 
@@ -297,7 +370,11 @@ export function updateCheckIn(id: string, patch: Partial<CheckInDraft>): void {
     ...(patch.color !== undefined ? { color: patch.color } : {}),
     // 换周期时把记录按新粒度重新裁剪，避免留下一堆用不上的旧键
     ...(patch.cadence !== undefined
-      ? { cadence: patch.cadence, days: pruneDays(current?.days ?? {}, patch.cadence) }
+      ? {
+          cadence: patch.cadence,
+          days: pruneDays(current?.days ?? {}, patch.cadence),
+          times: cleanTimes(current?.times, pruneDays(current?.days ?? {}, patch.cadence), patch.cadence),
+        }
       : {}),
   })
 }
@@ -310,7 +387,9 @@ export function tapCheckIn(id: string, now: number): TapResult | null {
   if (!event) return null
   const key = dayKey(now)
   const count = Math.max(0, Math.trunc(event.days[key] ?? 0)) + 1
-  checkins.update(id, { days: { ...event.days, [key]: count } })
+  const times = { ...(event.times ?? {}) }
+  times[key] = [...timesOf(event, key), now].slice(-MAX_TIMES_PER_DAY)
+  checkins.update(id, { days: { ...event.days, [key]: count }, times })
   return { key, count }
 }
 
@@ -320,7 +399,15 @@ export function untapCheckIn(id: string, key: string): void {
   if (!event) return
   const count = Math.max(0, Math.trunc(event.days[key] ?? 0)) - 1
   const days = { ...event.days }
+  const times = { ...(event.times ?? {}) }
+  // 撤销的是最近记的那一次，所以从尾部收走一个时刻
+  const list = timesOf(event, key)
+  if (list.length > 0) {
+    const next = list.slice(0, -1)
+    if (next.length > 0) times[key] = next
+    else delete times[key]
+  }
   if (count > 0) days[key] = count
   else delete days[key]
-  checkins.update(id, { days })
+  checkins.update(id, { days, times })
 }

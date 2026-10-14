@@ -3,6 +3,9 @@ import { test } from 'node:test'
 import {
   buildHistory,
   countInPeriod,
+  daysInPeriod,
+  formatClock,
+  timesOf,
   countInRange,
   countToday,
   dayKey,
@@ -153,4 +156,51 @@ test('periodLabel：历史条目的时间说法', () => {
   assert.equal(periodLabel('daily', at(2026, 9, 30, 0)), '9月30日 星期三')
   assert.equal(periodLabel('weekly', at(2026, 9, 28, 0)), '9月28日那周')
   assert.equal(periodLabel('monthly', at(2026, 8, 1, 0)), '2026年8月')
+})
+
+/* ---------------- 打卡时刻 ---------------- */
+
+function withTimes(cadence: CheckInCadence, days: Record<string, number>, times: Record<string, number[]>) {
+  return {
+    id: 'x', title: '喝水', createdAt: 0, color: 0,
+    cadence, days, times,
+  } as CheckInEvent
+}
+
+test('timesOf：读出某一天的时刻，没有就返回空数组', () => {
+  const event = withTimes('daily', { '2026-09-30': 2 }, { '2026-09-30': [1000, 2000] })
+  assert.deepEqual(timesOf(event, '2026-09-30'), [1000, 2000])
+  assert.deepEqual(timesOf(event, '2026-09-29'), [])
+  const legacy = withTimes('daily', { '2026-09-30': 2 }, {})
+  delete (legacy as { times?: unknown }).times
+  assert.deepEqual(timesOf(legacy, '2026-09-30'), [])
+})
+
+test('formatClock：补零成 09:05', () => {
+  const ts = new Date(2026, 8, 30, 9, 5).getTime()
+  assert.equal(formatClock(ts), '09:05')
+  const late = new Date(2026, 8, 30, 22, 40).getTime()
+  assert.equal(formatClock(late), '22:40')
+})
+
+test('daysInPeriod：按天列出明细，带时刻', () => {
+  const mon = new Date(2026, 8, 28, 0, 0, 0).getTime()
+  const event = withTimes(
+    'weekly',
+    { '2026-09-28': 1, '2026-09-30': 2, '2026-10-02': 1 },
+    { '2026-09-28': [mon + 3600e3], '2026-09-30': [mon + 7200e3, mon + 9000e3] },
+  )
+  const days = daysInPeriod(event, 'weekly', mon)
+  assert.equal(days.length, 3)
+  assert.deepEqual(days.map((d) => d.key), ['2026-09-28', '2026-09-30', '2026-10-02'])
+  assert.deepEqual(days[1].times, [mon + 7200e3, mon + 9000e3])
+  assert.deepEqual(days[2].times, [])
+  assert.equal(days[2].count, 1)
+})
+
+test('buildHistory：默认不含当前周期，includeCurrent 打开后带上', () => {
+  const today = new Date(2026, 8, 30, 10, 0).getTime()
+  const event = withTimes('daily', { '2026-09-28': 1, '2026-09-29': 2, '2026-09-30': 3 }, {})
+  assert.deepEqual(buildHistory(event, today).map((p) => p.count), [2, 1])
+  assert.deepEqual(buildHistory(event, today, true).map((p) => p.count), [3, 2, 1])
 })

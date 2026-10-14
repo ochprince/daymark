@@ -942,14 +942,79 @@ html[data-theme='light'] .checkin__flash {
 }
 
 .checkin-history__row {
+  border-radius: var(--radius-field);
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  overflow: hidden;
+}
+
+/* 一行 = 一个周期，整行可点开 */
+.checkin-history__head {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  width: 100%;
   padding: 12px 14px;
-  border-radius: var(--radius-field);
-  border: 1px solid var(--line);
-  background: var(--surface-2);
+  text-align: left;
+}
+
+.checkin-history__chev {
+  flex: none;
+  width: 15px;
+  height: 15px;
+  color: var(--text-3);
+  opacity: 0.75;
+  transition: transform 0.24s var(--ease-out);
+}
+
+.checkin-history__chev svg {
+  width: 15px;
+  height: 15px;
+}
+
+.checkin-history__row[data-open='true'] .checkin-history__chev {
+  transform: rotate(180deg);
+}
+
+/* 展开后：这个周期里每一天记的时刻 */
+.checkin-history__days {
+  display: flex;
+  flex-direction: column;
+  gap: 9px;
+  padding: 0 14px 13px;
+}
+
+.checkin-history__day {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.checkin-history__date {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+.checkin-history__times {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.checkin-history__time {
+  padding: 3px 7px;
+  border-radius: 8px;
+  font-size: 12.5px;
+  color: var(--text-2);
+  background: color-mix(in oklab, currentColor 9%, transparent);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: 'tnum' 1;
+}
+
+.checkin-history__notime {
+  font-size: 12.5px;
+  color: var(--text-3);
 }
 
 .checkin-history__when {

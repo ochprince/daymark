@@ -171,6 +171,21 @@ export function FestivalIcon({ className }: IconProps) {
   )
 }
 
+/** 历史：展开一行用的下箭头 */
+export function ChevronDownIcon({ className }: IconProps) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M6 9.5 12 15.5 18 9.5"
+        stroke="currentColor"
+        strokeWidth="2.1"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
 /** 自定义：铅笔 */
 export function PencilIcon({ className }: IconProps) {
   return (

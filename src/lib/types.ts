@@ -66,6 +66,11 @@ export type CheckInEvent = {
   cadence: CheckInCadence
   /** 每天的打卡次数：键是本地日期 yyyy-mm-dd，值是当天点了几下 */
   days: Record<string, number>
+  /**
+   * 每次打卡的时刻（毫秒）：键同样是 yyyy-mm-dd，值是按先后排好的时刻数组。
+   * 老数据没有这一项，读的时候当空数组处理。
+   */
+  times?: Record<string, number[]>
 }
 
 export type CheckInDraft = {
