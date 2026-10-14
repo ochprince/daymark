@@ -132,6 +132,8 @@ export function CheckInCard({
       onReveal={onReveal}
       // 点一下不再记数：记一次只能靠按住蓄力，这里什么都不做
       onOpen={() => undefined}
+      // 按住两秒的缩放会把卡片边缘缩进去、露出底下的红色，这里不要按下反馈
+      pressScale={false}
       onDelete={() => onDelete(event)}
     >
       <div
@@ -145,7 +147,14 @@ export function CheckInCard({
       >
         <div className="card__head">
           <h2 className="card__title">
-            <span className="card__dot" />
+            <span className="card__dot-wrap" data-charging={charging}>
+              <span className="card__dot" />
+              {/* 蓄力进度环：从圆点长出来，两秒闭合 */}
+              <svg className="charge-ring" viewBox="0 0 20 20" aria-hidden="true">
+                <circle className="charge-ring__track" cx="10" cy="10" r="8.4" />
+                <circle className="charge-ring__bar" cx="10" cy="10" r="8.4" />
+              </svg>
+            </span>
             <span>{event.title}</span>
           </h2>
           <div className="card__tools">
@@ -213,11 +222,8 @@ export function CheckInCard({
           ) : null}
         </p>
 
-        {/* 蓄力：自下而上亮起来的能量层 + 底部进度条（进度由 CSS 的 2 秒 transition 驱动） */}
+        {/* 蓄力：底部柔和亮起的一团光（进度看标题旁的圆环，两秒闭合） */}
         <span className="checkin__energy" aria-hidden="true" />
-        <span className="checkin__bar" aria-hidden="true">
-          <span className="checkin__bar-fill" />
-        </span>
 
         {/* 蓄满那一刻的特效层：全部限制在卡片内部（卡片本身 overflow: hidden），不参与命中 */}
         <div className="checkin__fx" aria-hidden="true">

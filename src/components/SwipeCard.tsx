@@ -26,6 +26,11 @@ type Props = {
   onDelete: () => void
   /** 内层容器的类名，默认 card；历史条目换成紧凑的行样式 */
   className?: string
+  /**
+   * 按下时是否做 0.988 的缩放反馈。打卡卡片按住要两秒，
+   * 缩放会让卡片边缘缩进去、把底下的红色露出来，所以那边关掉。
+   */
+  pressScale?: boolean
   children: ReactNode
 }
 
@@ -55,6 +60,7 @@ export function SwipeCard({
   onLongPress,
   onDelete,
   className,
+  pressScale = true,
   children,
 }: Props) {
   const accent = accentFor(colorIndex)
@@ -137,7 +143,7 @@ export function SwipeCard({
         // 左侧只留极小回弹：到按钮宽度就是「到头了」，不会拉出更多红色。
         dragElastic={{ left: 0.03, right: 0 }}
         dragMomentum={false}
-        whileTap={{ scale: 0.988 }}
+        whileTap={pressScale ? { scale: 0.988 } : undefined}
         onDragStart={() => {
           draggedRef.current = false
           x.stop()

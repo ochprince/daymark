@@ -752,67 +752,85 @@ html[data-theme='light'] .card__num {
   color: var(--text);
 }
 
-/* 蓄力时自下而上亮起来的能量层 */
+/* 蓄力：卡片底部亮起来的一团柔和光晕（没有硬边、不做拉伸） */
 .checkin__energy {
   position: absolute;
-  inset: 0;
+  /* 向外扩到卡片内边距之外，光晕能贴住卡片边缘 */
+  inset: -18px -18px -16px;
+  border-radius: var(--radius-card);
   pointer-events: none;
   opacity: 0;
-  transform: scaleY(0);
-  transform-origin: bottom;
-  background: linear-gradient(
-    0deg,
-    color-mix(in oklab, var(--accent-from) 38%, transparent),
-    color-mix(in oklab, var(--accent-to) 12%, transparent) 62%,
-    transparent 92%
+  background: radial-gradient(
+    128% 82% at 50% 116%,
+    color-mix(in oklab, var(--accent-from) 32%, transparent) 0%,
+    color-mix(in oklab, var(--accent-to) 15%, transparent) 44%,
+    transparent 78%
   );
-  transition: transform 0.26s var(--ease-out), opacity 0.26s var(--ease-out);
+  transition: opacity 0.36s var(--ease-out);
 }
 
-/* 底部进度条：2 秒走满，一眼看得出还差多少 */
-.checkin__bar {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 3px;
-  overflow: hidden;
-  pointer-events: none;
-}
-
-.checkin__bar-fill {
-  display: block;
-  width: 100%;
-  height: 100%;
-  transform: scaleX(0);
-  transform-origin: left;
-  background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
-  transition: transform 0.26s var(--ease-out);
-}
-
-/* 按住时：两条都改成 2 秒线性推进；松手则退回 0.26s 的原位 */
+/* 按住时缓慢亮起来，不是线性的机械感 */
 .checkin[data-charging='true'] .checkin__energy {
   opacity: 1;
-  transform: scaleY(1);
-  transition: transform 2s linear, opacity 0.18s linear;
+  transition: opacity 1.7s cubic-bezier(0.4, 0, 0.6, 1);
 }
 
-.checkin[data-charging='true'] .checkin__bar-fill {
-  transform: scaleX(1);
-  transition: transform 2s linear;
+/* 标题旁的小圆点：蓄力时从它长出一圈进度环。
+   盒子仍然是 7px（和别的页面一致，不会把标题挤开），环溢出去画。
+   选择器要带上 .card__title 才能压过 .card__title span 上的省略号裁切 */
+.card__title .card__dot-wrap {
+  position: relative;
+  flex: none;
+  width: 7px;
+  height: 7px;
+  overflow: visible;
 }
 
-/* 数字蓄力时微微长大，把「快满了」的感觉做出来 */
+.charge-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  transform: rotate(-90deg);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.24s var(--ease-out);
+}
+
+.card__dot-wrap[data-charging='true'] .charge-ring {
+  opacity: 1;
+}
+
+.charge-ring__track {
+  fill: none;
+  stroke: color-mix(in oklab, currentColor 13%, transparent);
+  stroke-width: 1.4;
+}
+
+.charge-ring__bar {
+  fill: none;
+  stroke: var(--accent-to);
+  stroke-width: 2.1;
+  stroke-linecap: round;
+  /* r=8.4，周长 2πr ≈ 52.78 */
+  stroke-dasharray: 52.78;
+  stroke-dashoffset: 52.78;
+  transition: stroke-dashoffset 0.28s var(--ease-out);
+}
+
+/* 两秒闭合，曲线带一点缓入缓出 */
+.card__dot-wrap[data-charging='true'] .charge-ring__bar {
+  stroke-dashoffset: 0;
+  transition: stroke-dashoffset 2s cubic-bezier(0.4, 0, 0.6, 1);
+}
+
+/* 大数字的容器：进出场两个数字要能叠在同一位置做「翻牌」 */
 .checkin__num {
   position: relative;
   display: inline-flex;
   align-items: baseline;
-  transition: transform 0.26s var(--ease-out);
-}
-
-.checkin[data-charging='true'] .checkin__num {
-  transform: scale(1.06);
-  transition: transform 2s linear;
 }
 
 /* 脚注中间的小圆点分隔 */
