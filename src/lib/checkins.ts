@@ -107,8 +107,48 @@ export function periodUnit(cadence: CheckInCadence): string {
   return '个月'
 }
 
-/** 历史条目的时间标签：8月30日 星期日 / 8月25日那周 / 2026年8月 */
-export function periodLabel(cadence: CheckInCadence, start: number): string {
+/**
+ * 最近几个周期的相对说法：今天 / 昨天 / 前天（每周、每月同理）。
+ * 用「往回数了几个周期」判断，而不是列表里的行号——中间某天没记录时行号会错位。
+ * 超出范围返回 null，交给具体日期。
+ */
+function relativePeriodLabel(
+  cadence: CheckInCadence,
+  start: number,
+  now: number,
+): string | null {
+  const current = periodStart(cadence, now)
+  let back: number
+  if (cadence === 'daily') {
+    // 用取整抵消夏令时造成的 23/25 小时
+    back = Math.round((current - start) / 86400000)
+  } else if (cadence === 'weekly') {
+    back = Math.round((current - start) / (7 * 86400000))
+  } else {
+    const currentDate = new Date(current)
+    const startDate = new Date(start)
+    back =
+      (currentDate.getFullYear() - startDate.getFullYear()) * 12 +
+      (currentDate.getMonth() - startDate.getMonth())
+  }
+
+  if (back === 0) return cadence === 'daily' ? '今天' : cadence === 'weekly' ? '本周' : '本月'
+  if (back === 1) return cadence === 'daily' ? '昨天' : cadence === 'weekly' ? '上周' : '上月'
+  if (back === 2 && cadence !== 'monthly') return cadence === 'daily' ? '前天' : '上上周'
+  return null
+}
+
+/**
+ * 历史条目的时间标签。
+ * 传了 now 时，最近三个周期用「今天 / 昨天 / 前天」（每周「本周 / 上周 / 上上周」、
+ * 每月「本月 / 上月」），再往前才是具体日期：
+ * 8月30日 星期日 / 8月25日那周 / 2026年8月
+ */
+export function periodLabel(cadence: CheckInCadence, start: number, now?: number): string {
+  if (now !== undefined) {
+    const relative = relativePeriodLabel(cadence, start, now)
+    if (relative) return relative
+  }
   if (cadence === 'daily') return `${formatShortDate(start)} ${formatWeekday(start)}`
   if (cadence === 'weekly') return `${formatShortDate(start)}那周`
   const date = new Date(start)

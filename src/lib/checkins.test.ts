@@ -214,3 +214,26 @@ test('buildHistory：默认不含当前周期，includeCurrent 打开后带上',
   assert.deepEqual(buildHistory(event, today).map((p) => p.count), [2, 1])
   assert.deepEqual(buildHistory(event, today, true).map((p) => p.count), [3, 2, 1])
 })
+
+test('periodLabel：最近三个周期用相对说法，再往前才是具体日期', () => {
+  const now = at(2026, 10, 15, 12)
+  assert.equal(periodLabel('daily', at(2026, 10, 15), now), '今天')
+  assert.equal(periodLabel('daily', at(2026, 10, 14), now), '昨天')
+  assert.equal(periodLabel('daily', at(2026, 10, 13), now), '前天')
+  assert.ok(periodLabel('daily', at(2026, 10, 12), now).startsWith('10月12日'), periodLabel('daily', at(2026, 10, 12)))
+  assert.equal(periodLabel('weekly', weekStart(now), now), '本周')
+  assert.equal(periodLabel('weekly', weekStart(now) - 7 * 86400000, now), '上周')
+  assert.equal(periodLabel('weekly', weekStart(now) - 14 * 86400000, now), '上上周')
+  assert.equal(periodLabel('monthly', at(2026, 10, 1), now), '本月')
+  assert.equal(periodLabel('monthly', at(2026, 9, 1), now), '上月')
+  assert.equal(periodLabel('monthly', at(2026, 8, 1), now), '2026年8月')
+  // 不传 now 时行为不变（老调用点不受影响）
+  assert.ok(periodLabel('daily', at(2026, 10, 12)).startsWith('10月12日'))
+})
+
+test('periodLabel：中间漏了几天，「前天」仍然按日期算而不是行号', () => {
+  const now = at(2026, 10, 15, 12)
+  // 10月14日 没有记录（列表里不会出现），10月13日 依然是「前天」
+  assert.equal(periodLabel('daily', at(2026, 10, 13), now), '前天')
+  assert.equal(periodLabel('daily', at(2026, 10, 12), now).startsWith('10月12日'), true)
+})

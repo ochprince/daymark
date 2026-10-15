@@ -61,7 +61,7 @@ export function CheckInHistorySheet({ event, now, onClose }: Props) {
                   {/* 不加「今天 ·」前缀：列表本来就是崭新的在上，顶行即当前周期，
                       加了前缀会让两行的日期错开，看着不齐 */}
                   <span className="checkin-history__when">
-                    {periodLabel(event.cadence, period.start)}
+                    {periodLabel(event.cadence, period.start, now)}
                   </span>
                   <span className="checkin-history__count">
                     <b>{period.count}</b>
