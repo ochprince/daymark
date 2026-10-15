@@ -949,11 +949,12 @@ html[data-theme='light'] .checkin__flash {
 }
 
 /* 一行 = 一个周期，整行可点开 */
+/* 网格而不是 space-between：右列（次数 + 箭头）在每一行都落在同一竖线上 */
 .checkin-history__head {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto 15px;
   align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  gap: 10px;
   width: 100%;
   padding: 12px 14px;
   text-align: left;
@@ -1020,6 +1021,9 @@ html[data-theme='light'] .checkin__flash {
 .checkin-history__when {
   font-size: 13.5px;
   color: var(--text-2);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .checkin-history__count {

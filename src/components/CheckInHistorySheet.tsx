@@ -6,7 +6,6 @@ import {
   daysInPeriod,
   formatClock,
   periodLabel,
-  periodStart,
   periodUnit,
   summarizePeriods,
 } from '../lib/checkins'
@@ -26,16 +25,13 @@ function shortDay(ts: number): string {
 
 /**
  * 打卡历史：每个周期一行，最近的在上，点开能看到这个周期里
- * 每一天是几点几分记的。今天/本周/本月也在里面，默认展开。
+ * 每一天是几点几分记的。当前周期也在列表里（顶行），默认展开。
  */
 export function CheckInHistorySheet({ event, now, onClose }: Props) {
-  const currentStart = periodStart(event.cadence, now)
   const periods = buildHistory(event, now, true)
   // 小结必须和下面列出来的行对得上：列表里有今天，小结就算今天
   const summary = summarizePeriods(periods)
   const unit = periodUnit(event.cadence)
-  const currentLabel =
-    event.cadence === 'daily' ? '今天' : event.cadence === 'weekly' ? '本周' : '本月'
 
   // 默认展开最近的一行——想看「今天几点喝的」，一进来就是它
   const [openKey, setOpenKey] = useState<number | null>(periods.length > 0 ? periods[0].start : null)
@@ -52,7 +48,6 @@ export function CheckInHistorySheet({ event, now, onClose }: Props) {
       {periods.length > 0 ? (
         <ul className="checkin-history">
           {periods.map((period) => {
-            const isCurrent = period.start === currentStart
             const open = openKey === period.start
             const days = open ? daysInPeriod(event, event.cadence, period.start) : []
             return (
@@ -63,10 +58,10 @@ export function CheckInHistorySheet({ event, now, onClose }: Props) {
                   aria-expanded={open}
                   onClick={() => setOpenKey(open ? null : period.start)}
                 >
+                  {/* 不加「今天 ·」前缀：列表本来就是崭新的在上，顶行即当前周期，
+                      加了前缀会让两行的日期错开，看着不齐 */}
                   <span className="checkin-history__when">
-                    {isCurrent
-                      ? `${currentLabel} · ${periodLabel(event.cadence, period.start)}`
-                      : periodLabel(event.cadence, period.start)}
+                    {periodLabel(event.cadence, period.start)}
                   </span>
                   <span className="checkin-history__count">
                     <b>{period.count}</b>
