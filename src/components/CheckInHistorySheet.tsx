@@ -31,8 +31,8 @@ function shortDay(ts: number): string {
 export function CheckInHistorySheet({ event, now, onClose }: Props) {
   const currentStart = periodStart(event.cadence, now)
   const periods = buildHistory(event, now, true)
-  // 「最多 / 合计」只看走完的周期，免得拿半截的今天去比
-  const summary = summarizePeriods(periods.filter((period) => period.start < currentStart))
+  // 小结必须和下面列出来的行对得上：列表里有今天，小结就算今天
+  const summary = summarizePeriods(periods)
   const unit = periodUnit(event.cadence)
   const currentLabel =
     event.cadence === 'daily' ? '今天' : event.cadence === 'weekly' ? '本周' : '本月'
