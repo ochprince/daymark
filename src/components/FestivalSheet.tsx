@@ -71,6 +71,14 @@ export function FestivalSheet({ now, selectedIds, onToggle, onToggleMany, onClos
             festival,
             next: resolved.get(festival.id)?.next ?? null,
           })
+          // 组内按「下一次到来的日子」排，离得近的在前面。
+          // 数据里手写的是「月份日期」顺序，跨年时会骗人：万圣夜 10月31日 只剩 16 天，
+          // 却排在明年 3 月的复活节后面。排序键必须用算出来的下一次日期。
+          const ordered = [...group.items].sort(
+            (a, b) =>
+              (resolved.get(a.id)?.next ?? Number.POSITIVE_INFINITY) -
+              (resolved.get(b.id)?.next ?? Number.POSITIVE_INFINITY),
+          )
           return (
             <section key={group.id} className="festival__group">
               <div className="festival__group-head">
@@ -90,7 +98,7 @@ export function FestivalSheet({ now, selectedIds, onToggle, onToggleMany, onClos
                 </button>
               </div>
               <div className="festival__grid">
-                {group.items.map((festival) => {
+                {ordered.map((festival) => {
                   const info = resolved.get(festival.id)
                   const selected = selectedIds.has(festival.id)
                   return (
