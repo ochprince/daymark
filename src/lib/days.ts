@@ -16,11 +16,22 @@ export function todayStart(now: number): number {
 }
 
 /**
- * 已经过去的天数：按自然日计算。
- * 当天记录 = 0 天，昨天记录 = 1 天。未来时间一律按 0 处理。
+ * 这一轮的计时锚点。
+ * 有 anchorAt（重置过、或者创建时就落在今天）就用它；否则退回起始日的 00:00。
  */
-export function daysSince(startedAt: number, now: number): number {
-  const diff = Math.round((startOfDay(now) - startOfDay(startedAt)) / DAY_MS)
+export function anchorOf(event: Pick<DayEvent, 'startedAt' | 'anchorAt'>): number {
+  if (typeof event.anchorAt === 'number' && Number.isFinite(event.anchorAt)) return event.anchorAt
+  return startOfDay(event.startedAt)
+}
+
+/**
+ * 已经过去的天数：从锚点起算的「完整 24 小时」个数。
+ *
+ * 不是按自然日跨零点 —— 15:30 起算的一轮，要到第二天 15:30 才满一天；
+ * 重置后同理，按下重置的那一刻起算 24 小时才 +1。未来时间一律按 0 处理。
+ */
+export function daysSince(anchorAt: number, now: number): number {
+  const diff = Math.floor((now - anchorAt) / DAY_MS)
   return diff > 0 ? diff : 0
 }
 
@@ -112,9 +123,9 @@ export function calendarBreakdown(startedAt: number, now: number): Breakdown {
 }
 
 /** 「1 年 24 天」/「4 个月 6 天」；不足 31 天时返回空串（大数字已经说明一切） */
-export function formatSpan(startedAt: number, now: number): string {
-  if (daysSince(startedAt, now) < 31) return ''
-  const { years, months, days } = calendarBreakdown(startedAt, now)
+export function formatSpan(anchorAt: number, now: number): string {
+  if (daysSince(anchorAt, now) < 31) return ''
+  const { years, months, days } = calendarBreakdown(anchorAt, now)
   const parts: string[] = []
   if (years > 0) parts.push(`${years} 年`)
   if (months > 0) parts.push(`${months} 个月`)
@@ -146,7 +157,7 @@ export type Summary = { count: number; longest: number }
 export function summarize(events: readonly DayEvent[], now: number): Summary {
   let longest = 0
   for (const event of events) {
-    const days = daysSince(event.startedAt, now)
+    const days = daysSince(anchorOf(event), now)
     if (days > longest) longest = days
   }
   return { count: events.length, longest }

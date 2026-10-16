@@ -5,8 +5,8 @@ import type { Streak } from './types'
  * 把「从起始日累计到现在」封存成一轮历史。
  * 完成时间就是被重置的那一天（本地 00:00），列表也按它倒序。
  */
-export function closeStreak(startedAt: number, now: number): Streak {
-  return { days: daysSince(startedAt, now), endedAt: todayStart(now) }
+export function closeStreak(anchorAt: number, now: number): Streak {
+  return { days: daysSince(anchorAt, now), endedAt: todayStart(now) }
 }
 
 /** 历史列表：最近一次重置排最前 */

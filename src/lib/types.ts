@@ -5,6 +5,12 @@ export type DayEvent = {
   title: string
   /** 起始时刻（毫秒时间戳），天数从这一天的 00:00 起算 */
   startedAt: number
+  /**
+   * 这一轮从哪一刻开始数 24 小时。
+   * 重置（把起始日改成今天）时写入按下的那一刻，于是「满 24 小时才 +1」；
+   * 手动挑的历史起始日没有这个值，就退回那一天的 00:00，跟原来一致。
+   */
+  anchorAt?: number
   /** 记录创建时刻，用于同一天创建时的排序 */
   createdAt: number
   /** 调色板索引 */
@@ -24,6 +30,8 @@ export type Streak = {
 export type EventDraft = {
   title: string
   startedAt: number
+  /** 重置那一刻的计时锚点；挑历史起始日时不给，退回那天的 00:00 */
+  anchorAt?: number
   color: number
   history?: Streak[]
 }

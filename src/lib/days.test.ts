@@ -3,12 +3,14 @@ import { test } from 'node:test'
 import {
   buildCountdownList,
   calendarBreakdown,
+  anchorOf,
   daysSince,
   daysUntil,
   formatSpan,
   milestoneAt,
   nextOccurrence,
   sortEvents,
+  todayStart,
   startOfDay,
   summarize,
   summarizeCountdowns,
@@ -202,4 +204,25 @@ test('summarizeCountdowns 只统计还没到的', () => {
     now,
   )
   assert.deepEqual(summarizeCountdowns(list), { count: 2, nearest: 7 })
+})
+
+test('daysSince：按满 24 小时算，不是跨零点就加一', () => {
+  const anchor = new Date(2026, 9, 15, 15, 30).getTime()
+  const at = (d: number, h: number, m: number) => new Date(2026, 9, d, h, m).getTime()
+  assert.equal(daysSince(anchor, at(15, 23, 59)), 0)
+  assert.equal(daysSince(anchor, at(16, 0, 1)), 0, '过了零点也还是 0')
+  assert.equal(daysSince(anchor, at(16, 15, 29)), 0)
+  assert.equal(daysSince(anchor, at(16, 15, 30)), 1, '满 24 小时才 +1')
+  assert.equal(daysSince(anchor, at(17, 20, 0)), 2)
+  assert.equal(daysSince(anchor, at(14, 0, 0)), 0, '未来时间按 0')
+})
+
+test('anchorOf：重置过用那一刻，挑历史日期退回当天 00:00', () => {
+  const reset = new Date(2026, 9, 15, 21, 0).getTime()
+  assert.equal(anchorOf({ startedAt: todayStart(reset), anchorAt: reset }), reset)
+  assert.equal(anchorOf({ startedAt: todayStart(reset) }), todayStart(reset))
+  // 老数据（挑的5月1日、没锚点）行为不变：仍然等于自然日天数
+  const start = new Date(2026, 4, 1).getTime()
+  const now = new Date(2026, 9, 15, 12, 0).getTime()
+  assert.equal(daysSince(anchorOf({ startedAt: start }), now), 167)
 })

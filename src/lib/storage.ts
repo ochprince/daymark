@@ -24,6 +24,10 @@ const events = createStore<DayEvent>({
   isValid,
   normalize: (event) => ({
     ...event,
+    // 坏掉的锚点直接丢掉，退回起始日的 00:00，不要把整条记录判为无效
+    ...(typeof event.anchorAt === 'number' && Number.isFinite(event.anchorAt)
+      ? {}
+      : { anchorAt: undefined }),
     title: event.title.slice(0, 40),
     color: Math.trunc(event.color),
     ...(event.history ? { history: normalizeStreaks(event.history) } : {}),
@@ -38,13 +42,22 @@ export const restoreEvent = events.restore
 export const suggestColor = events.suggestColor
 
 export function addEvent(draft: EventDraft): DayEvent {
-  return events.add({ title: draft.title.trim().slice(0, 40), startedAt: draft.startedAt, color: draft.color })
+  return events.add({
+    title: draft.title.trim().slice(0, 40),
+    startedAt: draft.startedAt,
+    color: draft.color,
+    ...(draft.anchorAt !== undefined ? { anchorAt: draft.anchorAt } : {}),
+  })
 }
 
 export function updateEvent(id: string, patch: Partial<EventDraft>): void {
   events.update(id, {
     ...(patch.title !== undefined ? { title: patch.title.trim().slice(0, 40) } : {}),
     ...(patch.startedAt !== undefined ? { startedAt: patch.startedAt } : {}),
+    // 改了起始日就一定重写锚点：挑历史日期时是 undefined，正好把旧锚点清掉
+    ...(patch.startedAt !== undefined || patch.anchorAt !== undefined
+      ? { anchorAt: patch.anchorAt }
+      : {}),
     ...(patch.color !== undefined ? { color: patch.color } : {}),
     ...(patch.history !== undefined ? { history: normalizeStreaks(patch.history) } : {}),
   })

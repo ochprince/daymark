@@ -1,5 +1,5 @@
 import { SwipeCard } from './SwipeCard'
-import { daysSince, formatDate, formatSpan, isToday, milestoneAt } from '../lib/days'
+import { anchorOf, daysSince, formatDate, formatSpan, isToday, milestoneAt } from '../lib/days'
 import type { DayEvent } from '../lib/types'
 import { SparkIcon } from './icons'
 
@@ -13,8 +13,9 @@ type Props = {
 }
 
 export function EventCard({ event, now, revealed, onReveal, onOpen, onDelete }: Props) {
-  const days = daysSince(event.startedAt, now)
-  const span = formatSpan(event.startedAt, now)
+  const anchor = anchorOf(event)
+  const days = daysSince(anchor, now)
+  const span = formatSpan(anchor, now)
   const milestone = milestoneAt(days)
   const started = isToday(event.startedAt, now)
 

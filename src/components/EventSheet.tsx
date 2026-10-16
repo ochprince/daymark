@@ -3,7 +3,14 @@ import { Sheet } from './Sheet'
 import { Swatches } from './Swatches'
 import { SwipeCard } from './SwipeCard'
 import { ChevronLeftIcon } from './icons'
-import { dateInputValue, daysSince, formatDate, parseDateInput, todayStart } from '../lib/days'
+import {
+  anchorOf,
+  dateInputValue,
+  daysSince,
+  formatDate,
+  parseDateInput,
+  todayStart,
+} from '../lib/days'
 import { closeStreak, sortStreaks, summarizeStreaks } from '../lib/streaks'
 import type { DayEvent, EventDraft } from '../lib/types'
 
@@ -65,10 +72,21 @@ export function EventSheet({
   const summary = useMemo(() => summarizeStreaks(history), [history])
 
   // 起始日被改到今天 = 清零：保存时把之前那一轮坚持封存进历史
-  const archived =
-    mode === 'edit' && event && days === 0 && startedAt !== event.startedAt
-      ? closeStreak(event.startedAt, Date.now())
-      : null
+  const restarted = mode === 'edit' && !!event && startedAt !== event.startedAt
+  const archived = restarted && days === 0 ? closeStreak(anchorOf(event!), Date.now()) : null
+
+  /**
+   * 这一轮从哪一刻开始数 24 小时：
+   * - 起始日就是今天（新建、或刚被重置）：按保存的这一刻算
+   * - 编辑时起始日没动：沿用原来存下的锚点，免得改个名字就把计时重置了
+   * - 挑的是历史日期：不给锚点，退回那一天的 00:00（跟过去的行为一致）
+   */
+  const anchorAt = (() => {
+    if (days !== 0) return undefined
+    if (restarted) return Date.now()
+    if (mode === 'edit') return event?.anchorAt ?? Date.now()
+    return Date.now()
+  })()
 
   return (
     <Sheet
@@ -136,6 +154,7 @@ export function EventSheet({
               onSubmit({
                 title: trimmed,
                 startedAt,
+                anchorAt,
                 color,
                 ...(archived
                   ? { history: [archived, ...history] }
