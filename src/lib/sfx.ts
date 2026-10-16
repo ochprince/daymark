@@ -103,7 +103,9 @@ function impulse(ac: AudioContext): AudioBuffer {
 }
 
 /** 干声 + 混响送出，返回两个入口 */
-function reverb(ac: AudioContext, wet: number): { dry: GainNode; send: GainNode } {
+type Bus = { dry: GainNode; send: GainNode }
+
+function reverb(ac: AudioContext, wet: number): Bus {
   const dry = ac.createGain()
   dry.connect(ac.destination)
   const send = ac.createGain()
@@ -130,8 +132,8 @@ function stopAt(node: AudioScheduledSourceNode, at: number): void {
  * 春节 · 整串挂鞭：引信 → 疏密不均的一串小爆 → 收一颗重的
  * ------------------------------------------------------------------ */
 
-function firecracker(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
-  const start = 0.24
+function firecracker(ac: AudioContext, bus: Bus, t0: number): void {
+  const start = t0 + 0.24
   const duration = 2.35
 
   // 引信
@@ -141,13 +143,13 @@ function firecracker(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): 
   fuseHp.type = 'highpass'
   fuseHp.frequency.value = 4200
   const fuseGain = ac.createGain()
-  fuseGain.gain.setValueAtTime(0.0001, 0)
-  fuseGain.gain.exponentialRampToValueAtTime(0.14, 0.14)
-  fuseGain.gain.exponentialRampToValueAtTime(0.0001, 0.24)
+  fuseGain.gain.setValueAtTime(0.0001, t0)
+  fuseGain.gain.exponentialRampToValueAtTime(0.14, t0 + 0.14)
+  fuseGain.gain.exponentialRampToValueAtTime(0.0001, t0 + 0.24)
   fuse.connect(fuseHp)
   fuseHp.connect(fuseGain)
   both(fuseGain, bus)
-  fuse.start(0)
+  fuse.start(t0)
 
   const pop = (at: number, amp: number, bright: number): void => {
     const src = ac.createBufferSource()
@@ -207,14 +209,15 @@ function firecracker(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): 
  * 端午 · 龙舟鼓：咚 · 咚 · 咚咚
  * ------------------------------------------------------------------ */
 
-function drum(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
+function drum(ac: AudioContext, bus: Bus, t0: number): void {
+  // 时刻统一抬到 t0 之后，否则第二次播放时这些点都在"过去"，包络会被跳过
   const hits = [
     { at: 0, freq: 78, amp: 1, big: true },
     { at: 0.42, freq: 78, amp: 0.85, big: true },
     { at: 0.78, freq: 92, amp: 0.6, big: false },
     { at: 0.94, freq: 86, amp: 0.7, big: true },
     { at: 1.24, freq: 78, amp: 0.95, big: true },
-  ]
+  ].map((hit) => ({ ...hit, at: t0 + hit.at }))
   for (const hit of hits) {
     const life = hit.big ? 0.5 : 0.26
     const skin = ac.createOscillator()
@@ -271,7 +274,7 @@ function drum(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
  * 元旦 · 钟声：撞三下，非谐分音各自衰减
  * ------------------------------------------------------------------ */
 
-function bell(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
+function bell(ac: AudioContext, bus: Bus, t0: number): void {
   const partials = [
     { ratio: 0.5, amp: 0.5, decay: 3.2 },
     { ratio: 1, amp: 0.42, decay: 2.9 },
@@ -282,7 +285,8 @@ function bell(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
     { ratio: 3.01, amp: 0.08, decay: 0.8 },
     { ratio: 4.17, amp: 0.05, decay: 0.6 },
   ]
-  ;[0, 1.35, 2.6].forEach((at, index) => {
+  ;[0, 1.35, 2.6].forEach((offset, index) => {
+    const at = t0 + offset
     partials.forEach((partial, k) => {
       const osc = ac.createOscillator()
       osc.type = 'sine'
@@ -318,9 +322,10 @@ function bell(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
  * 万圣夜 · 鬼叫：双层失谐 + 共振峰移动 + 气声
  * ------------------------------------------------------------------ */
 
-function ghost(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
-  const start = 0
-  const stop = 1.9
+function ghost(ac: AudioContext, bus: Bus, t0: number): void {
+  // 这个渲染器所有时刻都由 start 推出来，抬一次就够
+  const start = t0
+  const stop = t0 + 1.9
 
   const voice = ac.createGain()
   voice.gain.setValueAtTime(0.0001, start)
@@ -388,7 +393,7 @@ function ghost(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
  * 圣诞节 · 铃铛：模态合成 + 敲击瞬态
  * ------------------------------------------------------------------ */
 
-function jingle(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
+function jingle(ac: AudioContext, bus: Bus, t0: number): void {
   const partials = [
     { ratio: 1, amp: 0.5, decay: 0.5 },
     { ratio: 2.76, amp: 0.28, decay: 0.32 },
@@ -396,7 +401,7 @@ function jingle(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void 
     { ratio: 8.93, amp: 0.09, decay: 0.14 },
   ]
   ;[1568, 2093, 1568, 2637].forEach((freq, index) => {
-    const at = index * 0.115
+    const at = t0 + index * 0.115
     partials.forEach((partial, k) => {
       const osc = ac.createOscillator()
       osc.type = 'sine'
@@ -430,9 +435,9 @@ function jingle(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void 
  * 喝水 · 吨吨吨：三下吞咽 + 一串随机气泡（音高上滑，真实气泡就是这样）
  * ------------------------------------------------------------------ */
 
-function gulp(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
+function gulp(ac: AudioContext, bus: Bus, t0: number): void {
   for (let i = 0; i < 3; i++) {
-    const at = 0.03 + i * rnd(0.2, 0.26)
+    const at = t0 + 0.03 + i * rnd(0.2, 0.26)
     const osc = ac.createOscillator()
     osc.type = 'sine'
     const base = rnd(175, 205) - i * 12
@@ -468,7 +473,7 @@ function gulp(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
   }
 
   for (let i = 0; i < 14; i++) {
-    const at = rnd(0.02, 0.62)
+    const at = t0 + rnd(0.02, 0.62)
     const f0 = rnd(420, 1150)
     const osc = ac.createOscillator()
     osc.type = 'sine'
@@ -489,9 +494,9 @@ function gulp(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
  * 跑步 · 脚步：落地撞击 + 摩擦 + 呼吸
  * ------------------------------------------------------------------ */
 
-function steps(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
+function steps(ac: AudioContext, bus: Bus, t0: number): void {
   for (let i = 0; i < 6; i++) {
-    const at = 0.05 + i * 0.29 + rnd(-0.012, 0.012)
+    const at = t0 + 0.05 + i * 0.29 + rnd(-0.012, 0.012)
     const osc = ac.createOscillator()
     osc.type = 'sine'
     osc.frequency.setValueAtTime(rnd(95, 120), at)
@@ -522,7 +527,7 @@ function steps(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
   }
 
   for (let i = 0; i < 2; i++) {
-    const at = 0.12 + i * 0.85
+    const at = t0 + 0.12 + i * 0.85
     const breath = ac.createBufferSource()
     breath.buffer = noise(ac, 0.5)
     const bp = ac.createBiquadFilter()
@@ -545,7 +550,7 @@ function steps(ac: AudioContext, bus: { dry: GainNode; send: GainNode }): void {
  * 播放
  * ------------------------------------------------------------------ */
 
-const RENDERERS: Record<SfxId, (ac: AudioContext, bus: { dry: GainNode; send: GainNode }) => void> = {
+const RENDERERS: Record<SfxId, (ac: AudioContext, bus: Bus, t0: number) => void> = {
   firecracker,
   drum,
   bell,
@@ -576,7 +581,10 @@ export function playSfx(id: string | undefined): void {
   const ac = audio()
   if (!ac) return
   try {
-    RENDERERS[id](ac, reverb(ac, WET[id]))
+    // 关键：所有时刻都从 currentTime 起算。写死从 0 开始的话，
+    // 第二次播放时那些自动化点全在过去，包络会被直接跳到终值，声音就没了。
+    const t0 = ac.currentTime + 0.02
+    RENDERERS[id](ac, reverb(ac, WET[id]), t0)
   } catch {
     /* 音效是锦上添花，绝不因为它弄崩应用 */
   }
