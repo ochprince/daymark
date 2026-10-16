@@ -2101,3 +2101,68 @@ html[data-theme='light'] .fchip {
   color: var(--text-3);
   font-variant-numeric: tabular-nums;
 }
+
+
+/* 常用事件：两列小卡片，和节日面板的调性一致 */
+.presets {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin: 4px 0 10px;
+}
+
+.preset {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  padding: 12px 13px 13px;
+  border: 1px solid var(--line-strong);
+  border-radius: 15px;
+  background: var(--surface-2);
+  color: var(--text);
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: background 0.18s ease, transform 0.18s ease;
+}
+
+.preset:active {
+  transform: scale(0.98);
+  border-color: var(--brand-1);
+}
+
+.preset__name {
+  font-size: 15px;
+  font-weight: 600;
+}
+
+.preset__hint {
+  font-size: 12px;
+  color: var(--text-3);
+}
+
+/* 把顶栏右侧两个按钮收在一起，别被 space-between 撑开 */
+.topbar__actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* 带音效的常用项，名字后面缀一个小圆点 */
+.preset[data-sfx] .preset__name::after {
+  content: '';
+  display: inline-block;
+  width: 4px;
+  height: 4px;
+  margin-left: 5px;
+  border-radius: 50%;
+  background: var(--brand-1);
+  vertical-align: middle;
+}
+
+.preset--custom {
+  width: 100%;
+  margin-bottom: 2px;
+}

@@ -1,5 +1,6 @@
 import { createStore } from './store'
 import { formatShortDate, formatWeekday, startOfDay } from './days'
+import type { SfxId } from './sfx'
 import type { CheckInCadence, CheckInDraft, CheckInEvent } from './types'
 
 const STORAGE_KEY = 'daymark.checkins.v1'
@@ -449,3 +450,24 @@ export function untapCheckIn(id: string, key: string): void {
   else delete days[key]
   checkins.update(id, { days, times })
 }
+
+/* ------------------------------------------------------------------ *
+ * 常用事件
+ * ------------------------------------------------------------------ */
+
+export type CheckInPreset = {
+  title: string
+  cadence: CheckInCadence
+  /** 只有这几件配音效，其余安静 */
+  sfx?: SfxId
+}
+
+/** 「常用」里预置的事件，喝水排第一（有"吨吨吨"） */
+export const CHECKIN_PRESETS: readonly CheckInPreset[] = [
+  { title: '喝水', cadence: 'daily', sfx: 'gulp' },
+  { title: '跑步', cadence: 'weekly', sfx: 'steps' },
+  { title: '读书', cadence: 'daily' },
+  { title: '健身', cadence: 'weekly' },
+  { title: '早睡', cadence: 'daily' },
+  { title: '冥想', cadence: 'daily' },
+]

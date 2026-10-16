@@ -16,9 +16,37 @@ type Props = {
   scrolled: boolean
   mode: ThemeMode
   onCycleTheme: (origin: { x: number; y: number }) => void
+  soundOn: boolean
+  onToggleSound: () => void
 }
 
-export function TopBar({ scrolled, mode, onCycleTheme }: Props) {
+/** 喇叭：开着画声波，关了画一道叉 */
+function SoundIcon({ on }: { on: boolean }) {
+  return (
+    <svg
+      className="icon-18"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.7"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden="true"
+    >
+      <path d="M11 5 6.5 9H3.5v6h3L11 19z" />
+      {on ? (
+        <>
+          <path d="M15 9.5a3.5 3.5 0 0 1 0 5" />
+          <path d="M17.5 7a7 7 0 0 1 0 10" />
+        </>
+      ) : (
+        <path d="m15.5 9.5 5 5M20.5 9.5l-5 5" />
+      )}
+    </svg>
+  )
+}
+
+export function TopBar({ scrolled, mode, onCycleTheme, soundOn, onToggleSound }: Props) {
   const Icon = ICONS[mode]
 
   return (
@@ -32,6 +60,7 @@ export function TopBar({ scrolled, mode, onCycleTheme }: Props) {
           {/* 分支预览版才显示，方便和线上正式版区分 */}
           {PREVIEW ? <span className="brand__preview">预览</span> : null}
         </div>
+        <div className="topbar__actions">
         <button
           type="button"
           className="icon-btn"
@@ -48,6 +77,16 @@ export function TopBar({ scrolled, mode, onCycleTheme }: Props) {
         >
           <Icon className="icon-18" />
         </button>
+        <button
+          type="button"
+          className="icon-btn"
+          data-sound={soundOn ? 'on' : 'off'}
+          aria-label={soundOn ? '音效已开，点击关闭' : '音效已关，点击打开'}
+          onClick={onToggleSound}
+        >
+          <SoundIcon on={soundOn} />
+        </button>
+        </div>
       </div>
     </header>
   )

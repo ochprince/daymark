@@ -58,6 +58,8 @@ import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
 import { THEME_MODE_TOAST, useTheme } from './lib/useTheme'
 import { sortStreaks } from './lib/streaks'
+import { festivalSfx, isSoundOn, playSfx, toggleSound } from './lib/sfx'
+import { CheckInPresetSheet } from './components/CheckInPresetSheet'
 import type {
   CheckInDraft,
   CheckInEvent,
@@ -108,6 +110,7 @@ type SheetState =
   | { kind: 'event'; mode: 'edit'; event: DayEvent }
   | { kind: 'countdown'; mode: 'add' }
   | { kind: 'countdown'; mode: 'edit'; event: CountdownEvent }
+  | { kind: 'checkin-menu' }
   | { kind: 'checkin'; mode: 'add' }
   | { kind: 'checkin'; mode: 'edit'; event: CheckInEvent }
   | { kind: 'checkin-history'; event: CheckInEvent }
@@ -196,6 +199,7 @@ export default function App() {
   const [toast, setToast] = useState<ToastState | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const { mode: themeMode, cycleTheme } = useTheme()
+  const [soundOn, setSoundOn] = useState(isSoundOn)
 
   const handleListScroll = useCallback((scrollEvent: UIEvent<HTMLDivElement>) => {
     setScrolled(scrollEvent.currentTarget.scrollTop > 8)
@@ -367,6 +371,7 @@ export default function App() {
         return
       }
       if (next === null) return
+      playSfx(festivalSfx(festival.id))
       const created = addCountdown({
         title: festival.name,
         startedAt: next,
@@ -383,6 +388,7 @@ export default function App() {
   const toggleFestivalMany = useCallback(
     (entries: Array<{ festival: Festival; next: number | null }>) => {
       let anchor: { id: string; next: number } | null = null
+      let played = false
       for (const entry of entries) {
         const existing = countdowns.find((item) => item.festivalId === entry.festival.id)
         if (existing) {
@@ -397,6 +403,10 @@ export default function App() {
           repeat: 'yearly',
           festivalId: entry.festival.id,
         })
+        if (!played) {
+          playSfx(festivalSfx(entry.festival.id))
+          played = true
+        }
         // 一批加完只滚一次，滚到这批里最早发生的那个
         if (!anchor || entry.next < anchor.next) anchor = { id: created.id, next: entry.next }
       }
@@ -409,7 +419,7 @@ export default function App() {
     // 走过的日子页：直接进表单；倒数日页：先弹选项框（节日 / 自定义）；打卡页：直接进表单
     if (index === 0) setSheet({ kind: 'event', mode: 'add' })
     else if (index === 1) setSheet({ kind: 'menu' })
-    else setSheet({ kind: 'checkin', mode: 'add' })
+    else setSheet({ kind: 'checkin-menu' })
   }, [index])
 
   const sinceStats =
@@ -575,6 +585,12 @@ export default function App() {
             const next = cycleTheme(origin)
             setToast({ id: Date.now(), message: THEME_MODE_TOAST[next] })
           }}
+          soundOn={soundOn}
+          onToggleSound={() => {
+            const next = toggleSound()
+            setSoundOn(next)
+            setToast({ id: Date.now(), message: next ? '音效已开' : '音效已关' })
+          }}
         />
 
         <div className="stage" ref={stageRef}>
@@ -666,6 +682,23 @@ export default function App() {
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
               onDelete={sheet.mode === 'edit' ? () => handleDeleteCheckIn(sheet.event) : undefined}
+            />
+          ) : null}
+
+          {sheet?.kind === 'checkin-menu' ? (
+            <CheckInPresetSheet
+              key="checkin-menu"
+              onClose={() => setSheet(null)}
+              onPick={(preset) => {
+                addCheckIn({
+                  title: preset.title,
+                  color: suggestCheckInColor(),
+                  cadence: preset.cadence,
+                })
+                playSfx(preset.sfx)
+                setSheet(null)
+              }}
+              onCustom={() => setSheet({ kind: 'checkin', mode: 'add' })}
             />
           ) : null}
 
