@@ -471,3 +471,10 @@ export const CHECKIN_PRESETS: readonly CheckInPreset[] = [
   { title: '早睡', cadence: 'daily' },
   { title: '冥想', cadence: 'daily' },
 ]
+
+/** 打卡时按事件名找音效：喝水→吨吨吨、跑步→脚步，其余安静 */
+export function sfxForTitle(title: string | undefined): SfxId | undefined {
+  if (!title) return undefined
+  const name = title.trim()
+  return CHECKIN_PRESETS.find((preset) => preset.title === name)?.sfx
+}

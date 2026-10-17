@@ -9,8 +9,10 @@ import {
   periodUnit,
   previousNoun,
   previousPeriodCount,
+  sfxForTitle,
   streakPeriods,
 } from '../lib/checkins'
+import { playSfx } from '../lib/sfx'
 import type { CheckInEvent } from '../lib/types'
 
 /** 蓄力时长：按住这么久才记一次 */
@@ -118,6 +120,8 @@ export function CheckInCard({
     setCharging(true)
     timerRef.current = window.setTimeout(() => {
       setCharging(false)
+      // 蓄力填满、真的记上了一次，配一声对应的音效（喝水→吨吨吨、跑步→脚步）
+      playSfx(sfxForTitle(event.title))
       onTap(event)
     }, CHARGE_MS)
   }
