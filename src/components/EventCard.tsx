@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { motion, useReducedMotion } from 'motion/react'
 import { SwipeCard } from './SwipeCard'
 import { anchorOf, daysSince, formatDate, formatSpan, isToday, milestoneAt } from '../lib/days'
 import type { DayEvent } from '../lib/types'
@@ -21,6 +22,7 @@ type Props = {
 const RESET_HOLD_MS = 500
 
 export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, onReset, onDelete }: Props) {
+  const reduced = useReducedMotion()
   const [charging, setCharging] = useState(false)
   const chargedRef = useRef(false)
   const holdTimer = useRef<number | null>(null)
@@ -118,7 +120,15 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, o
       </div>
 
       <div className="card__count">
-        <span className="card__num">{days}</span>
+        <motion.span
+          key={days}
+          className="card__num"
+          initial={reduced ? false : { opacity: 0, y: 12, scale: 0.92, filter: 'blur(3px)' }}
+          animate={{ opacity: 1, y: 0, scale: 1, filter: 'blur(0px)' }}
+          transition={{ type: 'spring', stiffness: 380, damping: 26 }}
+        >
+          {days}
+        </motion.span>
         <span className="card__unit">天</span>
       </div>
 

@@ -185,17 +185,6 @@ export function EventSheet({
                   autoComplete="off"
                   enterKeyHint="done"
                 />
-                {mode === 'edit' ? (
-                  <button
-                    type="button"
-                    className="btn btn--ghost"
-                    disabled={days === 0}
-                    aria-label="把起始日期改回今天，保存后之前的天数计入历史"
-                    onClick={() => setDateValue(dateInputValue(today))}
-                  >
-                    重置
-                  </button>
-                ) : null}
               </div>
             </div>
 
@@ -204,19 +193,6 @@ export function EventSheet({
                 <label className="field__label" htmlFor="event-start">
                   起始日期
                 </label>
-                {mode === 'edit' ? (
-                  <button
-                    type="button"
-                    className="field__chip"
-                    onClick={() => {
-                      setRevealedStreak(null)
-                      setView('history')
-                    }}
-                  >
-                    <span className="field__chip-dot" />
-                    {history.length > 0 ? `历史 · ${history.length} 轮` : '历史'}
-                  </button>
-                ) : null}
               </div>
               <input
                 id="event-start"
