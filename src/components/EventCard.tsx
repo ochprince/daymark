@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react'
 import { SwipeCard } from './SwipeCard'
 import { anchorOf, daysSince, formatDate, formatSpan, isToday, milestoneAt } from '../lib/days'
 import type { DayEvent } from '../lib/types'
@@ -16,7 +17,35 @@ type Props = {
   onDelete: (event: DayEvent) => void
 }
 
+/** 按住多久才重置：和打卡蓄力一致 */
+const RESET_HOLD_MS = 500
+
 export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, onReset, onDelete }: Props) {
+  const [charging, setCharging] = useState(false)
+  const chargedRef = useRef(false)
+  const holdTimer = useRef<number | null>(null)
+
+  const endCharge = () => {
+    if (holdTimer.current !== null) {
+      window.clearTimeout(holdTimer.current)
+      holdTimer.current = null
+    }
+    setCharging(false)
+  }
+
+  const beginCharge = () => {
+    if (!onReset) return
+    setCharging(true)
+    holdTimer.current = window.setTimeout(() => {
+      holdTimer.current = null
+      setCharging(false)
+      // 之后这次 click 要吞掉，别让它顺手把编辑弹层也打开了
+      chargedRef.current = true
+      onReset(event)
+    }, RESET_HOLD_MS)
+  }
+
+  useEffect(() => endCharge, [])
   const anchor = anchorOf(event)
   const days = daysSince(anchor, now)
   const span = formatSpan(anchor, now)
@@ -31,14 +60,37 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, o
       revealed={revealed}
       onReveal={onReveal}
       onOpen={() => onOpen(event)}
-      // 按住半秒重置：和打卡页按住记一次是同一套确认逻辑
-      onLongPress={onReset ? () => onReset(event) : undefined}
+      // 按住重置的蓄力自己做（要带进度环），不用 SwipeCard 的裸长按
       pressScale={false}
       onDelete={() => onDelete(event)}
     >
+      <div
+        className="card__body"
+        data-charging={charging ? 'true' : undefined}
+        onPointerDown={(pointerEvent) => {
+          pointerEvent.preventDefault()
+          beginCharge()
+        }}
+        onPointerUp={endCharge}
+        onPointerLeave={endCharge}
+        onPointerCancel={endCharge}
+        onClick={(clickEvent) => {
+          if (chargedRef.current) {
+            chargedRef.current = false
+            clickEvent.stopPropagation()
+          }
+        }}
+      >
+        <span className="checkin__energy" aria-hidden="true" />
       <div className="card__head">
         <h2 className="card__title">
-          <span className="card__dot" />
+          <span className="card__dot-wrap" data-charging={charging ? 'true' : undefined}>
+            <span className="card__dot" />
+            <svg className="charge-ring" viewBox="0 0 20 20" aria-hidden="true">
+              <circle className="charge-ring__track" cx="10" cy="10" r="8.4" />
+              <circle className="charge-ring__bar" cx="10" cy="10" r="8.4" />
+            </svg>
+          </span>
           <span>{event.title}</span>
         </h2>
       <div className="card__tools">
@@ -73,6 +125,7 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, o
       <p className="card__foot">
         {started ? <em>从今天开始计时</em> : <span>{formatDate(event.startedAt)} 起</span>}
       </p>
+      </div>
     </SwipeCard>
   )
 }
