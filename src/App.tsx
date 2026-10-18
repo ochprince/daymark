@@ -19,7 +19,14 @@ import { AddMenu } from './components/AddMenu'
 import { FestivalSheet } from './components/FestivalSheet'
 import { Toast } from './components/Toast'
 import type { ToastState } from './components/Toast'
-import { buildCountdownList, sortEvents, summarize, summarizeCountdowns } from './lib/days'
+import {
+  anchorOf,
+  buildCountdownList,
+  sortEvents,
+  summarize,
+  summarizeCountdowns,
+  todayStart,
+} from './lib/days'
 import { pageOfSlot, slotCountFor, usePager } from './lib/usePager'
 import { useSharedScroll } from './lib/useSharedScroll'
 import {
@@ -57,7 +64,7 @@ import {
 import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
 import { THEME_MODE_TOAST, useTheme } from './lib/useTheme'
-import { sortStreaks } from './lib/streaks'
+import { closeStreak, sortStreaks } from './lib/streaks'
 import { festivalSfx, isSoundOn, playSfx, toggleSound } from './lib/sfx'
 import { CheckInPresetSheet } from './components/CheckInPresetSheet'
 import type {
@@ -238,6 +245,18 @@ export default function App() {
 
   const notifyDeleted = useCallback((title: string, undo: () => void) => {
     setToast({ id: Date.now(), message: `已删除「${title}」`, action: { label: '撤销', run: undo } })
+  }, [])
+
+  /** 按住卡片半秒：把这一轮封存进历史，并从此刻重新计时 */
+  const handleResetEvent = useCallback((event: DayEvent) => {
+    const now = Date.now()
+    const streak = closeStreak(anchorOf(event), now)
+    updateEvent(event.id, {
+      startedAt: todayStart(now),
+      anchorAt: now,
+      history: [streak, ...(event.history ?? [])],
+    })
+    setToast({ id: now, message: '已重置，之前的天数记进历史了' })
   }, [])
 
   const handleDeleteEvent = useCallback(
@@ -500,10 +519,11 @@ export default function App() {
                     setRevealedId(null)
                     setSheet({ kind: 'event', mode: 'edit', event, view: 'history' })
                   }}
+                  onReset={handleResetEvent}
                   onDelete={handleDeleteEvent}
                 />
                 <div className="foot">
-                  <span>点击编辑 · 左滑删除</span>
+                  <span>点击编辑 · 按住重置 · 左滑删除</span>
                 </div>
               </>
             ) : (
