@@ -247,16 +247,40 @@ export default function App() {
     setToast({ id: Date.now(), message: `已删除「${title}」`, action: { label: '撤销', run: undo } })
   }, [])
 
-  /** 按住卡片半秒：把这一轮封存进历史，并从此刻重新计时 */
+  /**
+   * 按住卡片半秒：把这一轮封存进历史，并从此刻重新计时。
+   * 重置代价大，所以留一份完整快照给撤销用——恢复的是原值，不是反推。
+   */
   const handleResetEvent = useCallback((event: DayEvent) => {
     const now = Date.now()
+    const snapshot = {
+      startedAt: event.startedAt,
+      anchorAt: event.anchorAt,
+      history: event.history ?? [],
+    }
     const streak = closeStreak(anchorOf(event), now)
+
     updateEvent(event.id, {
       startedAt: todayStart(now),
       anchorAt: now,
       history: [streak, ...(event.history ?? [])],
     })
-    setToast({ id: now, message: '已重置，之前的天数记进历史了' })
+
+    setToast({
+      id: now,
+      message: `「${event.title}」已重置，之前的天数记进历史了`,
+      action: {
+        label: '撤销',
+        run: () => {
+          updateEvent(event.id, {
+            startedAt: snapshot.startedAt,
+            anchorAt: snapshot.anchorAt,
+            history: snapshot.history,
+          })
+          setToast(null)
+        },
+      },
+    })
   }, [])
 
   const handleDeleteEvent = useCallback(

@@ -164,7 +164,7 @@ export function SwipeCard({
           snap(shouldReveal ? REVEAL_X : 0)
           window.setTimeout(() => {
             draggedRef.current = false
-          }, 420)
+          }, 500)
         }}
         onPointerDown={(pointerEvent) => {
           // 在 window 上记移动量：拖动时手指下的元素会换，挂在卡片上会漏记
@@ -186,12 +186,12 @@ export function SwipeCard({
           window.addEventListener('pointermove', onMove, { passive: true, capture: true })
           window.addEventListener('pointerup', stop)
           const timer = window.setTimeout(stop, 1500)
-          // 长按：按住 0.45 秒且中途没怎么移动才算，移动超过 6px（想滑）就取消
+          // 长按：按住 0.5 秒且中途没怎么移动才算，移动超过 6px（想滑）就取消
           longTimer = window.setTimeout(() => {
             if (!onLongPress || press.moved > 6 || draggedRef.current) return
             longPressedRef.current = true
             onLongPress()
-          }, 450)
+          }, 500)
         }}
         onClick={(clickEvent) => {
           const press = pressRef.current

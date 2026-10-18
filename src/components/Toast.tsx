@@ -17,7 +17,7 @@ export function Toast({ toast, onDismiss }: Props) {
 
   useEffect(() => {
     if (!toast) return
-    const timer = window.setTimeout(onDismiss, toast.action ? 6000 : 3200)
+    const timer = window.setTimeout(onDismiss, toast.action ? 8000 : 3200)
     return () => window.clearTimeout(timer)
   }, [toast, onDismiss])
 
