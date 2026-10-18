@@ -107,7 +107,7 @@ type SheetState =
   /** 节日挑选 */
   | { kind: 'festival' }
   | { kind: 'event'; mode: 'add' }
-  | { kind: 'event'; mode: 'edit'; event: DayEvent }
+  | { kind: 'event'; mode: 'edit'; event: DayEvent; view?: 'history' }
   | { kind: 'countdown'; mode: 'add' }
   | { kind: 'countdown'; mode: 'edit'; event: CountdownEvent }
   | { kind: 'checkin-menu' }
@@ -496,6 +496,10 @@ export default function App() {
                     setRevealedId(null)
                     setSheet({ kind: 'event', mode: 'edit', event })
                   }}
+                  onHistory={(event) => {
+                    setRevealedId(null)
+                    setSheet({ kind: 'event', mode: 'edit', event, view: 'history' })
+                  }}
                   onDelete={handleDeleteEvent}
                 />
                 <div className="foot">
@@ -641,6 +645,7 @@ export default function App() {
                   : undefined
               }
               suggestedColor={suggestEventColor()}
+              initialView={sheet.mode === 'edit' ? sheet.view : undefined}
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
               onDelete={sheet.mode === 'edit' ? () => handleDeleteEvent(sheet.event) : undefined}

@@ -171,6 +171,3 @@ type CheckInEvent = {
 
 MIT
 
-## 待办
-
-- [ ] **走过的日子的历史胶囊挪到卡片上**：现在历史入口在编辑弹层的「起始日期」旁边，要挪到卡片底部，点它直接开历史弹层，点卡片本身仍是编辑——和打卡卡片（`.card__tools` + `.field__chip`）完全一致。改动涉及 `EventCard.tsx`（加 `onHistory` 与 UI）、`EventList.tsx`（透传）、`App.tsx`（sheet 状态加 `view?: 'history'`，并把 `EventSheet` 的 `initialView` 传进去；`EventSheet` 已支持 `initialView`）。重置已改成按住半秒，已完成。

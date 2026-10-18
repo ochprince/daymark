@@ -8,10 +8,11 @@ type Props = {
   revealedId: string | null
   onReveal: (id: string | null) => void
   onOpen: (event: DayEvent) => void
+  onHistory?: (event: DayEvent) => void
   onDelete: (event: DayEvent) => void
 }
 
-export function EventList({ events, now, revealedId, onReveal, onOpen, onDelete }: Props) {
+export function EventList({ events, now, revealedId, onReveal, onOpen, onHistory, onDelete }: Props) {
   const reduced = useReducedMotion()
 
   return (
@@ -37,6 +38,7 @@ export function EventList({ events, now, revealedId, onReveal, onOpen, onDelete 
               revealed={revealedId === event.id}
               onReveal={onReveal}
               onOpen={onOpen}
+              onHistory={onHistory}
               onDelete={onDelete}
             />
           </motion.li>

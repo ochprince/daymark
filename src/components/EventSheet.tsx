@@ -26,6 +26,8 @@ type Props = {
   onDelete?: () => void
   /** 左滑删掉一轮历史（按下标，重复条目也能精确删一条），可撤销 */
   onDeleteStreak?: (index: number) => void
+  /** 从卡片上的「历史」进来时，直接展示历史 */
+  initialView?: 'edit' | 'history'
 }
 
 export function EventSheet({
@@ -36,13 +38,14 @@ export function EventSheet({
   onSubmit,
   onDelete,
   onDeleteStreak,
+  initialView = 'edit',
 }: Props) {
   const today = useMemo(() => todayStart(Date.now()), [])
   const [title, setTitle] = useState(event?.title ?? '')
   const [dateValue, setDateValue] = useState(() => dateInputValue(event ? event.startedAt : today))
   const [color, setColor] = useState(event ? event.color : suggestedColor)
   // 弹层里两种视图：编辑表单 / 历史列表（带返回）
-  const [view, setView] = useState<'edit' | 'history'>('edit')
+  const [view, setView] = useState<'edit' | 'history'>(initialView)
   /** 重置要按住半秒才生效，避免误触把攒下的天数清零 */
   const [resetting, setResetting] = useState(false)
   const resetTimer = useRef<number | null>(null)

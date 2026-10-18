@@ -9,10 +9,12 @@ type Props = {
   revealed: boolean
   onReveal: (id: string | null) => void
   onOpen: (event: DayEvent) => void
+  /** 点「历史」胶囊：直接看这一轮轮的历史 */
+  onHistory?: (event: DayEvent) => void
   onDelete: (event: DayEvent) => void
 }
 
-export function EventCard({ event, now, revealed, onReveal, onOpen, onDelete }: Props) {
+export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, onDelete }: Props) {
   const anchor = anchorOf(event)
   const days = daysSince(anchor, now)
   const span = formatSpan(anchor, now)
@@ -47,6 +49,21 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onDelete }: 
       <div className="card__count">
         <span className="card__num">{days}</span>
         <span className="card__unit">天</span>
+      </div>
+
+      <div className="card__tools">
+        <button
+          type="button"
+          className="field__chip"
+          aria-label={`查看「${event.title}」的历史`}
+          onClick={(clickEvent) => {
+            clickEvent.stopPropagation()
+            onHistory?.(event)
+          }}
+        >
+          <span className="field__chip-dot" />
+          {event.history && event.history.length > 0 ? `历史 · ${event.history.length} 轮` : '历史'}
+        </button>
       </div>
 
       <p className="card__foot">
