@@ -2166,3 +2166,31 @@ html[data-theme='light'] .fchip {
   width: 100%;
   margin-bottom: 2px;
 }
+
+
+/* 按住重置：按住期间底部填充，松手就退回去 */
+.btn--hold {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn--hold[data-charging] {
+  background-image: linear-gradient(var(--brand-1), var(--brand-1));
+  background-repeat: no-repeat;
+  background-position: left bottom;
+  background-size: 0% 2px;
+  animation: hold-fill 0.5s linear forwards;
+}
+
+@keyframes hold-fill {
+  to {
+    background-size: 100% 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn--hold[data-charging] {
+    background-size: 100% 2px;
+    animation: none;
+  }
+}

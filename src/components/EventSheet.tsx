@@ -14,6 +14,9 @@ import {
 import { closeStreak, sortStreaks, summarizeStreaks } from '../lib/streaks'
 import type { DayEvent, EventDraft } from '../lib/types'
 
+/** 重置要按住多久 */
+const RESET_HOLD_MS = 500
+
 type Props = {
   mode: 'add' | 'edit'
   event?: DayEvent
@@ -40,6 +43,27 @@ export function EventSheet({
   const [color, setColor] = useState(event ? event.color : suggestedColor)
   // 弹层里两种视图：编辑表单 / 历史列表（带返回）
   const [view, setView] = useState<'edit' | 'history'>('edit')
+  /** 重置要按住半秒才生效，避免误触把攒下的天数清零 */
+  const [resetting, setResetting] = useState(false)
+  const resetTimer = useRef<number | null>(null)
+
+  const startReset = () => {
+    if (days === 0) return
+    setResetting(true)
+    resetTimer.current = window.setTimeout(() => {
+      setDateValue(dateInputValue(today))
+      setResetting(false)
+      resetTimer.current = null
+    }, RESET_HOLD_MS)
+  }
+
+  const cancelReset = () => {
+    if (resetTimer.current !== null) {
+      window.clearTimeout(resetTimer.current)
+      resetTimer.current = null
+    }
+    setResetting(false)
+  }
   /** 历史列表里左滑露出来的那一条 */
   const [revealedStreak, setRevealedStreak] = useState<string | null>(null)
   /** 编辑视图量下来的内容高度：历史视图撑到同高，来回切换不会忽高忽低 */
@@ -185,12 +209,20 @@ export function EventSheet({
                 {mode === 'edit' ? (
                   <button
                     type="button"
-                    className="btn btn--ghost"
+                    className="btn btn--ghost btn--hold"
+                    data-charging={resetting ? 'true' : undefined}
                     disabled={days === 0}
-                    aria-label="把起始日期改回今天，保存后之前的天数计入历史"
-                    onClick={() => setDateValue(dateInputValue(today))}
+                    aria-label="按住半秒重置：把起始日期改回今天，保存后之前的天数计入历史"
+                    onPointerDown={(pointerEvent) => {
+                      pointerEvent.preventDefault()
+                      startReset()
+                    }}
+                    onPointerUp={cancelReset}
+                    onPointerLeave={cancelReset}
+                    onPointerCancel={cancelReset}
+                    onContextMenu={(contextEvent) => contextEvent.preventDefault()}
                   >
-                    重置
+                    {resetting ? '按住…' : '按住重置'}
                   </button>
                 ) : null}
               </div>
@@ -201,7 +233,7 @@ export function EventSheet({
                 <label className="field__label" htmlFor="event-start">
                   起始日期
                 </label>
-                {mode === 'edit' && history.length > 0 ? (
+                {mode === 'edit' ? (
                   <button
                     type="button"
                     className="field__chip"
@@ -211,7 +243,7 @@ export function EventSheet({
                     }}
                   >
                     <span className="field__chip-dot" />
-                    历史 · {history.length} 轮
+                    {history.length > 0 ? `历史 · ${history.length} 轮` : '历史'}
                   </button>
                 ) : null}
               </div>
