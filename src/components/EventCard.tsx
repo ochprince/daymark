@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, useReducedMotion } from 'motion/react'
 import { SwipeCard } from './SwipeCard'
+import { PencilIcon } from './icons'
 import { anchorOf, daysSince, formatDate, formatSpan, isToday, milestoneAt } from '../lib/days'
 import type { DayEvent } from '../lib/types'
 import { SparkIcon } from './icons'
@@ -24,7 +25,6 @@ const RESET_HOLD_MS = 500
 export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, onReset, onDelete }: Props) {
   const reduced = useReducedMotion()
   const [charging, setCharging] = useState(false)
-  const chargedRef = useRef(false)
   const holdTimer = useRef<number | null>(null)
 
   const endCharge = () => {
@@ -41,8 +41,6 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, o
     holdTimer.current = window.setTimeout(() => {
       holdTimer.current = null
       setCharging(false)
-      // 之后这次 click 要吞掉，别让它顺手把编辑弹层也打开了
-      chargedRef.current = true
       onReset(event)
     }, RESET_HOLD_MS)
   }
@@ -61,7 +59,8 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, o
       ariaLabel={`${event.title}，已经 ${days} 天`}
       revealed={revealed}
       onReveal={onReveal}
-      onOpen={() => onOpen(event)}
+      // 卡面点一下不做任何事：按住是重置，编辑走右上角的铅笔，避免两者打架
+      onOpen={() => undefined}
       // 按住重置的蓄力自己做（要带进度环），不用 SwipeCard 的裸长按
       pressScale={false}
       onDelete={() => onDelete(event)}
@@ -76,12 +75,6 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, o
         onPointerUp={endCharge}
         onPointerLeave={endCharge}
         onPointerCancel={endCharge}
-        onClick={(clickEvent) => {
-          if (chargedRef.current) {
-            chargedRef.current = false
-            clickEvent.stopPropagation()
-          }
-        }}
       >
         <span className="checkin__energy" aria-hidden="true" />
       <div className="card__head">
@@ -107,6 +100,17 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, o
         >
           <span className="field__chip-dot" />
           {event.history && event.history.length > 0 ? `历史 · ${event.history.length} 轮` : '历史'}
+        </button>
+        <button
+          type="button"
+          className="card__icon"
+          aria-label={`编辑「${event.title}」`}
+          onClick={(clickEvent) => {
+            clickEvent.stopPropagation()
+            onOpen(event)
+          }}
+        >
+          <PencilIcon className="icon-16" />
         </button>
       </div>
         {milestone !== null ? (
