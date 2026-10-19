@@ -941,6 +941,13 @@ html[data-theme='light'] .checkin__flash {
   overscroll-behavior: contain;
 }
 
+.checkin-history > .checkin-history__row {
+  /* 父级是带 max-height 的纵向 flex 滚动容器；行自己 overflow:hidden，
+     自动最小尺寸就是 0，会被压扁到装不下换行后的时刻胶囊（第二行被裁掉）。
+     锁死不参与收缩，超出的高度交给容器滚动。 */
+  flex: none;
+}
+
 .checkin-history__row {
   border-radius: var(--radius-field);
   border: 1px solid var(--line);
