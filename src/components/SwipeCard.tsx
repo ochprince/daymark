@@ -47,6 +47,14 @@ const SPRING_SNAP = { type: 'spring', visualDuration: 0.35, bounce: 0.18 } as co
 const clampAction = (value: number) => Math.min(-REVEAL_X, Math.max(0, value - REVEAL_X))
 
 /**
+ * 多长的按下算「点一下」。
+ * 卡片上的长按动作（打卡蓄力 0.5s）由子组件自己处理，
+ * 所以这里只用时长把「松手之后浏览器补发的那次 click」挡掉，
+ * 而不指望标志位——按到 300ms 以上一律不算点击。
+ */
+const TAP_MAX_MS = 300
+
+/**
  * 卡片外壳：负责左滑露出删除、点击打开、拖动跟手与松手吸附。
  * 走过的日子 / 倒数日两种卡片、以及编辑弹层里的历史条目共用同一套手势实现。
  */
@@ -67,8 +75,8 @@ export function SwipeCard({
   const draggedRef = useRef(false)
   /** 长按已经触发过：抑制随之而来的那次 click，否则会又记一次 */
   const longPressedRef = useRef(false)
-  /** 记录按下位置与按下期间的最大移动量：用来区分「点击」和「拖动」 */
-  const pressRef = useRef<{ x: number; y: number; moved: number } | null>(null)
+  /** 记录按下位置、按下期间的最大移动量与按下时刻：用来区分「点击」「拖动」「按住」 */
+  const pressRef = useRef<{ x: number; y: number; moved: number; downAt: number } | null>(null)
   const reduceMotion = useReducedMotion()
 
   // 位移是唯一状态源：红色填充与删除图标都由它派生
@@ -168,7 +176,7 @@ export function SwipeCard({
         }}
         onPointerDown={(pointerEvent) => {
           // 在 window 上记移动量：拖动时手指下的元素会换，挂在卡片上会漏记
-          const press = { x: pointerEvent.clientX, y: pointerEvent.clientY, moved: 0 }
+          const press = { x: pointerEvent.clientX, y: pointerEvent.clientY, moved: 0, downAt: Date.now() }
           pressRef.current = press
           const onMove = (moveEvent: PointerEvent) => {
             const moved = Math.hypot(moveEvent.clientX - press.x, moveEvent.clientY - press.y)
@@ -205,6 +213,12 @@ export function SwipeCard({
           if (draggedRef.current) return
           // 纵向拖动（滚列表）也算「不是点击」，否则松手会误开编辑
           if (press && clickEvent.detail > 0 && press.moved > 6) return
+          /*
+           * 按得久 = 不是点击。子组件（打卡卡的蓄力）自己吃掉长按，
+           * SwipeCard 这边收不到 onLongPress，只靠标志位拦不住松手后补发的 click，
+           * 于是「按住记一次」会顺带把编辑页打开。改用时长判定，与谁处理长按无关。
+           */
+          if (press && clickEvent.detail > 0 && Date.now() - press.downAt > TAP_MAX_MS) return
           activate()
         }}
         onKeyDown={(keyEvent) => {

@@ -39,14 +39,16 @@ export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Pr
           <span>{event.title}</span>
         </h2>
         {/* 倒数日页不放里程碑徽标：那和大字「还有 N 天」是同一句话 */}
-        {event.repeat !== 'none' ? (
-          <span className="chip">
-            <RepeatIcon />
-            {repeat.label}
-          </span>
-        ) : expired ? (
-          <span className="chip chip--muted">已过期</span>
-        ) : null}
+        <div className="card__head-aside">
+          {event.repeat !== 'none' ? (
+            <span className="chip">
+              <RepeatIcon />
+              {repeat.label}
+            </span>
+          ) : expired ? (
+            <span className="chip chip--muted">已过期</span>
+          ) : null}
+        </div>
       </div>
 
       <div className="card__count">

@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { SwipeCard } from './SwipeCard'
-import { PencilIcon } from './icons'
 import {
   buildHistory,
   countInPeriod,
@@ -77,6 +76,8 @@ export function CheckInCard({
   const [bursts, setBursts] = useState<Burst[]>([])
   const pointRef = useRef({ x: 0, y: 0 })
   const timerRef = useRef(0)
+  /** 每次特效各自的收走定时器：连续两次打卡时，前一次不能被后一次的 effect 清理连带取消 */
+  const burstTimers = useRef<number[]>([])
 
   const lastCount = useRef(count)
 
@@ -97,15 +98,24 @@ export function CheckInCard({
     setBursts((list) => [...list.slice(-4), burst])
     // 轻微震动（iOS Safari 没有这个 API，会自动跳过）
     navigator.vibrate?.(burst.milestone ? [12, 40, 22] : 16)
-    // 定时收走这一次的特效：不依赖动画回调，连续打卡时也不会越积越多
+    // 定时收走这一次的特效：不依赖动画回调，连续打卡时也不会越积越多。
+    // 定时器挂在 ref 上、不跟 effect 的清理走——清理会把上一次的定时器一起取消，
+    // 一秒内连按两次时上一条 "+1" 就永远留在 DOM 里。
     const timer = window.setTimeout(() => {
       setBursts((list) => list.filter((item) => item.id !== burst.id))
+      burstTimers.current = burstTimers.current.filter((id) => id !== timer)
     }, 1000)
-    return () => window.clearTimeout(timer)
+    burstTimers.current.push(timer)
   }, [count])
 
   // 卡片被滑走 / 页面切走时别把定时器留下，否则会在后台补记一次
-  useEffect(() => () => window.clearTimeout(timerRef.current), [])
+  useEffect(
+    () => () => {
+      window.clearTimeout(timerRef.current)
+      burstTimers.current.forEach((id) => window.clearTimeout(id))
+    },
+    [],
+  )
 
   const beginCharge = (pointerEvent: React.PointerEvent<HTMLDivElement>) => {
     if (pointerEvent.pointerType === 'mouse' && pointerEvent.button !== 0) return
@@ -138,8 +148,8 @@ export function CheckInCard({
       ariaLabel={`${event.title}，${periodNoun(event.cadence)}已记 ${count} 次，按住半秒再记一次`}
       revealed={revealed}
       onReveal={onReveal}
-      // 点一下不再记数：记一次只能靠按住蓄力，这里什么都不做
-      onOpen={() => undefined}
+      // 点一下 = 打开编辑（按得久就不算点击，由 SwipeCard 判断时长）
+      onOpen={() => onEdit(event)}
       // 按住两秒的缩放会把卡片边缘缩进去、露出底下的红色，这里不要按下反馈
       pressScale={false}
       onDelete={() => onDelete(event)}
@@ -151,7 +161,6 @@ export function CheckInCard({
         onPointerUp={endCharge}
         onPointerCancel={endCharge}
         onPointerLeave={endCharge}
-        onClick={(clickEvent) => clickEvent.stopPropagation()}
       >
         <div className="card__head">
           <h2 className="card__title">
@@ -165,6 +174,7 @@ export function CheckInCard({
             </span>
             <span>{event.title}</span>
           </h2>
+          <div className="card__head-aside">
           <div className="card__tools">
             {/* 入口常驻：刚建的事一件还没记完时也要能看到它，否则入口等于藏起来了 */}
             <button
@@ -178,17 +188,7 @@ export function CheckInCard({
               <span className="field__chip-dot" />
               {history.length > 0 ? `历史 · ${history.length} ${periodUnit(event.cadence)}` : '历史'}
             </button>
-            <button
-              type="button"
-              className="card__icon"
-              aria-label={`编辑「${event.title}」`}
-              onClick={(clickEvent) => {
-                clickEvent.stopPropagation()
-                onEdit(event)
-              }}
-            >
-              <PencilIcon />
-            </button>
+          </div>
           </div>
         </div>
 
@@ -229,8 +229,12 @@ export function CheckInCard({
           ) : null}
         </p>
 
-        {/* 蓄力：底部柔和亮起的一团光（进度看标题旁的圆环，两秒闭合） */}
+        {/* 蓄力：底部柔和亮起的一团光（进度看标题旁的圆环，半秒闭合） */}
         <span className="checkin__energy" aria-hidden="true" />
+        {/* 常驻的蓄力槽：静止时也在说「这里可以按住」，按住后从左往右填满 */}
+        <span className="checkin__track" aria-hidden="true">
+          <span className="checkin__track-fill" />
+        </span>
 
         {/* 蓄满那一刻的特效层：全部限制在卡片内部（卡片本身 overflow: hidden），不参与命中 */}
         <div className="checkin__fx" aria-hidden="true">

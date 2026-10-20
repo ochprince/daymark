@@ -491,15 +491,12 @@ export default function App() {
       <span>生日、纪念日，写下来就不用再数了</span>
     )
 
+  // 副标题只留「共 N 件事」：今天几次在每张卡片上已经有了，写两遍只是噪声
   const checkinStats =
     checkInSummary.count > 0 ? (
-      <>
-        <span>共 {checkInSummary.count} 件事</span>
-        <span className="hero__sep" />
-        <span>今天记了 {checkInSummary.today} 次</span>
-      </>
+      <span>共 {checkInSummary.count} 件事</span>
     ) : (
-      <span>按住半秒记一次，它会替你数着</span>
+      <span>按住卡片记一次，它会替你数着</span>
     )
 
   /** 每页的结构一样，只是数据源与文案不同；轨道上有几格就渲染几份 */
@@ -543,11 +540,10 @@ export default function App() {
                     setRevealedId(null)
                     setSheet({ kind: 'event', mode: 'edit', event, view: 'history' })
                   }}
-                  onReset={handleResetEvent}
                   onDelete={handleDeleteEvent}
                 />
                 <div className="foot">
-                  <span>点击编辑 · 按住重置 · 左滑删除</span>
+                  <span>轻点编辑 · 左滑删除</span>
                 </div>
               </>
             ) : (
@@ -602,7 +598,7 @@ export default function App() {
                 onDelete={handleDeleteCheckIn}
               />
               <div className="foot">
-                <span>按住半秒记一次 · 铅笔编辑 · 左滑删除</span>
+                <span>按住卡片记一次 · 轻点编辑 · 左滑删除</span>
               </div>
             </>
           ) : (
@@ -692,6 +688,15 @@ export default function App() {
               initialView={sheet.mode === 'edit' ? sheet.view : undefined}
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
+              onReset={
+                sheet.mode === 'edit'
+                  ? () => {
+                      const current = events.find((item) => item.id === sheet.event.id) ?? sheet.event
+                      setSheet(null)
+                      handleResetEvent(current)
+                    }
+                  : undefined
+              }
               onDelete={sheet.mode === 'edit' ? () => handleDeleteEvent(sheet.event) : undefined}
               onDeleteStreak={
                 sheet.mode === 'edit'
