@@ -231,10 +231,6 @@ export function CheckInCard({
 
         {/* 蓄力：底部柔和亮起的一团光（进度看标题旁的圆环，半秒闭合） */}
         <span className="checkin__energy" aria-hidden="true" />
-        {/* 常驻的蓄力槽：静止时也在说「这里可以按住」，按住后从左往右填满 */}
-        <span className="checkin__track" aria-hidden="true">
-          <span className="checkin__track-fill" />
-        </span>
 
         {/* 蓄满那一刻的特效层：全部限制在卡片内部（卡片本身 overflow: hidden），不参与命中 */}
         <div className="checkin__fx" aria-hidden="true">

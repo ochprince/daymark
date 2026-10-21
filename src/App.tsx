@@ -20,12 +20,10 @@ import { FestivalSheet } from './components/FestivalSheet'
 import { Toast } from './components/Toast'
 import type { ToastState } from './components/Toast'
 import {
-  anchorOf,
   buildCountdownList,
   sortEvents,
   summarize,
   summarizeCountdowns,
-  todayStart,
 } from './lib/days'
 import { pageOfSlot, slotCountFor, usePager } from './lib/usePager'
 import { useSharedScroll } from './lib/useSharedScroll'
@@ -64,7 +62,7 @@ import {
 import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
 import { THEME_MODE_TOAST, useTheme } from './lib/useTheme'
-import { closeStreak, sortStreaks } from './lib/streaks'
+import { sortStreaks } from './lib/streaks'
 import { festivalSfx, isSoundOn, playSfx, toggleSound } from './lib/sfx'
 import { CheckInPresetSheet } from './components/CheckInPresetSheet'
 import type {
@@ -245,42 +243,6 @@ export default function App() {
 
   const notifyDeleted = useCallback((title: string, undo: () => void) => {
     setToast({ id: Date.now(), message: `已删除「${title}」`, action: { label: '撤销', run: undo } })
-  }, [])
-
-  /**
-   * 按住卡片半秒：把这一轮封存进历史，并从此刻重新计时。
-   * 重置代价大，所以留一份完整快照给撤销用——恢复的是原值，不是反推。
-   */
-  const handleResetEvent = useCallback((event: DayEvent) => {
-    const now = Date.now()
-    const snapshot = {
-      startedAt: event.startedAt,
-      anchorAt: event.anchorAt,
-      history: event.history ?? [],
-    }
-    const streak = closeStreak(anchorOf(event), now)
-
-    updateEvent(event.id, {
-      startedAt: todayStart(now),
-      anchorAt: now,
-      history: [streak, ...(event.history ?? [])],
-    })
-
-    setToast({
-      id: now,
-      message: `「${event.title}」已重置，之前的天数记进历史了`,
-      action: {
-        label: '撤销',
-        run: () => {
-          updateEvent(event.id, {
-            startedAt: snapshot.startedAt,
-            anchorAt: snapshot.anchorAt,
-            history: snapshot.history,
-          })
-          setToast(null)
-        },
-      },
-    })
   }, [])
 
   const handleDeleteEvent = useCallback(
@@ -688,15 +650,6 @@ export default function App() {
               initialView={sheet.mode === 'edit' ? sheet.view : undefined}
               onClose={() => setSheet(null)}
               onSubmit={handleSubmit}
-              onReset={
-                sheet.mode === 'edit'
-                  ? () => {
-                      const current = events.find((item) => item.id === sheet.event.id) ?? sheet.event
-                      setSheet(null)
-                      handleResetEvent(current)
-                    }
-                  : undefined
-              }
               onDelete={sheet.mode === 'edit' ? () => handleDeleteEvent(sheet.event) : undefined}
               onDeleteStreak={
                 sheet.mode === 'edit'

@@ -21,8 +21,6 @@ type Props = {
   onClose: () => void
   onSubmit: (draft: EventDraft) => void
   onDelete?: () => void
-  /** 重置这一轮：之前的天数归档进历史，从今天重新计时（带撤销） */
-  onReset?: () => void
   /** 左滑删掉一轮历史（按下标，重复条目也能精确删一条），可撤销 */
   onDeleteStreak?: (index: number) => void
   /** 从卡片上的「历史」进来时，直接展示历史 */
@@ -36,7 +34,6 @@ export function EventSheet({
   onClose,
   onSubmit,
   onDelete,
-  onReset,
   onDeleteStreak,
   initialView = 'edit',
 }: Props) {
@@ -196,6 +193,17 @@ export function EventSheet({
                 <label className="field__label" htmlFor="event-start">
                   起始日期
                 </label>
+                {/* 重置就是「把起始日改回今天」：放成日期旁的一个快捷键，
+                    不再占底部按钮区的第三行 */}
+                {mode === 'edit' && dateValue !== dateInputValue(today) ? (
+                  <button
+                    type="button"
+                    className="field__chip"
+                    onClick={() => setDateValue(dateInputValue(today))}
+                  >
+                    设为今天
+                  </button>
+                ) : null}
               </div>
               <input
                 id="event-start"
@@ -206,9 +214,11 @@ export function EventSheet({
                 onChange={(changeEvent) => setDateValue(changeEvent.target.value)}
               />
               <span className="field__hint">
-                {days > 0
-                  ? `${formatDate(startedAt)} 起算 · 已经过去 ${days} 天`
-                  : `今天（${formatDate(startedAt)}）起算 · 天数从 0 开始`}
+                {archived
+                  ? '保存后：之前的天数记进历史，从今天重新计时'
+                  : days > 0
+                    ? `${formatDate(startedAt)} 起算 · 已经过去 ${days} 天`
+                    : `今天（${formatDate(startedAt)}）起算 · 天数从 0 开始`}
               </span>
             </div>
 
@@ -221,12 +231,6 @@ export function EventSheet({
               <button type="submit" className="btn btn--primary" disabled={!canSubmit}>
                 {mode === 'add' ? '开始记录' : '保存修改'}
               </button>
-              {mode === 'edit' && onReset ? (
-                <button type="button" className="btn btn--quiet" onClick={onReset}>
-                  重置这一轮
-                  <span className="btn__note">之前的天数记进历史，从今天重新计时</span>
-                </button>
-              ) : null}
               {mode === 'edit' && onDelete ? (
                 <button type="button" className="btn btn--danger" onClick={onDelete}>
                   删除这个日子

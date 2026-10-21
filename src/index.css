@@ -800,37 +800,6 @@ html[data-theme='light'] .card__num {
 
 /* 常驻的蓄力槽：静止时是一条很淡的轨道，等于把「这里可以按住」写在卡片上；
    按住后从左往右填满，填到头就是记上了 */
-.checkin__track {
-  position: absolute;
-  left: 18px;
-  right: 18px;
-  bottom: 6px;
-  height: 2px;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--accent-to) 16%, transparent);
-  pointer-events: none;
-  overflow: hidden;
-}
-
-.checkin__track-fill {
-  display: block;
-  height: 100%;
-  width: 0;
-  border-radius: inherit;
-  background: linear-gradient(90deg, var(--accent-from), var(--accent-to));
-  opacity: 0.85;
-}
-
-.checkin[data-charging='true'] .checkin__track-fill {
-  width: 100%;
-  transition: width 0.5s linear;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .checkin[data-charging='true'] .checkin__track-fill {
-    transition-duration: 0.01s;
-  }
-}
 
 /* 标题旁的小圆点：蓄力时从它长出一圈进度环。
    盒子仍然是 7px（和别的页面一致，不会把标题挤开），环溢出去画。
