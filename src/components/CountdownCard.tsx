@@ -1,18 +1,14 @@
 import { SwipeCard } from './SwipeCard'
 import { DAY_MS, formatDate, formatWeekday, nextOccurrence, repeatOption } from '../lib/days'
 import type { CountdownView } from '../lib/days'
-import type { CountdownEvent } from '../lib/types'
 import { RepeatIcon } from './icons'
 
 type Props = {
   view: CountdownView
-  revealed: boolean
-  onReveal: (id: string | null) => void
   onOpen: (view: CountdownView) => void
-  onDelete: (event: CountdownEvent) => void
 }
 
-export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Props) {
+export function CountdownCard({ view, onOpen }: Props) {
   const { event, next, days } = view
   const repeat = repeatOption(event.repeat)
   const expired = days < 0
@@ -28,10 +24,7 @@ export function CountdownCard({ view, revealed, onReveal, onOpen, onDelete }: Pr
       id={event.id}
       colorIndex={event.color}
       ariaLabel={`${event.title}，${expired ? `已过去 ${number} 天` : days === 0 ? '就是今天' : `还有 ${days} 天`}`}
-      revealed={revealed}
-      onReveal={onReveal}
       onOpen={() => onOpen(view)}
-      onDelete={() => onDelete(event)}
     >
       <div className="card__head">
         <h2 className="card__title">

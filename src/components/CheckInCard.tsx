@@ -36,13 +36,10 @@ let burstSeed = 0
 type Props = {
   event: CheckInEvent
   now: number
-  revealed: boolean
-  onReveal: (id: string | null) => void
   /** 蓄满力：记一次 */
   onTap: (event: CheckInEvent) => void
   onOpenHistory: (event: CheckInEvent) => void
   onEdit: (event: CheckInEvent) => void
-  onDelete: (event: CheckInEvent) => void
 }
 
 /**
@@ -59,12 +56,9 @@ type Props = {
 export function CheckInCard({
   event,
   now,
-  revealed,
-  onReveal,
   onTap,
   onOpenHistory,
   onEdit,
-  onDelete,
 }: Props) {
   const count = countInPeriod(event, now)
   const previous = previousPeriodCount(event, now)
@@ -146,13 +140,12 @@ export function CheckInCard({
       id={event.id}
       colorIndex={event.color}
       ariaLabel={`${event.title}，${periodNoun(event.cadence)}已记 ${count} 次，按住半秒再记一次`}
-      revealed={revealed}
-      onReveal={onReveal}
+
       // 点一下 = 打开编辑（按得久就不算点击，由 SwipeCard 判断时长）
       onOpen={() => onEdit(event)}
       // 按住两秒的缩放会把卡片边缘缩进去、露出底下的红色，这里不要按下反馈
       pressScale={false}
-      onDelete={() => onDelete(event)}
+
     >
       <div
         className="checkin"

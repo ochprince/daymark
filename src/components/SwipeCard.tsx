@@ -14,8 +14,12 @@ type Props = {
   /** 无障碍名称 */
   ariaLabel: string
   colorIndex: number
-  revealed: boolean
-  onReveal: (id: string | null) => void
+  /**
+   * 左滑露出删除：现在只剩编辑弹层里的历史条目在用。
+   * 首页卡片已经撤掉这套手势——它和滚动/翻页同向，误触率高、后果又不可逆。
+   */
+  revealed?: boolean
+  onReveal?: (id: string | null) => void
   /** 点击打开。历史条目这种没有可打开内容的就不传，点一下改为露出删除 */
   onOpen?: () => void
   /**
@@ -23,7 +27,7 @@ type Props = {
    * 所以这里需要一个「按住不动 0.45 秒」的入口。
    */
   onLongPress?: () => void
-  onDelete: () => void
+  onDelete?: () => void
   /** 内层容器的类名，默认 card；历史条目换成紧凑的行样式 */
   className?: string
   /**
@@ -72,6 +76,8 @@ export function SwipeCard({
   children,
 }: Props) {
   const accent = accentFor(colorIndex)
+  /** 没传 onDelete 就是「不使用滑动手势」的纯卡片外壳 */
+  const swipeEnabled = Boolean(onDelete)
   const draggedRef = useRef(false)
   /** 长按已经触发过：抑制随之而来的那次 click，否则会又记一次 */
   const longPressedRef = useRef(false)
@@ -95,7 +101,7 @@ export function SwipeCard({
     [reduceMotion, x],
   )
 
-  useEffect(() => snap(revealed ? REVEAL_X : 0), [revealed, snap])
+  useEffect(() => snap(swipeEnabled && revealed ? REVEAL_X : 0), [revealed, snap, swipeEnabled])
 
   const accentStyle = {
     '--accent-from': accent.from,
@@ -105,35 +111,37 @@ export function SwipeCard({
 
   /** 点击 / 回车：已经露出来就收回，有可打开的内容就打开，否则露出删除 */
   const activate = useCallback(() => {
-    if (revealed) {
-      onReveal(null)
+    if (swipeEnabled && revealed) {
+      onReveal?.(null)
       return
     }
     if (onOpen) {
       onOpen()
       return
     }
-    onReveal(id)
-  }, [id, onOpen, onReveal, revealed])
+    onReveal?.(id)
+  }, [id, onOpen, onReveal, revealed, swipeEnabled])
 
   return (
     <div className="swipe">
       {/* 删除层裁剪成与卡片同半径的圆角矩形：红色沿卡片弧度贴合，
           静止时两者轮廓一致，红色被卡片完全盖住 */}
-      <div className="swipe__bleed">
-        <div className="swipe__fill" />
-        <motion.button
-          type="button"
-          className="swipe__action"
-          style={{ x: actionX }}
-          tabIndex={revealed ? 0 : -1}
-          aria-hidden={!revealed}
-          onClick={onDelete}
-        >
-          <TrashIcon />
-          删除
-        </motion.button>
-      </div>
+      {swipeEnabled ? (
+        <div className="swipe__bleed">
+          <div className="swipe__fill" />
+          <motion.button
+            type="button"
+            className="swipe__action"
+            style={{ x: actionX }}
+            tabIndex={revealed ? 0 : -1}
+            aria-hidden={!revealed}
+            onClick={onDelete}
+          >
+            <TrashIcon />
+            删除
+          </motion.button>
+        </div>
+      ) : null}
 
       <motion.div
         className={className ?? 'card'}
@@ -144,9 +152,9 @@ export function SwipeCard({
         aria-haspopup={onOpen ? 'dialog' : undefined}
         aria-label={ariaLabel}
         data-card-id={id}
-        drag="x"
-        dragDirectionLock
-        dragConstraints={{ left: DRAG_FLOOR, right: 0 }}
+        drag={swipeEnabled ? 'x' : false}
+        dragDirectionLock={swipeEnabled}
+        dragConstraints={swipeEnabled ? { left: DRAG_FLOOR, right: 0 } : undefined}
         // 右侧阻尼 0：卡片不能往右拖（往右会露出底下的红色）。
         // 左侧只留极小回弹：到按钮宽度就是「到头了」，不会拉出更多红色。
         dragElastic={{ left: 0.03, right: 0 }}
@@ -157,9 +165,11 @@ export function SwipeCard({
           x.stop()
         }}
         onDrag={(_event, info: DragInfo) => {
+          if (!swipeEnabled) return
           if (Math.abs(info.offset.x) > 6) draggedRef.current = true
         }}
         onDragEnd={(_event, info: DragInfo) => {
+          if (!swipeEnabled) return
           // iOS 的判定顺序：先看甩动速度，速度不够再看松手瞬间的绝对位置（过半即开）
           const position = x.get()
           const velocity = info.velocity.x
@@ -168,7 +178,7 @@ export function SwipeCard({
           else if (velocity > 400) shouldReveal = false
           else shouldReveal = position < REVEAL_X / 2
 
-          onReveal(shouldReveal ? id : null)
+          onReveal?.(shouldReveal ? id : null)
           snap(shouldReveal ? REVEAL_X : 0)
           window.setTimeout(() => {
             draggedRef.current = false

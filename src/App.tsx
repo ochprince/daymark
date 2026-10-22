@@ -200,7 +200,6 @@ export default function App() {
   }
 
   const [sheet, setSheet] = useState<SheetState>(null)
-  const [revealedId, setRevealedId] = useState<string | null>(null)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const { mode: themeMode, cycleTheme } = useTheme()
@@ -220,25 +219,6 @@ export default function App() {
     }
   }, [sheet])
 
-  // 翻页时收起已经滑开的卡片（每页各自保留滚动位置）
-  useEffect(() => {
-    setRevealedId(null)
-  }, [index])
-
-  // 滑开删除后点其它任何地方 = 放弃这次删除，卡片归位。
-  // 按下的位置在那一行内部（卡片本身、删除按钮）时不处理，交给它们自己。
-  useEffect(() => {
-    if (!revealedId) return
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null
-      if (target?.closest('.swipe')) return
-      setRevealedId(null)
-    }
-    // 捕获阶段：先于这一下的其它处理，先把滑开状态收掉
-    document.addEventListener('pointerdown', onPointerDown, true)
-    return () => document.removeEventListener('pointerdown', onPointerDown, true)
-  }, [revealedId])
-
   const dismissToast = useCallback(() => setToast(null), [])
 
   const notifyDeleted = useCallback((title: string, undo: () => void) => {
@@ -248,7 +228,6 @@ export default function App() {
   const handleDeleteEvent = useCallback(
     (event: DayEvent) => {
       removeEvent(event.id)
-      setRevealedId(null)
       setSheet(null)
       notifyDeleted(event.title, () => restoreEvent(event))
     },
@@ -271,7 +250,6 @@ export default function App() {
   const handleDeleteCountdown = useCallback(
     (event: CountdownEvent) => {
       removeCountdown(event.id)
-      setRevealedId(null)
       setSheet(null)
       notifyDeleted(event.title, () => restoreCountdown(event))
     },
@@ -281,7 +259,6 @@ export default function App() {
   const handleDeleteCheckIn = useCallback(
     (event: CheckInEvent) => {
       removeCheckIn(event.id)
-      setRevealedId(null)
       setSheet(null)
       notifyDeleted(event.title, () => restoreCheckIn(event))
     },
@@ -492,20 +469,15 @@ export default function App() {
                 <EventList
                   events={sortedEvents}
                   now={now}
-                  revealedId={revealedId}
-                  onReveal={setRevealedId}
                   onOpen={(event) => {
-                    setRevealedId(null)
                     setSheet({ kind: 'event', mode: 'edit', event })
                   }}
                   onHistory={(event) => {
-                    setRevealedId(null)
                     setSheet({ kind: 'event', mode: 'edit', event, view: 'history' })
                   }}
-                  onDelete={handleDeleteEvent}
                 />
                 <div className="foot">
-                  <span>轻点编辑 · 左滑删除</span>
+                  <span>轻点编辑</span>
                 </div>
               </>
             ) : (
@@ -521,16 +493,12 @@ export default function App() {
               <>
                 <CountdownList
                   views={countdownList}
-                  revealedId={revealedId}
-                  onReveal={setRevealedId}
                   onOpen={(view) => {
-                    setRevealedId(null)
                     setSheet({ kind: 'countdown', mode: 'edit', event: view.event })
                   }}
-                  onDelete={handleDeleteCountdown}
                 />
                 <div className="foot">
-                  <span>点击编辑 · 左滑删除</span>
+                  <span>轻点编辑</span>
                 </div>
               </>
             ) : (
@@ -546,21 +514,16 @@ export default function App() {
               <CheckInList
                 events={sortedCheckIns}
                 now={now}
-                revealedId={revealedId}
-                onReveal={setRevealedId}
                 onTap={handleTapCheckIn}
                 onOpenHistory={(event) => {
-                  setRevealedId(null)
                   setSheet({ kind: 'checkin-history', event })
                 }}
                 onEdit={(event) => {
-                  setRevealedId(null)
                   setSheet({ kind: 'checkin', mode: 'edit', event })
                 }}
-                onDelete={handleDeleteCheckIn}
               />
               <div className="foot">
-                <span>按住卡片记一次 · 轻点编辑 · 左滑删除</span>
+                <span>按住卡片记一次 · 轻点编辑</span>
               </div>
             </>
           ) : (

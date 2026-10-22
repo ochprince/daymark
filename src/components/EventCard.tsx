@@ -7,15 +7,12 @@ import { SparkIcon } from './icons'
 type Props = {
   event: DayEvent
   now: number
-  revealed: boolean
-  onReveal: (id: string | null) => void
   onOpen: (event: DayEvent) => void
   /** 点「历史」胶囊：直接看这一轮轮的历史 */
   onHistory?: (event: DayEvent) => void
-  onDelete: (event: DayEvent) => void
 }
 
-export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, onDelete }: Props) {
+export function EventCard({ event, now, onOpen, onHistory }: Props) {
   const reduced = useReducedMotion()
   const anchor = anchorOf(event)
   const days = daysSince(anchor, now)
@@ -28,13 +25,10 @@ export function EventCard({ event, now, revealed, onReveal, onOpen, onHistory, o
       id={event.id}
       colorIndex={event.color}
       ariaLabel={`${event.title}，已经 ${days} 天`}
-      revealed={revealed}
-      onReveal={onReveal}
       // 点一下 = 打开编辑。长按在这张卡片上不再绑定任何动作：
       // 「按住」在整个 app 里只有一个意思——记一次（打卡）。
       onOpen={() => onOpen(event)}
       pressScale={false}
-      onDelete={() => onDelete(event)}
     >
       <div className="card__body">
       <div className="card__head">

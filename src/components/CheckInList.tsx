@@ -5,23 +5,17 @@ import { CheckInCard } from './CheckInCard'
 type Props = {
   events: CheckInEvent[]
   now: number
-  revealedId: string | null
-  onReveal: (id: string | null) => void
   onTap: (event: CheckInEvent) => void
   onOpenHistory: (event: CheckInEvent) => void
   onEdit: (event: CheckInEvent) => void
-  onDelete: (event: CheckInEvent) => void
 }
 
 export function CheckInList({
   events,
   now,
-  revealedId,
-  onReveal,
   onTap,
   onOpenHistory,
   onEdit,
-  onDelete,
 }: Props) {
   const reduced = useReducedMotion()
 
@@ -45,12 +39,9 @@ export function CheckInList({
             <CheckInCard
               event={event}
               now={now}
-              revealed={revealedId === event.id}
-              onReveal={onReveal}
               onTap={onTap}
               onOpenHistory={onOpenHistory}
               onEdit={onEdit}
-              onDelete={onDelete}
             />
           </motion.li>
         ))}
