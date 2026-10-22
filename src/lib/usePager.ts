@@ -12,10 +12,13 @@ const PAGE_RATIO = 0.3
 const DRAG_SLOP = 6
 
 /**
- * 这些区域里的横向拖动不属于翻页：
- * 卡片自己要用左滑删除，弹层/提示条是浮在上面的独立层。
+ * 这些区域里的横向拖动不属于翻页：弹层/提示条/悬浮按钮是浮在上面的独立层。
+ *
+ * 卡片不在这个列表里——卡片自己已经不做横向手势了（左滑删除撤掉了），
+ * 所以在卡片上左右滑就是翻页，和空白处一样。弹层里的历史条目仍然靠
+ * `.sheet-overlay` 被排除，那边的左滑删除不受影响。
  */
-const OCCUPIED = '[data-swipe-card], .swipe__action, .sheet-overlay, .toast, .fab'
+const OCCUPIED = '.swipe__action, .sheet-overlay, .toast, .fab'
 
 /**
  * 轨道上的槽位数 = 页数 + 1。
@@ -43,8 +46,8 @@ type Sample = { x: number; t: number }
  * 所以越过一整轮时把位置整体平移一个周期，渲染结果一个像素都不变，
  * 于是左右都能一直滑下去（不会滑到边上就停住）。
  *
- * 手势挂在整个页面上（handleProps），但只要按下的位置落在卡片内部，
- * 就让位给卡片的左滑删除，两边不会一起动。
+ * 手势挂在整个页面上（handleProps）：卡片、空白处按下都能翻页，
+ * 只有弹层、提示条、悬浮按钮这些浮层里的横向拖动不由它接管。
  */
 export function usePager(count: number, initialIndex = 0) {
   const stageRef = useRef<HTMLDivElement | null>(null)
