@@ -36,6 +36,7 @@ const events = createStore<DayEvent>({
 })
 
 export const subscribe = events.subscribe
+export const reload = events.reload
 export const getEvents = events.getAll
 export const removeEvent = events.remove
 export const restoreEvent = events.restore

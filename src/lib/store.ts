@@ -104,5 +104,10 @@ export function createStore<T extends Base>({ key, isValid, normalize, defaults 
     reset(): void {
       commit([])
     },
+    /** 迁移写完 localStorage 之后从这里重新读一遍 */
+    reload(): void {
+      cache = read()
+      emit()
+    },
   }
 }

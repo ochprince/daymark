@@ -17,22 +17,8 @@ const MAX_TIMES_PER_DAY = 500
  * 日期与周期
  * ------------------------------------------------------------------ */
 
-/** 本地日期键 yyyy-mm-dd */
-export function dayKey(ts: number): string {
-  const date = new Date(ts)
-  const month = `${date.getMonth() + 1}`.padStart(2, '0')
-  const day = `${date.getDate()}`.padStart(2, '0')
-  return `${date.getFullYear()}-${month}-${day}`
-}
-
-/** 日期键 → 当天 00:00。用本地时间构造，不走 Date.parse 以免被当成 UTC */
-export function parseDayKey(key: string): number {
-  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(key)
-  if (!match) return Number.NaN
-  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
-  date.setHours(0, 0, 0, 0)
-  return date.getTime()
-}
+import { dayKey, parseDayKey } from './daykey'
+export { dayKey, parseDayKey }
 
 /** 所在自然周的周一 00:00（周一是每周第一天） */
 export function weekStart(ts: number): number {
@@ -387,6 +373,7 @@ const checkins = createStore<CheckInEvent>({
 })
 
 export const subscribe = checkins.subscribe
+export const reload = checkins.reload
 export const getCheckIns = checkins.getAll
 export const removeCheckIn = checkins.remove
 export const restoreCheckIn = checkins.restore

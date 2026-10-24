@@ -34,6 +34,7 @@ const countdowns = createStore<CountdownEvent>({
 })
 
 export const subscribe = countdowns.subscribe
+export const reload = countdowns.reload
 export const getCountdowns = countdowns.getAll
 export const removeCountdown = countdowns.remove
 export const restoreCountdown = countdowns.restore
