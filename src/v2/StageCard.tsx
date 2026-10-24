@@ -21,6 +21,8 @@ export type StageCardProps = {
   onProfile: () => void
   /** 记录之后临时换一句气泡 */
   overrideLine?: string | null
+  /** 每摸一次 +1：用来触发跳一下的动画 */
+  pokeNonce?: number
 }
 
 function stageName(species: CreatureSpecies, stage: number): string {
@@ -39,8 +41,17 @@ function stagePercent(growth: number, stage: number): number {
   return Math.max(0, Math.min(100, ((growth - from) / span) * 100))
 }
 
-export function StageCard({ view, onLog, onSayDone, onPoke, onProfile, overrideLine }: StageCardProps) {
+export function StageCard({
+  view,
+  onLog,
+  onSayDone,
+  onPoke,
+  onProfile,
+  overrideLine,
+  pokeNonce = 0,
+}: StageCardProps) {
   const [charging, setCharging] = useState(false)
+  const [jumping, setJumping] = useState(false)
   const timer = useRef<number | null>(null)
 
   useEffect(
@@ -49,6 +60,14 @@ export function StageCard({ view, onLog, onSayDone, onPoke, onProfile, overrideL
     },
     [],
   )
+
+  // 摸摸它：跳一下就好，不加粒子（日常交互的动效节点要省着用）
+  useEffect(() => {
+    if (pokeNonce === 0) return undefined
+    setJumping(true)
+    const timer = window.setTimeout(() => setJumping(false), 620)
+    return () => window.clearTimeout(timer)
+  }, [pokeNonce])
 
   const canHold = view.kind === 'habit'
   const sleeping = view.mood === 'sleep'
@@ -97,7 +116,7 @@ export function StageCard({ view, onLog, onSayDone, onPoke, onProfile, overrideL
       <div className="sc-hero">
         <div className="bubble">{line}</div>
         <div
-          className={`cr-wrap ${sleeping ? 'sleep' : ''}`}
+          className={`cr-wrap ${sleeping ? 'sleep' : ''} ${jumping ? 'jump' : ''}`}
           onPointerDown={startHold}
           onPointerUp={cancelHold}
           onPointerLeave={cancelHold}

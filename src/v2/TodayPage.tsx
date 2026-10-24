@@ -17,6 +17,7 @@ export type TodayPageProps = {
   onPoke: () => void
   onProfile: () => void
   overrideLine?: string | null
+  pokeNonce?: number
 }
 
 function greet(now: number): string {
@@ -40,6 +41,7 @@ export function TodayPage({
   onPoke,
   onProfile,
   overrideLine,
+  pokeNonce,
 }: TodayPageProps) {
   if (!focus) {
     return (
@@ -113,6 +115,7 @@ export function TodayPage({
         onPoke={onPoke}
         onProfile={onProfile}
         overrideLine={overrideLine}
+        pokeNonce={pokeNonce}
       />
 
       <div className="focus-dots">

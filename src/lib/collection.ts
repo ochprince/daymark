@@ -197,7 +197,12 @@ export function dexKey(species: string, stage: Stage): string {
 /** 解锁图鉴（幂等） */
 export function unlockDex(keys: readonly string[]): string[] {
   const state = collectionStore.get()
-  const fresh = keys.filter((key) => key.length > 0 && !state.dex.includes(key))
+  // 同一批里重复的键只算一次（filter 只看得到旧状态，会漏掉批内重复）
+  const fresh: string[] = []
+  for (const key of keys) {
+    if (key.length === 0 || state.dex.includes(key) || fresh.includes(key)) continue
+    fresh.push(key)
+  }
   if (fresh.length === 0) return []
   collectionStore.patch({ dex: [...state.dex, ...fresh] })
   return fresh
@@ -206,7 +211,11 @@ export function unlockDex(keys: readonly string[]): string[] {
 /** 解锁徽章，返回这次真正解锁的（用来弹窗） */
 export function unlockBadges(ids: readonly BadgeId[], now = Date.now()): BadgeId[] {
   const state = collectionStore.get()
-  const fresh = ids.filter((id) => BADGE_BY_ID[id] && !hasBadge(state, id))
+  const fresh: BadgeId[] = []
+  for (const id of ids) {
+    if (!BADGE_BY_ID[id] || hasBadge(state, id) || fresh.includes(id)) continue
+    fresh.push(id)
+  }
   if (fresh.length === 0) return []
   const badges = { ...state.badges }
   for (const id of fresh) badges[id] = now
@@ -230,10 +239,12 @@ export function grantBadgesSilently(ids: readonly BadgeId[], at: number): void {
 /** 记下某件事见过的最高形态（只升不降） */
 export function noteStage(itemKey: string, stage: Stage, kind: 'peak' | 'seen'): void {
   const state = collectionStore.get()
-  const map = kind === 'peak' ? state.peakStage : state.seenStage
+  // 字段名是 peakStage / seenStage——曾经写成 [kind] 直接拼，结果多出 peak/seen 两个野字段
+  const field = kind === 'peak' ? 'peakStage' : 'seenStage'
+  const map = state[field]
   const current = map[itemKey]
   if (typeof current === 'number' && current >= stage) return
-  collectionStore.patch({ [kind]: { ...map, [itemKey]: stage } } as Partial<CollectionState>)
+  collectionStore.patch({ [field]: { ...map, [itemKey]: stage } })
 }
 
 /** 过场是否还需要播：见过的形态低于当前形态 */

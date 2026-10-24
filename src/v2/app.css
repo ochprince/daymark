@@ -160,6 +160,60 @@ body {
   font-weight: 500;
 }
 
+/* 徽章弹窗 */
+.badge-pop {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: min(300px, calc(100% - 48px));
+  padding: 22px 20px 18px;
+  border-radius: var(--r1);
+  border: var(--bw) solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--pop);
+  text-align: center;
+  animation: pop 0.42s var(--ease-pop);
+}
+
+.badge-pop .badge-wrap {
+  display: inline-flex;
+  animation: stamp 0.5s var(--ease-pop) 0.1s both;
+}
+
+.badge-pop__title {
+  margin-top: 6px;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: var(--ink3);
+}
+
+.badge-pop__name {
+  margin-top: 2px;
+  font-size: 22px;
+  font-weight: 800;
+  font-family: var(--font-title);
+}
+
+.badge-pop p {
+  margin: 6px 0 16px;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink2);
+}
+
+@keyframes stamp {
+  from {
+    opacity: 0;
+    transform: scale(2.2) rotate(-14deg);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) rotate(0);
+  }
+}
+
 /* 提示条 */
 .toast {
   position: fixed;
