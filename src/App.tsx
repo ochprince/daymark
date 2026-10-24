@@ -20,12 +20,10 @@ import { FestivalSheet } from './components/FestivalSheet'
 import { Toast } from './components/Toast'
 import type { ToastState } from './components/Toast'
 import {
-  anchorOf,
   buildCountdownList,
   sortEvents,
   summarize,
   summarizeCountdowns,
-  todayStart,
 } from './lib/days'
 import { pageOfSlot, slotCountFor, usePager } from './lib/usePager'
 import { useSharedScroll } from './lib/useSharedScroll'
@@ -64,7 +62,7 @@ import {
 import type { Festival } from './lib/festivals'
 import { useNow } from './lib/useNow'
 import { THEME_MODE_TOAST, useTheme } from './lib/useTheme'
-import { closeStreak, sortStreaks } from './lib/streaks'
+import { sortStreaks } from './lib/streaks'
 import { festivalSfx, isSoundOn, playSfx, toggleSound } from './lib/sfx'
 import { CheckInPresetSheet } from './components/CheckInPresetSheet'
 import type {
@@ -202,7 +200,6 @@ export default function App() {
   }
 
   const [sheet, setSheet] = useState<SheetState>(null)
-  const [revealedId, setRevealedId] = useState<string | null>(null)
   const [toast, setToast] = useState<ToastState | null>(null)
   const [scrolled, setScrolled] = useState(false)
   const { mode: themeMode, cycleTheme } = useTheme()
@@ -222,71 +219,15 @@ export default function App() {
     }
   }, [sheet])
 
-  // 翻页时收起已经滑开的卡片（每页各自保留滚动位置）
-  useEffect(() => {
-    setRevealedId(null)
-  }, [index])
-
-  // 滑开删除后点其它任何地方 = 放弃这次删除，卡片归位。
-  // 按下的位置在那一行内部（卡片本身、删除按钮）时不处理，交给它们自己。
-  useEffect(() => {
-    if (!revealedId) return
-    const onPointerDown = (event: PointerEvent) => {
-      const target = event.target as HTMLElement | null
-      if (target?.closest('.swipe')) return
-      setRevealedId(null)
-    }
-    // 捕获阶段：先于这一下的其它处理，先把滑开状态收掉
-    document.addEventListener('pointerdown', onPointerDown, true)
-    return () => document.removeEventListener('pointerdown', onPointerDown, true)
-  }, [revealedId])
-
   const dismissToast = useCallback(() => setToast(null), [])
 
   const notifyDeleted = useCallback((title: string, undo: () => void) => {
     setToast({ id: Date.now(), message: `已删除「${title}」`, action: { label: '撤销', run: undo } })
   }, [])
 
-  /**
-   * 按住卡片半秒：把这一轮封存进历史，并从此刻重新计时。
-   * 重置代价大，所以留一份完整快照给撤销用——恢复的是原值，不是反推。
-   */
-  const handleResetEvent = useCallback((event: DayEvent) => {
-    const now = Date.now()
-    const snapshot = {
-      startedAt: event.startedAt,
-      anchorAt: event.anchorAt,
-      history: event.history ?? [],
-    }
-    const streak = closeStreak(anchorOf(event), now)
-
-    updateEvent(event.id, {
-      startedAt: todayStart(now),
-      anchorAt: now,
-      history: [streak, ...(event.history ?? [])],
-    })
-
-    setToast({
-      id: now,
-      message: `「${event.title}」已重置，之前的天数记进历史了`,
-      action: {
-        label: '撤销',
-        run: () => {
-          updateEvent(event.id, {
-            startedAt: snapshot.startedAt,
-            anchorAt: snapshot.anchorAt,
-            history: snapshot.history,
-          })
-          setToast(null)
-        },
-      },
-    })
-  }, [])
-
   const handleDeleteEvent = useCallback(
     (event: DayEvent) => {
       removeEvent(event.id)
-      setRevealedId(null)
       setSheet(null)
       notifyDeleted(event.title, () => restoreEvent(event))
     },
@@ -309,7 +250,6 @@ export default function App() {
   const handleDeleteCountdown = useCallback(
     (event: CountdownEvent) => {
       removeCountdown(event.id)
-      setRevealedId(null)
       setSheet(null)
       notifyDeleted(event.title, () => restoreCountdown(event))
     },
@@ -319,7 +259,6 @@ export default function App() {
   const handleDeleteCheckIn = useCallback(
     (event: CheckInEvent) => {
       removeCheckIn(event.id)
-      setRevealedId(null)
       setSheet(null)
       notifyDeleted(event.title, () => restoreCheckIn(event))
     },
@@ -491,15 +430,12 @@ export default function App() {
       <span>生日、纪念日，写下来就不用再数了</span>
     )
 
+  // 副标题只留「共 N 件事」：今天几次在每张卡片上已经有了，写两遍只是噪声
   const checkinStats =
     checkInSummary.count > 0 ? (
-      <>
-        <span>共 {checkInSummary.count} 件事</span>
-        <span className="hero__sep" />
-        <span>今天记了 {checkInSummary.today} 次</span>
-      </>
+      <span>共 {checkInSummary.count} 件事</span>
     ) : (
-      <span>按住半秒记一次，它会替你数着</span>
+      <span>按住卡片记一次，它会替你数着</span>
     )
 
   /** 每页的结构一样，只是数据源与文案不同；轨道上有几格就渲染几份 */
@@ -533,21 +469,15 @@ export default function App() {
                 <EventList
                   events={sortedEvents}
                   now={now}
-                  revealedId={revealedId}
-                  onReveal={setRevealedId}
                   onOpen={(event) => {
-                    setRevealedId(null)
                     setSheet({ kind: 'event', mode: 'edit', event })
                   }}
                   onHistory={(event) => {
-                    setRevealedId(null)
                     setSheet({ kind: 'event', mode: 'edit', event, view: 'history' })
                   }}
-                  onReset={handleResetEvent}
-                  onDelete={handleDeleteEvent}
                 />
                 <div className="foot">
-                  <span>点击编辑 · 按住重置 · 左滑删除</span>
+                  <span>轻点编辑</span>
                 </div>
               </>
             ) : (
@@ -563,16 +493,12 @@ export default function App() {
               <>
                 <CountdownList
                   views={countdownList}
-                  revealedId={revealedId}
-                  onReveal={setRevealedId}
                   onOpen={(view) => {
-                    setRevealedId(null)
                     setSheet({ kind: 'countdown', mode: 'edit', event: view.event })
                   }}
-                  onDelete={handleDeleteCountdown}
                 />
                 <div className="foot">
-                  <span>点击编辑 · 左滑删除</span>
+                  <span>轻点编辑</span>
                 </div>
               </>
             ) : (
@@ -588,21 +514,16 @@ export default function App() {
               <CheckInList
                 events={sortedCheckIns}
                 now={now}
-                revealedId={revealedId}
-                onReveal={setRevealedId}
                 onTap={handleTapCheckIn}
                 onOpenHistory={(event) => {
-                  setRevealedId(null)
                   setSheet({ kind: 'checkin-history', event })
                 }}
                 onEdit={(event) => {
-                  setRevealedId(null)
                   setSheet({ kind: 'checkin', mode: 'edit', event })
                 }}
-                onDelete={handleDeleteCheckIn}
               />
               <div className="foot">
-                <span>按住半秒记一次 · 铅笔编辑 · 左滑删除</span>
+                <span>按住卡片记一次 · 轻点编辑</span>
               </div>
             </>
           ) : (

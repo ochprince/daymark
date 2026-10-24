@@ -56,7 +56,9 @@ html[data-theme='light'] {
   --surface-hi: rgba(255, 255, 255, 0.8);
   --text: #14161a;
   --text-2: #5a6069;
-  --text-3: #7c828b;
+  /* 说明类文字：原先的 #7c828b 在浅灰卡片上只有 3.35，低于 AA 4.5；
+     调到 #666c76 后白卡 5.29 / 浅灰卡 4.57 / 页面底 4.82，仍明显浅于 --text-2 */
+  --text-3: #666c76;
   --line: rgba(18, 20, 26, 0.08);
   --line-strong: rgba(18, 20, 26, 0.14);
   --shadow-card: 0 1px 0 rgba(255, 255, 255, 0.9) inset, 0 16px 34px -26px rgba(24, 26, 34, 0.45);
@@ -382,6 +384,7 @@ textarea,
 }
 
 .icon-btn {
+  position: relative;
   display: grid;
   place-items: center;
   width: 38px;
@@ -391,6 +394,12 @@ textarea,
   border: 1px solid transparent;
   transition: background 0.2s var(--ease-out), color 0.2s var(--ease-out),
     border-color 0.2s var(--ease-out), transform 0.2s var(--ease-out);
+}
+
+.icon-btn::after {
+  content: '';
+  position: absolute;
+  inset: -3px;
 }
 
 .icon-btn:hover {
@@ -647,6 +656,11 @@ html[data-theme='dark'] .chip {
   border-color: var(--line);
 }
 
+/* 浅色下 --brand-2 在白卡上只有 3.19，一个可点入口的标签读不清就白写了 */
+html[data-theme='light'] .field__chip {
+  color: #2b5fc9;
+}
+
 html[data-theme='light'] .chip--milestone {
   color: var(--accent-ink);
   background: color-mix(in oklab, var(--accent-to) 22%, transparent);
@@ -730,6 +744,15 @@ html[data-theme='light'] .card__num {
   gap: 6px;
 }
 
+/* 标题行右侧的一组：历史胶囊 + 里程碑/跨度徽标。
+   包起来之后由这一组顶住卡片右边缘，带不带右侧徽标的两张卡才对得齐 */
+.card__head-aside {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .card__icon {
   flex: none;
   display: grid;
@@ -774,6 +797,9 @@ html[data-theme='light'] .card__num {
   opacity: 1;
   transition: opacity 0.42s cubic-bezier(0.4, 0, 0.6, 1);
 }
+
+/* 常驻的蓄力槽：静止时是一条很淡的轨道，等于把「这里可以按住」写在卡片上；
+   按住后从左往右填满，填到头就是记上了 */
 
 /* 标题旁的小圆点：蓄力时从它长出一圈进度环。
    盒子仍然是 7px（和别的页面一致，不会把标题挤开），环溢出去画。
@@ -1155,6 +1181,25 @@ html[data-theme='light'] .checkin__flash {
   background: color-mix(in oklab, #ff6b7a 10%, transparent);
 }
 
+/* 「重置这一轮」：破坏性但可撤销，做成安静的方块，不和删除抢红色 */
+.btn--quiet {
+  width: 100%;
+  height: auto;
+  padding: 11px 16px;
+  flex-direction: column;
+  gap: 2px;
+  border: 1px solid var(--line-strong);
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.btn__note {
+  font-size: 12px;
+  font-weight: 400;
+  letter-spacing: 0;
+  color: var(--text-3);
+}
+
 /* ---------- 悬浮按钮 ---------- */
 .fab-wrap {
   position: fixed;
@@ -1495,13 +1540,15 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  font-size: 11.5px;
-  color: var(--text-3);
+  /* 这行是手势的唯一说明，11.5px + --text-3 在全站是最弱的一层，读不清就等于没写 */
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--text-2);
 }
 
 .foot kbd {
   font-family: inherit;
-  font-size: 11.5px;
+  font-size: 12.5px;
 }
 
 /* ---------- 翻页轨道 ---------- */
@@ -1530,6 +1577,7 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
 
 /* ---------- 翻页手柄（箭头） ---------- */
 .pager-handle {
+  position: relative;
   flex: none;
   display: inline-flex;
   align-items: center;
@@ -1552,6 +1600,13 @@ html[data-theme='dark'] .date-input::-webkit-calendar-picker-indicator {
 .pager-handle:hover {
   color: var(--text);
   border-color: var(--line-strong);
+}
+
+/* 视觉高度 34，热区补到 44 */
+.pager-handle::after {
+  content: '';
+  position: absolute;
+  inset: -5px 0;
 }
 
 .pager-handle__chevron {
@@ -1963,6 +2018,7 @@ html[data-theme='light'] .fchip {
 
 /* 「历史 · N 轮」小胶囊：一眼看得出是按钮，还顺带带出轮数 */
 .field__chip {
+  position: relative;
   display: inline-flex;
   align-items: center;
   gap: 5px;
@@ -1977,6 +2033,13 @@ html[data-theme='light'] .fchip {
   transition:
     transform 0.16s var(--ease-out),
     opacity 0.16s var(--ease-out);
+}
+
+/* 胶囊本身只有 29px 高，热区扩到 44：视觉尺寸不变，手指更容易点中 */
+.field__chip::after {
+  content: '';
+  position: absolute;
+  inset: -8px -6px;
 }
 
 .field__chip:active {

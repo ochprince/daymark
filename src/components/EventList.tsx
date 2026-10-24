@@ -5,15 +5,11 @@ import { EventCard } from './EventCard'
 type Props = {
   events: DayEvent[]
   now: number
-  revealedId: string | null
-  onReveal: (id: string | null) => void
   onOpen: (event: DayEvent) => void
   onHistory?: (event: DayEvent) => void
-  onReset?: (event: DayEvent) => void
-  onDelete: (event: DayEvent) => void
 }
 
-export function EventList({ events, now, revealedId, onReveal, onOpen, onHistory, onReset, onDelete }: Props) {
+export function EventList({ events, now, onOpen, onHistory }: Props) {
   const reduced = useReducedMotion()
 
   return (
@@ -36,12 +32,8 @@ export function EventList({ events, now, revealedId, onReveal, onOpen, onHistory
             <EventCard
               event={event}
               now={now}
-              revealed={revealedId === event.id}
-              onReveal={onReveal}
               onOpen={onOpen}
               onHistory={onHistory}
-              onReset={onReset}
-              onDelete={onDelete}
             />
           </motion.li>
         ))}

@@ -193,6 +193,17 @@ export function EventSheet({
                 <label className="field__label" htmlFor="event-start">
                   起始日期
                 </label>
+                {/* 重置就是「把起始日改回今天」：放成日期旁的一个快捷键，
+                    不再占底部按钮区的第三行 */}
+                {mode === 'edit' && dateValue !== dateInputValue(today) ? (
+                  <button
+                    type="button"
+                    className="field__chip"
+                    onClick={() => setDateValue(dateInputValue(today))}
+                  >
+                    设为今天
+                  </button>
+                ) : null}
               </div>
               <input
                 id="event-start"
@@ -203,9 +214,11 @@ export function EventSheet({
                 onChange={(changeEvent) => setDateValue(changeEvent.target.value)}
               />
               <span className="field__hint">
-                {days > 0
-                  ? `${formatDate(startedAt)} 起算 · 已经过去 ${days} 天`
-                  : `今天（${formatDate(startedAt)}）起算 · 天数从 0 开始`}
+                {archived
+                  ? '保存后：之前的天数记进历史，从今天重新计时'
+                  : days > 0
+                    ? `${formatDate(startedAt)} 起算 · 已经过去 ${days} 天`
+                    : `今天（${formatDate(startedAt)}）起算 · 天数从 0 开始`}
               </span>
             </div>
 

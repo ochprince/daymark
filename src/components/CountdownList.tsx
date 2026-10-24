@@ -1,17 +1,13 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { CountdownCard } from './CountdownCard'
 import type { CountdownView } from '../lib/days'
-import type { CountdownEvent } from '../lib/types'
 
 type Props = {
   views: CountdownView[]
-  revealedId: string | null
-  onReveal: (id: string | null) => void
   onOpen: (view: CountdownView) => void
-  onDelete: (event: CountdownEvent) => void
 }
 
-export function CountdownList({ views, revealedId, onReveal, onOpen, onDelete }: Props) {
+export function CountdownList({ views, onOpen }: Props) {
   const reduced = useReducedMotion()
 
   return (
@@ -33,10 +29,7 @@ export function CountdownList({ views, revealedId, onReveal, onOpen, onDelete }:
           >
             <CountdownCard
               view={view}
-              revealed={revealedId === view.event.id}
-              onReveal={onReveal}
               onOpen={onOpen}
-              onDelete={onDelete}
             />
           </motion.li>
         ))}
