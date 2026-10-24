@@ -1181,25 +1181,6 @@ html[data-theme='light'] .checkin__flash {
   background: color-mix(in oklab, #ff6b7a 10%, transparent);
 }
 
-/* 「重置这一轮」：破坏性但可撤销，做成安静的方块，不和删除抢红色 */
-.btn--quiet {
-  width: 100%;
-  height: auto;
-  padding: 11px 16px;
-  flex-direction: column;
-  gap: 2px;
-  border: 1px solid var(--line-strong);
-  background: var(--surface-2);
-  color: var(--text);
-}
-
-.btn__note {
-  font-size: 12px;
-  font-weight: 400;
-  letter-spacing: 0;
-  color: var(--text-3);
-}
-
 /* ---------- 悬浮按钮 ---------- */
 .fab-wrap {
   position: fixed;

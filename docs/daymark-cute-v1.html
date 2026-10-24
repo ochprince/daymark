@@ -1,0 +1,805 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>刻度 · 萌系原型 v1</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Noto+Sans+SC:wght@400;500;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #faf6ef;
+    --paper-deep: #f4eee3;
+    --card: #ffffff;
+    --ink: #2e2a26;
+    --ink-2: #7a7268;
+    --ink-3: #a49a8d;
+    --line: #eee5d8;
+    --peach: #ef8f66;
+    --peach-soft: #fce9dd;
+    --mint: #62b998;
+    --mint-soft: #dff2e8;
+    --butter: #efc164;
+    --sky: #86b9e8;
+    --lilac: #ab98e2;
+    --r-card: 28px;
+    --r-pill: 999px;
+    --shadow-card: 0 10px 26px -14px rgba(78, 58, 38, 0.35), 0 2px 6px -4px rgba(78, 58, 38, 0.18);
+    --font: 'Noto Sans SC', -apple-system, 'WenQuanYi Micro Hei', sans-serif;
+    --font-num: 'Baloo 2', 'Noto Sans SC', sans-serif;
+    --font-cute: 'ZCOOL KuaiLe', 'Noto Sans SC', sans-serif;
+  }
+
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+  html, body { height: 100%; }
+
+  body {
+    margin: 0;
+    font-family: var(--font);
+    color: var(--ink);
+    background: #e8e2d8;
+    display: grid;
+    place-items: center;
+    padding: 0;
+  }
+
+  /* 手机上铺满，桌面上收进一台手机框里 */
+  .phone {
+    position: relative;
+    width: min(100vw, 402px);
+    height: min(100vh, 874px);
+    background: var(--paper);
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  @media (min-width: 520px) {
+    body { padding: 24px; background: #ded7cb; }
+    .phone {
+      height: 874px;
+      border-radius: 44px;
+      box-shadow: 0 40px 80px -40px rgba(46, 42, 38, .55), 0 0 0 1px rgba(0,0,0,.04);
+    }
+  }
+
+  /* 奶油底上的两团柔光，代替纯平底色 */
+  .phone::before {
+    content: '';
+    position: absolute;
+    inset: -20% -30% auto -30%;
+    height: 62%;
+    background:
+      radial-gradient(60% 60% at 30% 30%, rgba(239, 143, 102, .20), transparent 70%),
+      radial-gradient(50% 50% at 78% 12%, rgba(98, 185, 152, .18), transparent 72%);
+    filter: blur(6px);
+    z-index: -1;
+  }
+
+  /* 状态栏：让原型看起来像真机截图，而不是设计稿 */
+  .statusbar {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 26px 2px; font-size: 13px; font-weight: 600;
+    color: var(--ink); letter-spacing: .2px;
+  }
+  .statusbar__right { display: flex; align-items: center; gap: 5px; }
+  .bars { display: flex; align-items: flex-end; gap: 2px; }
+  .bars i { display: block; width: 3px; border-radius: 1px; background: var(--ink); opacity: .9; }
+  .bars i:nth-child(1) { height: 4px; }
+  .bars i:nth-child(2) { height: 6px; }
+  .bars i:nth-child(3) { height: 8px; }
+  .bars i:nth-child(4) { height: 10px; }
+  .batt {
+    width: 22px; height: 11px; margin-left: 4px; border-radius: 3px;
+    border: 1.4px solid var(--ink); position: relative; opacity: .9;
+  }
+  .batt::before {
+    content: ''; position: absolute; inset: 1.5px; right: 6px;
+    border-radius: 1px; background: var(--ink);
+  }
+
+  .home-bar {
+    position: absolute; left: 50%; bottom: 8px; width: 132px; height: 5px;
+    margin-left: -66px; border-radius: 999px; background: rgba(46,42,38,.28);
+  }
+
+  .screen {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 12px 0 0;
+    opacity: 0;
+    transform: translateY(6px);
+    pointer-events: none;
+    transition: opacity .28s ease, transform .28s ease;
+  }
+  .screen.is-on { opacity: 1; transform: none; pointer-events: auto; }
+
+  /* ---------- 顶栏 ---------- */
+  .topbar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 20px 0;
+  }
+  .brand { display: flex; align-items: center; gap: 8px; }
+  .brand__mark { display: flex; align-items: flex-end; gap: 3px; height: 18px; }
+  .brand__mark i {
+    width: 4px; border-radius: 999px; background: var(--peach); display: block;
+  }
+  .brand__mark i:nth-child(1) { height: 9px; opacity: .55; }
+  .brand__mark i:nth-child(2) { height: 14px; opacity: .8; }
+  .brand__mark i:nth-child(3) { height: 18px; }
+  .brand__name { font-family: var(--font-cute); font-size: 17px; letter-spacing: .5px; }
+  .topbar__spacer { flex: 1; }
+  .icon-btn {
+    width: 44px; height: 44px;
+    display: grid; place-items: center;
+    border: 0; background: transparent; padding: 0;
+    border-radius: 14px; color: #6f6659;
+  }
+  .icon-btn svg { width: 21px; height: 21px; display: block; }
+  .icon-btn:active { background: rgba(46,42,38,.06); }
+
+  /* ---------- 标题区 ---------- */
+  .hero-head { padding: 10px 24px 14px; }
+  .hero-date {
+    display: flex; align-items: center; gap: 6px;
+    font-size: 12.5px; color: var(--ink-2); letter-spacing: .3px;
+  }
+  .hero-date::before {
+    content: ''; width: 6px; height: 6px; border-radius: 50%; background: var(--mint);
+  }
+  .hero-title {
+    margin: 10px 0 0;
+    font-size: 24px; line-height: 1.28; font-weight: 700; letter-spacing: -.2px;
+  }
+  .hero-sub { margin: 6px 0 0; font-size: 13px; color: var(--ink-2); }
+
+  /* ---------- 焦点卡 ---------- */
+  .focus {
+    margin: 0 16px;
+    background: var(--card);
+    border-radius: var(--r-card);
+    box-shadow: var(--shadow-card);
+    padding: 18px 20px 16px;
+    position: relative;
+    overflow: hidden;
+  }
+  .focus::after {
+    /* 卡片右上角的一团淡色，随强调色走 */
+    content: '';
+    position: absolute; right: -46px; top: -52px;
+    width: 150px; height: 150px; border-radius: 50%;
+    background: radial-gradient(circle at 50% 50%, var(--accent-soft), transparent 70%);
+  }
+  .focus__head {
+    display: flex; align-items: center; gap: 10px; position: relative; z-index: 1;
+  }
+  .focus__title { font-size: 16px; font-weight: 700; }
+  .focus__head .grow { flex: 1; }
+  .chip {
+    display: inline-flex; align-items: center; gap: 5px;
+    height: 26px; padding: 0 11px;
+    border-radius: var(--r-pill);
+    background: var(--accent-soft); color: var(--accent-ink);
+    font-size: 12px; font-weight: 500;
+  }
+  .chip--line { background: transparent; border: 1px solid var(--line); color: var(--ink-2); }
+
+  /* 角色：纯 CSS 养的这个小东西 */
+  .pet { position: relative; width: 34px; height: 34px; flex: none; }
+  .pet__body {
+    position: absolute; inset: 6px 5px 2px;
+    transform: translateX(-2px);
+    border-radius: 52% 52% 46% 46%;
+    background: linear-gradient(160deg, var(--pet-hi), var(--pet-lo));
+    box-shadow: inset 0 -5px 9px rgba(120, 70, 40, .16), 0 3px 7px -4px rgba(120,70,40,.45);
+  }
+  .pet__body::before {
+    /* 一颗高光，让平面色块立起来 */
+    content: ''; position: absolute; left: 22%; top: 14%;
+    width: 26%; height: 22%; border-radius: 50%;
+    background: rgba(255,255,255,.7); filter: blur(1.5px);
+  }
+  .pet__leaf {
+    position: absolute; width: 13px; height: 9px;
+    background: var(--pet-leaf);
+    border-radius: 100% 0 100% 0;
+    top: 1px;
+  }
+  .pet__leaf--l { left: 9px; transform: rotate(-18deg); }
+  .pet__leaf--r { right: 9px; transform: rotate(72deg); }
+  .pet__eye {
+    position: absolute; width: 3.4px; height: 3.4px; border-radius: 50%;
+    background: #3a322c; top: 17px;
+  }
+  .pet__eye--l { left: 12px; }
+  .pet__eye--r { right: 12px; }
+  .pet__mouth {
+    position: absolute; left: 50%; top: 21px; width: 6px; height: 3px;
+    margin-left: -3px; border-bottom: 1.6px solid #3a322c;
+    border-radius: 0 0 6px 6px;
+  }
+  .pet--lg { width: 74px; height: 74px; }
+  .pet--lg .pet__body { inset: 14px 8px 4px; }
+  .pet--lg .pet__leaf { width: 28px; height: 18px; top: 0; }
+  .pet--lg .pet__leaf--l { left: 20px; }
+  .pet--lg .pet__leaf--r { right: 20px; }
+  .pet--lg .pet__eye { width: 7px; height: 7px; top: 36px; }
+  .pet--lg .pet__eye--l { left: 25px; }
+  .pet--lg .pet__eye--r { right: 25px; }
+  .pet--lg .pet__mouth { top: 46px; width: 12px; height: 6px; margin-left: -6px; border-bottom-width: 2.4px; }
+
+  .focus__body { display: flex; align-items: flex-end; gap: 14px; margin-top: 14px; position: relative; z-index: 1; }
+  .focus__num {
+    font-family: var(--font-num); font-weight: 800;
+    font-size: 60px; line-height: .9; letter-spacing: -1.5px;
+    font-variant-numeric: tabular-nums;
+  }
+  .focus__unit { font-size: 15px; color: var(--ink-2); padding-bottom: 9px; }
+  .focus__meta {
+    margin-left: auto; text-align: right; padding-bottom: 8px;
+    background: var(--accent-soft); border-radius: 12px; padding: 7px 10px 6px;
+  }
+  .focus__meta b { display: block; font-size: 12px; color: var(--accent-ink); font-weight: 600; white-space: nowrap; }
+  .focus__meta small { font-size: 11px; color: #8c7f6f; white-space: nowrap; }
+
+  /* 成长轨道 */
+  .growth { margin-top: 16px; position: relative; z-index: 1; }
+  .growth__rail {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    align-items: center; background: var(--paper-deep);
+    border-radius: 16px; padding: 10px 14px;
+  }
+  .stage { display: flex; align-items: center; }
+  .stage:last-child .stage__bar { display: none; }
+  .stage__dot {
+    width: 21px; height: 21px; border-radius: 50%;
+    background: #fff; border: 1.5px solid var(--line);
+    display: grid; place-items: center;
+    font-family: var(--font-num); font-size: 11px; font-weight: 700; color: #a99f92;
+    flex: none;
+  }
+  .stage--done .stage__dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .stage--now .stage__dot {
+    background: #fff; border-color: var(--accent); color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-soft);
+  }
+  .stage__bar { height: 1.5px; flex: 1; background: var(--line); }
+  .stage--done .stage__bar { background: var(--accent); }
+  .growth__label {
+    margin-top: 8px; font-size: 12px; color: var(--ink-2);
+    display: flex; align-items: center; gap: 6px;
+  }
+  .growth__label b { color: var(--accent-ink); font-weight: 600; }
+
+  .focus__quote {
+    margin: 14px 0 0; position: relative; z-index: 1;
+    font-size: 13px; line-height: 1.6; color: var(--ink-2);
+    padding-left: 12px; border-left: 2px solid var(--accent-soft);
+  }
+
+  /* ---------- 折叠列表 ---------- */
+  .more { margin: 18px 16px 0; }
+  .more__head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 0 6px 8px; font-size: 12px; color: #8b8175;
+    letter-spacing: .4px;
+  }
+  .more__head { padding-left: 6px; }
+  .row {
+    display: flex; align-items: center; gap: 12px;
+    background: var(--card); border-radius: 22px;
+    padding: 15px 18px; margin-bottom: 10px;
+    box-shadow: 0 4px 14px -12px rgba(78,58,38,.5);
+  }
+  .row__pet { transform: scale(.82); transform-origin: center; flex: none; }
+  .row__title { font-size: 14px; font-weight: 500; }
+  .row__grow { flex: 1; }
+  .row__num { font-family: var(--font-num); font-weight: 700; font-size: 17px; }
+  .row__num small { font-size: 11px; color: var(--ink-3); font-family: var(--font); margin-left: 3px; }
+
+  /* ---------- 本周 ---------- */
+  .week {
+    margin: 4px 16px 0; background: var(--card); border-radius: 22px;
+    padding: 14px 18px 12px; box-shadow: 0 4px 14px -12px rgba(78,58,38,.5);
+  }
+  .week__head { display: flex; align-items: baseline; gap: 8px; }
+  .week__title { font-size: 13px; font-weight: 600; }
+  .week__sum { margin-left: auto; font-size: 12px; color: var(--ink-2); }
+  .week__bars { display: flex; align-items: flex-end; gap: 8px; height: 44px; margin-top: 12px; }
+  .week__bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 6px; }
+  .week__bar i {
+    display: block; width: 100%; border-radius: 6px;
+    background: #f1e9dd; height: var(--h, 8px);
+  }
+  .week__bar.on i { background: linear-gradient(180deg, #ffb08a, var(--peach)); }
+  .week__bar span { font-size: 10.5px; color: #a99f92; }
+  .week__bar.today span { color: var(--peach); font-weight: 600; }
+  .week__bar.is-future i { background: repeating-linear-gradient(45deg, #f4ece0 0 3px, #faf5ec 3px 6px); }
+
+  /* ---------- 底部 ---------- */
+  .foot {
+    margin-top: auto; padding: 10px 24px 16px;
+    text-align: center; font-size: 12.5px; color: #857b6f;
+  }
+  .pager { display: flex; justify-content: center; gap: 6px; padding: 4px 0 10px; }
+  .pager i {
+    width: 6px; height: 6px; border-radius: 999px; background: rgba(46,42,38,.18);
+    transition: width .25s ease, background .25s ease;
+  }
+  .pager i.on { width: 20px; background: var(--peach); }
+
+  .fab {
+    position: absolute; right: 20px; bottom: 26px;
+    width: 56px; height: 56px; border-radius: 20px;
+    border: 0; background: linear-gradient(160deg, #ffb08a, var(--peach));
+    color: #fff; font-size: 26px; line-height: 1;
+    box-shadow: 0 14px 26px -14px rgba(239,143,102,.9);
+  }
+
+  /* ---------- 打卡页 ---------- */
+  .checkin-card { --accent-soft: var(--mint-soft); }
+  .checkin__count { display: flex; align-items: baseline; gap: 8px; }
+  .checkin__count .focus__num { font-size: 60px; }
+  .water-pet .pet__body { background: linear-gradient(160deg, #bfe6f5, #7cc3e2); }
+  .water-pet .pet__leaf { display: none; }
+  .water-pet .pet__body::after {
+    content: ''; position: absolute; left: 50%; top: -8px; margin-left: -7px;
+    width: 14px; height: 14px; background: #8bcbe6; border-radius: 0 100% 0 100%;
+    transform: rotate(45deg);
+  }
+
+  /* ---------- 皮肤画廊 ---------- */
+  .gallery { padding: 0 16px; overflow-y: auto; flex: 1; }
+  .pack {
+    display: flex; gap: 14px; align-items: center;
+    background: var(--card); border-radius: 24px; padding: 12px;
+    margin-bottom: 12px; box-shadow: 0 4px 14px -12px rgba(78,58,38,.5);
+  }
+  .pack--on { box-shadow: 0 0 0 2px var(--peach), 0 10px 20px -16px rgba(239,143,102,.9); }
+  .mini {
+    width: 78px; height: 108px; border-radius: 16px; overflow: hidden; flex: none;
+    position: relative; border: 1px solid var(--line);
+  }
+  .mini i { position: absolute; display: block; border-radius: 6px; }
+  .pack__name { font-size: 15px; font-weight: 700; }
+  .pack__desc { font-size: 12px; color: var(--ink-2); margin-top: 4px; line-height: 1.5; }
+  .pack__tag {
+    display: inline-block; margin-top: 8px; font-size: 11px;
+    padding: 3px 8px; border-radius: 999px; background: var(--paper-deep); color: #6b6357;
+  }
+
+  /* 各套皮肤的迷你预览配色 */
+  .mini--cute { background: linear-gradient(170deg, #fdf2e5, #ffe6d6); }
+  .mini--cute i:nth-child(1) { left: 8px; top: 10px; width: 62px; height: 34px; background: #fff; }
+  .mini--cute i:nth-child(2) { left: 14px; top: 18px; width: 22px; height: 8px; background: #f0b39a; }
+  .mini--cute i:nth-child(3) { left: 14px; top: 30px; width: 34px; height: 6px; background: #e6d7c8; }
+  .mini--cute i:nth-child(4) { left: 8px; top: 50px; width: 62px; height: 24px; background: #fff; }
+  .mini--cute i:nth-child(5) { left: 8px; top: 80px; width: 62px; height: 20px; background: #fff; }
+
+  .mini--night { background: linear-gradient(170deg, #0c0d12, #161826); }
+  .mini--night i { background: #232637; }
+  .mini--night i:nth-child(1) { left: 8px; top: 10px; width: 62px; height: 34px; }
+  .mini--night i:nth-child(2) { left: 14px; top: 18px; width: 22px; height: 8px; background: #8b7bff; }
+  .mini--night i:nth-child(3) { left: 14px; top: 30px; width: 34px; height: 6px; background: #3a3f57; }
+  .mini--night i:nth-child(4) { left: 8px; top: 50px; width: 62px; height: 24px; }
+  .mini--night i:nth-child(5) { left: 8px; top: 80px; width: 62px; height: 20px; }
+
+  .mini--paper { background: linear-gradient(170deg, #f7f3ea, #efe8da); }
+  .mini--paper i { background: #fffdf8; border: 1px solid #e3dacb; }
+  .mini--paper i:nth-child(1) { left: 8px; top: 10px; width: 62px; height: 34px; }
+  .mini--paper i:nth-child(2) { left: 14px; top: 18px; width: 22px; height: 8px; background: #a89373; border: 0; }
+  .mini--paper i:nth-child(3) { left: 14px; top: 30px; width: 34px; height: 6px; background: #d9cdb8; border: 0; }
+  .mini--paper i:nth-child(4) { left: 8px; top: 50px; width: 62px; height: 24px; }
+  .mini--paper i:nth-child(5) { left: 8px; top: 80px; width: 62px; height: 20px; }
+
+  .mini--pixel { background: #1d2430; image-rendering: pixelated; }
+  .mini--pixel i { border-radius: 0; }
+  .mini--pixel i:nth-child(1) { left: 8px; top: 10px; width: 62px; height: 32px; background: #2d3a4f; }
+  .mini--pixel i:nth-child(2) { left: 14px; top: 18px; width: 20px; height: 6px; background: #7fe0a8; }
+  .mini--pixel i:nth-child(3) { left: 14px; top: 28px; width: 32px; height: 4px; background: #4a5f7d; }
+  .mini--pixel i:nth-child(4) { left: 8px; top: 48px; width: 62px; height: 22px; background: #2d3a4f; }
+  .mini--pixel i:nth-child(5) { left: 8px; top: 76px; width: 62px; height: 18px; background: #2d3a4f; }
+
+  /* ---------- 弹层 ---------- */
+  .sheet {
+    position: absolute; left: 0; right: 0; bottom: 0;
+    background: var(--card);
+    border-radius: 30px 30px 0 0;
+    padding: 10px 22px 24px;
+    transform: translateY(101%);
+    transition: transform .32s cubic-bezier(.22,.9,.3,1);
+    box-shadow: 0 -20px 50px -30px rgba(46,42,38,.5);
+  }
+  .sheet.is-on { transform: none; }
+  .sheet__grab {
+    width: 40px; height: 4px; border-radius: 999px; background: #e4dcd0;
+    margin: 0 auto 14px;
+  }
+  .sheet__title { font-size: 19px; font-weight: 700; margin: 0 0 4px; }
+  .sheet__sub { font-size: 12.5px; color: var(--ink-2); margin: 0 0 16px; }
+  .field { margin-bottom: 14px; }
+  .field__label { font-size: 12.5px; color: var(--ink-2); }
+  .field__head { display: flex; align-items: center; }
+  .field__head .field__label { flex: 1; }
+  .field__chip {
+    border: 0; background: var(--peach-soft); color: #b5542f;
+    font-size: 12px; padding: 6px 11px; border-radius: 999px;
+    font-family: var(--font);
+  }
+  .input {
+    width: 100%; margin-top: 7px; padding: 13px 14px;
+    border-radius: 14px; border: 1.5px solid var(--line);
+    background: #fdfbf8; font-size: 15px; font-family: var(--font); color: var(--ink);
+  }
+  .hint { display: block; margin-top: 6px; font-size: 12px; color: var(--ink-3); }
+  .actions { margin-top: 18px; display: flex; flex-direction: column; gap: 9px; }
+  .btn {
+    height: 50px; border: 0; border-radius: 16px; font-size: 15px; font-weight: 600;
+    font-family: var(--font);
+  }
+  .btn--primary { background: linear-gradient(150deg, #ffab84, var(--peach)); color: #fff; }
+  .btn--danger { background: #fdefe9; color: #c2503a; }
+
+  .scrim {
+    position: absolute; inset: 0; background: rgba(46, 42, 38, .28);
+    opacity: 0; pointer-events: none; transition: opacity .3s ease;
+    backdrop-filter: blur(2px);
+  }
+  .scrim.is-on { opacity: 1; pointer-events: auto; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .screen, .sheet, .scrim, .pager i { transition-duration: .01ms; }
+  }
+</style>
+</head>
+<body>
+<main class="phone" id="phone">
+
+  <!-- ========== 屏 1：走过的日子 ========== -->
+  <section class="screen is-on" data-screen="home" style="--accent:#ef8f66; --accent-soft:#fce9dd; --accent-ink:#b5542f; --pet-hi:#ffc4a3; --pet-lo:#f0926a; --pet-leaf:#7fc08f;">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="statusbar__right"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span>
+    </div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark"><i></i><i></i><i></i></span>
+        <span class="brand__name">刻度</span>
+      </div>
+      <span class="topbar__spacer"></span>
+      <button class="icon-btn" aria-label="换皮肤">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="9" /><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" />
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="声音">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M11 5 6.5 9H3v6h3.5L11 19z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="hero-head">
+      <div class="hero-date">2026年10月21日 · 星期三</div>
+      <h1 class="hero-title">一点点积累的日子</h1>
+      <p class="hero-sub">共 4 件事</p>
+    </div>
+
+    <article class="focus">
+      <div class="focus__head">
+        <div class="pet" aria-hidden="true">
+          <span class="pet__leaf pet__leaf--l"></span>
+          <span class="pet__leaf pet__leaf--r"></span>
+          <span class="pet__body"></span>
+          <span class="pet__eye pet__eye--l"></span>
+          <span class="pet__eye pet__eye--r"></span>
+          <span class="pet__mouth"></span>
+        </div>
+        <span class="focus__title">戒烟</span>
+        <span class="grow"></span>
+        <span class="chip">今天也在长</span>
+      </div>
+
+      <div class="focus__body">
+        <span class="focus__num">128</span>
+        <span class="focus__unit">天</span>
+        <span class="focus__meta">
+          <b>6 月 15 日 起</b>
+          <small>4 个月 6 天</small>
+        </span>
+      </div>
+
+      <div class="growth">
+        <div class="growth__rail">
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--now"><i class="stage__dot">4</i></span>
+        </div>
+        <p class="growth__label">下一形态 <b>开花</b> · 还差 22 天</p>
+      </div>
+
+      <p class="focus__quote">你已经比自己以为的更能撑。</p>
+    </article>
+
+    <div class="more">
+      <div class="more__head">另外 3 件</div>
+
+      <div class="row" style="--pet-hi:#bfe6f5; --pet-lo:#7cc3e2; --pet-leaf:#8bcbe6;">
+        <span class="row__pet pet" aria-hidden="true">
+          <span class="pet__body"></span><span class="pet__eye pet__eye--l"></span>
+          <span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span>
+        </span>
+        <span class="row__title">喝水</span>
+        <span class="row__grow"></span>
+        <span class="row__num">23<small>天</small></span>
+      </div>
+
+      <div class="row" style="--pet-hi:#d3c8f5; --pet-lo:#a892e6; --pet-leaf:#c0b0f0;">
+        <span class="row__pet pet" aria-hidden="true">
+          <span class="pet__body"></span><span class="pet__eye pet__eye--l"></span>
+          <span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span>
+        </span>
+        <span class="row__title">跑步</span>
+        <span class="row__grow"></span>
+        <span class="row__num">7<small>天</small></span>
+      </div>
+
+      <div class="row" style="--pet-hi:#ffe3a8; --pet-lo:#efc164; --pet-leaf:#f3d68c;">
+        <span class="row__pet pet" aria-hidden="true">
+          <span class="pet__body"></span><span class="pet__eye pet__eye--l"></span>
+          <span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span>
+        </span>
+        <span class="row__title">读书</span>
+        <span class="row__grow"></span>
+        <span class="row__num">12<small>天</small></span>
+      </div>
+    </div>
+
+    <div class="week">
+      <div class="week__head">
+        <span class="week__title">本周</span>
+        <span class="week__sum">已记 3 天</span>
+      </div>
+      <div class="week__bars">
+        <span class="week__bar on" style="--h:26px"><i></i><span>一</span></span>
+        <span class="week__bar on" style="--h:34px"><i></i><span>二</span></span>
+        <span class="week__bar on today" style="--h:22px"><i></i><span>三</span></span>
+        <span class="week__bar is-future" style="--h:8px"><i></i><span>四</span></span>
+        <span class="week__bar is-future" style="--h:8px"><i></i><span>五</span></span>
+        <span class="week__bar is-future" style="--h:8px"><i></i><span>六</span></span>
+        <span class="week__bar is-future" style="--h:8px"><i></i><span>日</span></span>
+      </div>
+    </div>
+
+    <p class="foot">轻点卡片看看它</p>
+    <div class="pager"><i class="on"></i><i></i><i></i></div>
+    <button class="fab" aria-label="记录一件事">+</button>
+  </section>
+
+  <!-- ========== 屏 2：打卡 ========== -->
+  <section class="screen" data-screen="checkin" style="--accent:#62b998; --accent-soft:#dff2e8; --accent-ink:#2f7d62; --pet-hi:#b9e8f3; --pet-lo:#79c2df; --pet-leaf:#8bcbe6;">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="statusbar__right"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span>
+    </div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark"><i></i><i></i><i></i></span>
+        <span class="brand__name">刻度</span>
+      </div>
+      <span class="topbar__spacer"></span>
+      <button class="icon-btn" aria-label="换皮肤">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+          <circle cx="12" cy="12" r="9" /><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none" />
+        </svg>
+      </button>
+      <button class="icon-btn" aria-label="声音">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+          <path d="M11 5 6.5 9H3v6h3.5L11 19z" /><path d="M15.5 8.5a5 5 0 0 1 0 7" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="hero-head">
+      <div class="hero-date">2026年10月21日 · 星期三</div>
+      <h1 class="hero-title">一点点积累的日子</h1>
+      <p class="hero-sub">今天记了 3 次</p>
+    </div>
+
+    <article class="focus checkin-card" style="--accent:#62b998; --accent-soft:#dff2e8; --accent-ink:#2f7d62;">
+      <div class="focus__head">
+        <div class="pet water-pet" aria-hidden="true">
+          <span class="pet__body"></span>
+          <span class="pet__eye pet__eye--l"></span>
+          <span class="pet__eye pet__eye--r"></span>
+          <span class="pet__mouth"></span>
+        </div>
+        <span class="focus__title">喝水</span>
+        <span class="grow"></span>
+        <span class="chip chip--line">历史 · 23 天</span>
+      </div>
+
+      <div class="focus__body">
+        <div class="checkin__count">
+          <span class="focus__num">3</span>
+          <span class="focus__unit">次</span>
+        </div>
+        <span class="focus__meta">
+          <b>昨天 8 次</b>
+          <small>连续 6 天</small>
+        </span>
+      </div>
+
+      <div class="growth">
+        <div class="growth__rail">
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--now"><i class="stage__dot">4</i></span>
+        </div>
+        <p class="growth__label">再记 <b>1 次</b>，它就鼓起来了</p>
+      </div>
+
+      <p class="focus__quote">今天的水，是明天脸色的伏笔。</p>
+    </article>
+
+    <div class="more">
+      <div class="more__head">另外 1 件</div>
+      <div class="row" style="--pet-hi:#d3c8f5; --pet-lo:#a892e6; --pet-leaf:#c0b0f0;">
+        <span class="row__pet pet" aria-hidden="true">
+          <span class="pet__body"></span><span class="pet__eye pet__eye--l"></span>
+          <span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span>
+        </span>
+        <span class="row__title">跑步</span>
+        <span class="row__grow"></span>
+        <span class="row__num">0<small>次</small></span>
+      </div>
+    </div>
+
+    <p class="foot">按住卡片记一次 · 轻点编辑</p>
+    <div class="pager"><i></i><i></i><i class="on"></i></div>
+    <button class="fab" aria-label="新增打卡">+</button>
+  </section>
+
+  <!-- ========== 屏 3：皮肤画廊 ========== -->
+  <section class="screen" data-screen="skins" style="--accent:#ef8f66; --accent-soft:#fce9dd; --accent-ink:#b5542f; --pet-hi:#ffc4a3; --pet-lo:#f0926a; --pet-leaf:#7fc08f;">
+    <div class="statusbar">
+      <span>9:41</span>
+      <span class="statusbar__right"><span class="bars"><i></i><i></i><i></i><i></i></span><span class="batt"></span></span>
+    </div>
+
+    <header class="topbar">
+      <div class="brand">
+        <span class="brand__mark"><i></i><i></i><i></i></span>
+        <span class="brand__name">刻度</span>
+      </div>
+      <span class="topbar__spacer"></span>
+      <button class="icon-btn" aria-label="关闭">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round">
+          <path d="M6 6l12 12M18 6 6 18" />
+        </svg>
+      </button>
+    </header>
+
+    <div class="hero-head">
+      <h1 class="hero-title">换一个世界</h1>
+      <p class="hero-sub">换的是它长什么样，你记下的东西一件都不会动</p>
+    </div>
+
+    <div class="gallery">
+      <div class="pack pack--on">
+        <div class="mini mini--cute"><i></i><i></i><i></i><i></i><i></i></div>
+        <div>
+          <div class="pack__name">萌系</div>
+          <div class="pack__desc">会长大的小东西，圆手圆脚</div>
+          <span class="pack__tag">正在使用</span>
+        </div>
+      </div>
+
+      <div class="pack">
+        <div class="mini mini--night"><i></i><i></i><i></i><i></i><i></i></div>
+        <div>
+          <div class="pack__name">夜刻</div>
+          <div class="pack__desc">现在这一套，深、准、克制</div>
+          <span class="pack__tag">经典</span>
+        </div>
+      </div>
+
+      <div class="pack">
+        <div class="mini mini--paper"><i></i><i></i><i></i><i></i><i></i></div>
+        <div>
+          <div class="pack__name">纸感</div>
+          <div class="pack__desc">像写在纸上，轻、慢、有纹理</div>
+          <span class="pack__tag">安静</span>
+        </div>
+      </div>
+
+      <div class="pack">
+        <div class="mini mini--pixel"><i></i><i></i><i></i><i></i><i></i></div>
+        <div>
+          <div class="pack__name">像素</div>
+          <div class="pack__desc">一格一格攒出来的成就感</div>
+          <span class="pack__tag">怀旧</span>
+        </div>
+      </div>
+    </div>
+
+    <p class="foot">皮肤只是外观 · 数据永远留在本机</p>
+  </section>
+
+  <div class="home-bar"></div>
+
+  <!-- 编辑弹层（叠在首页上） -->
+  <div class="scrim" id="scrim"></div>
+  <div class="sheet" id="sheet">
+    <div class="sheet__grab"></div>
+    <h2 class="sheet__title">编辑这个日子</h2>
+    <p class="sheet__sub">时间从起始日开始累计，按自然日计算。</p>
+
+    <div class="field">
+      <div class="field__head">
+        <span class="field__label">起始日期</span>
+        <button class="field__chip">设为今天</button>
+      </div>
+      <input class="input" value="2026-06-15" readonly />
+      <span class="hint">2026年6月15日 起算 · 已经过去 128 天</span>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn--primary">保存修改</button>
+      <button class="btn btn--danger">删除这个日子</button>
+    </div>
+  </div>
+
+</main>
+
+<script>
+  const params = new URLSearchParams(location.search)
+  const wanted = params.get('screen') || location.hash.replace('#', '') || 'home'
+  const screens = [...document.querySelectorAll('.screen')]
+
+  function show(name) {
+    screens.forEach((s) => s.classList.toggle('is-on', s.dataset.screen === name))
+    const sheet = document.getElementById('sheet')
+    const scrim = document.getElementById('scrim')
+    const withSheet = name === 'sheet'
+    sheet.classList.toggle('is-on', withSheet)
+    scrim.classList.toggle('is-on', withSheet)
+    if (withSheet) screens.forEach((s) => s.classList.toggle('is-on', s.dataset.screen === 'home'))
+  }
+  show(wanted)
+
+  // 手机上：点底部分页点、左右滑都能换屏
+  screens.forEach((s) => {
+    s.querySelectorAll('.pager i').forEach((dot, i) => {
+      dot.addEventListener('click', () => show(['home', 'checkin', 'skins'][i]))
+    })
+    s.querySelector('[aria-label="换皮肤"]')?.addEventListener('click', () => show('skins'))
+    s.querySelector('[aria-label="关闭"]')?.addEventListener('click', () => show('home'))
+    s.querySelector('.focus')?.addEventListener('click', () => (s.dataset.screen === 'home' ? show('sheet') : null))
+  })
+  document.getElementById('scrim').addEventListener('click', () => show('home'))
+
+  let startX = null
+  document.getElementById('phone').addEventListener('pointerdown', (e) => { startX = e.clientX })
+  document.getElementById('phone').addEventListener('pointerup', (e) => {
+    if (startX === null) return
+    const dx = e.clientX - startX
+    startX = null
+    if (Math.abs(dx) < 60) return
+    const order = ['home', 'checkin', 'skins']
+    const current = screens.findIndex((s) => s.classList.contains('is-on'))
+    const next = (current + (dx < 0 ? 1 : order.length - 1)) % order.length
+    show(order[next])
+  })
+</script>
+</body>
+</html>

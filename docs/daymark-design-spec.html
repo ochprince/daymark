@@ -1,0 +1,1110 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>刻度 Daymark · 设计规范 v1.0</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Baloo+2:wght@600;700;800&family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;700&family=ZCOOL+KuaiLe&display=swap" rel="stylesheet" />
+<style>
+/* ============ 规范页外壳 ============ */
+:root {
+  --page: #ffffff;
+  --page-2: #f7f5f2;
+  --page-3: #efeae3;
+  --spec-ink: #1f1b17;
+  --spec-ink-2: #6b6157;
+  --spec-ink-3: #9a8f83;
+  --spec-line: #e8e2d9;
+  --brand: #ef8f66;
+  --brand-soft: #fdf0e9;
+  --font-ui: 'Inter', 'Noto Sans SC', -apple-system, 'WenQuanYi Micro Hei', sans-serif;
+}
+
+* { box-sizing: border-box; }
+
+html, body { margin: 0; }
+
+body {
+  background: var(--page-2);
+  color: var(--spec-ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+}
+
+/* 顶部栏 */
+.topbar {
+  position: sticky; top: 0; z-index: 40;
+  display: flex; align-items: center; gap: 18px;
+  padding: 12px 24px;
+  background: rgba(255,255,255,.88);
+  backdrop-filter: blur(14px);
+  border-bottom: 1px solid var(--spec-line);
+}
+.brand { display: flex; align-items: center; gap: 10px; }
+.brand__logo {
+  width: 34px; height: 34px; border-radius: 11px;
+  background: linear-gradient(150deg, #ffb389, var(--brand));
+  display: grid; place-items: center; color: #fff; font-weight: 800;
+  font-family: 'Baloo 2', sans-serif; font-size: 17px;
+}
+.brand__t { font-size: 14.5px; font-weight: 600; letter-spacing: -.1px; }
+.brand__s { font-size: 11.5px; color: var(--spec-ink-3); margin-top: 2px; }
+.topbar__spacer { flex: 1; }
+.seg {
+  display: inline-flex; padding: 3px; gap: 2px;
+  background: var(--page-3); border-radius: 11px;
+}
+.seg button {
+  border: 0; background: transparent; font-family: inherit;
+  font-size: 12.5px; color: var(--spec-ink-2);
+  padding: 6px 11px; border-radius: 8px; cursor: pointer;
+}
+.seg button[aria-pressed='true'] {
+  background: #fff; color: var(--spec-ink); font-weight: 600;
+  box-shadow: 0 1px 3px rgba(31,27,23,.12);
+}
+.live { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--spec-ink-2); }
+.live::before {
+  content: ''; width: 6px; height: 6px; border-radius: 50%;
+  background: #55b981; box-shadow: 0 0 0 3px rgba(85,185,129,.16);
+}
+
+/* 布局 */
+.layout { display: grid; grid-template-columns: 216px minmax(0, 1fr); gap: 0; }
+
+.side {
+  position: sticky; top: 59px; align-self: start;
+  height: calc(100vh - 59px);
+  padding: 22px 14px 18px;
+  border-right: 1px solid var(--spec-line);
+  background: var(--page);
+  display: flex; flex-direction: column;
+}
+.side__cap {
+  font-size: 10.5px; letter-spacing: .12em; text-transform: uppercase;
+  color: var(--spec-ink-3); padding: 0 10px 10px;
+}
+.side a {
+  display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px; border-radius: 10px;
+  font-size: 13px; color: var(--spec-ink-2); text-decoration: none;
+}
+.side a b {
+  font-weight: 500; font-size: 11px; color: var(--spec-ink-3);
+  font-variant-numeric: tabular-nums; min-width: 16px;
+}
+.side a.on { background: var(--brand-soft); color: #b4552f; font-weight: 600; }
+.side a.on b { color: #c9764f; }
+.side__foot {
+  margin-top: auto; padding: 12px 10px 0;
+  border-top: 1px solid var(--spec-line);
+  font-size: 11px; line-height: 1.65; color: var(--spec-ink-3);
+}
+
+.main { padding: 34px 40px 90px; max-width: 1180px; }
+.eyebrow {
+  font-size: 10.5px; letter-spacing: .14em; text-transform: uppercase;
+  color: var(--spec-ink-3); font-weight: 600;
+}
+h1 { font-size: 27px; letter-spacing: -.3px; margin: 8px 0 10px; font-weight: 700; }
+.lede { font-size: 13.5px; line-height: 1.75; color: var(--spec-ink-2); max-width: 760px; margin: 0 0 22px; }
+section { scroll-margin-top: 76px; padding-bottom: 46px; }
+section + section { border-top: 1px solid var(--spec-line); padding-top: 34px; }
+h2 { font-size: 19px; margin: 6px 0 6px; letter-spacing: -.2px; }
+h3 { font-size: 13px; margin: 22px 0 10px; color: var(--spec-ink-2); font-weight: 600; }
+
+/* 页面 Tab */
+.tabs { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+.tabs button {
+  border: 1px solid var(--spec-line); background: #fff;
+  color: var(--spec-ink-2); font-family: inherit; font-size: 12.5px;
+  padding: 7px 13px; border-radius: 999px; cursor: pointer;
+}
+.tabs button[aria-pressed='true'] {
+  background: var(--brand); border-color: var(--brand); color: #fff; font-weight: 600;
+}
+
+/* 预览台 */
+.stage {
+  background:
+    radial-gradient(70% 90% at 20% 0%, #fff6ef 0%, transparent 60%),
+    radial-gradient(60% 80% at 90% 10%, #f2f7f4 0%, transparent 60%),
+    var(--page-3);
+  border-radius: 24px;
+  padding: 26px 22px 30px;
+  display: flex; gap: 26px; justify-content: center; flex-wrap: wrap;
+}
+.frame { display: flex; flex-direction: column; align-items: center; gap: 9px; }
+.frame__cap {
+  font-size: 11px; color: var(--spec-ink-2); letter-spacing: .02em;
+  display: flex; align-items: center; gap: 6px;
+}
+.frame__cap b {
+  font-size: 9.5px; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--spec-ink-3); font-weight: 600;
+}
+.device {
+  width: 300px; height: 636px;   /* 286 宽装 402，等比 0.7114 → 621.8 高 */
+  border-radius: 38px;
+  background: #1c1917;
+  padding: 7px;
+  box-shadow: 0 24px 50px -26px rgba(40,28,18,.55), 0 2px 8px rgba(40,28,18,.16);
+  position: relative;
+}
+.device__screen {
+  width: 100%; height: 100%; border-radius: 32px; overflow: hidden;
+  position: relative; background: var(--paper);
+  /* 402 宽的版面缩到 286 装进框里 */
+  --scale: .7114;
+}
+.device__inner {
+  width: 402px; height: 874px;
+  transform: scale(var(--scale)); transform-origin: top left;
+}
+.device[data-theme='dark'] .device__screen { background: var(--paper-d); }
+
+/* ============ 产品视觉（萌系浅色 / 萌系暗色） ============ */
+.device__screen {
+  --paper: #faf6ef;
+  --paper-deep: #f4eee3;
+  --card: #ffffff;
+  --ink: #2e2a26;
+  --ink-2: #7a7268;
+  --ink-3: #a49a8d;
+  --line: #eee5d8;
+  --accent: #ef8f66;
+  --accent-soft: #fce9dd;
+  --accent-ink: #b5542f;
+  --pet-hi: #ffc4a3;
+  --pet-lo: #f0926a;
+  --pet-leaf: #7fc08f;
+}
+.device[data-theme='dark'] .device__screen {
+  --paper: #17130f;
+  --paper-deep: #201b16;
+  --card: #241f1a;
+  --ink: #f6efe6;
+  --ink-2: #b3a798;
+  --ink-3: #8b7f71;
+  --line: #362d26;
+  --accent: #f5a17a;
+  --accent-soft: #3a2a21;
+  --accent-ink: #f7b694;
+  --pet-hi: #ffc9ab;
+  --pet-lo: #e07f57;
+  --pet-leaf: #7fbf8f;
+}
+
+.phone-screen {
+  position: absolute; inset: 0; display: flex; flex-direction: column;
+  background: var(--paper); color: var(--ink);
+  font-family: 'Noto Sans SC', 'PingFang SC', sans-serif;
+  padding-top: 6px;
+  overflow: hidden;
+}
+.phone-screen::before {
+  content: ''; position: absolute; inset: -30% -40% auto -40%; height: 60%;
+  background:
+    radial-gradient(60% 60% at 30% 30%, color-mix(in srgb, var(--accent) 20%, transparent), transparent 70%),
+    radial-gradient(50% 50% at 78% 12%, color-mix(in srgb, #6cc0a0 16%, transparent), transparent 72%);
+  pointer-events: none;
+}
+
+.ps-status {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 22px 0; font-size: 11px; font-weight: 600; position: relative;
+}
+.ps-status .bars { display: flex; align-items: flex-end; gap: 2px; }
+.ps-status .bars i { display: block; width: 2.6px; border-radius: 1px; background: currentColor; }
+.ps-status .bars i:nth-child(1) { height: 3.4px; }
+.ps-status .bars i:nth-child(2) { height: 5px; }
+.ps-status .bars i:nth-child(3) { height: 6.8px; }
+.ps-status .bars i:nth-child(4) { height: 8.4px; }
+.ps-status .batt {
+  width: 18px; height: 9px; border-radius: 2.6px; border: 1.2px solid currentColor;
+  position: relative; margin-left: 4px; display: inline-block;
+}
+.ps-status .batt::before {
+  content: ''; position: absolute; inset: 1.2px; right: 5px; border-radius: 1px; background: currentColor;
+}
+
+.ps-top { display: flex; align-items: center; padding: 6px 16px 0; gap: 6px; }
+.ps-brand { display: flex; align-items: center; gap: 6px; font-size: 13px; }
+.ps-brand .mark { display: flex; align-items: flex-end; gap: 2.4px; height: 14px; }
+.ps-brand .mark i { width: 3.2px; border-radius: 99px; background: var(--accent); display: block; }
+.ps-brand .mark i:nth-child(1) { height: 7px; opacity: .5; }
+.ps-brand .mark i:nth-child(2) { height: 11px; opacity: .75; }
+.ps-brand .mark i:nth-child(3) { height: 14px; }
+.ps-brand span { font-family: 'ZCOOL KuaiLe', sans-serif; font-size: 14px; }
+.ps-ico { width: 34px; height: 34px; display: grid; place-items: center; color: var(--ink-2); }
+.ps-ico svg { width: 17px; height: 17px; }
+
+.ps-head { padding: 8px 20px 12px; position: relative; }
+.ps-date { font-size: 11px; color: var(--ink-2); display: flex; align-items: center; gap: 5px; }
+.ps-date::before { content: ''; width: 5px; height: 5px; border-radius: 50%; background: #62b998; }
+.ps-title { font-size: 20px; font-weight: 700; margin: 8px 0 0; letter-spacing: -.2px; }
+.ps-sub { font-size: 11.5px; color: var(--ink-2); margin: 5px 0 0; }
+
+/* 焦点卡 */
+.focus {
+  margin: 0 14px; background: var(--card); border-radius: 24px;
+  padding: 15px 17px 14px; position: relative; overflow: hidden;
+  box-shadow: 0 10px 24px -14px rgba(78,58,38,.4);
+}
+.focus::after {
+  content: ''; position: absolute; right: -40px; top: -46px; width: 130px; height: 130px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--accent-soft), transparent 70%);
+}
+.focus__head { display: flex; align-items: center; gap: 9px; position: relative; z-index: 1; }
+.focus__title { font-size: 14px; font-weight: 700; }
+.focus__head .grow { flex: 1; }
+.chip {
+  display: inline-flex; align-items: center; height: 22px; padding: 0 9px;
+  border-radius: 999px; background: var(--accent-soft); color: var(--accent-ink);
+  font-size: 10.5px; font-weight: 500;
+}
+.chip--line { background: transparent; border: 1px solid var(--line); color: var(--ink-2); }
+.focus__body { display: flex; align-items: flex-end; gap: 12px; margin-top: 12px; position: relative; z-index: 1; }
+.focus__num {
+  font-family: 'Baloo 2', 'Noto Sans SC', sans-serif; font-weight: 800;
+  font-size: 54px; line-height: .9; letter-spacing: -1.5px;
+  font-variant-numeric: tabular-nums;
+}
+.focus__unit { font-size: 13px; color: var(--ink-2); padding-bottom: 7px; }
+.focus__meta {
+  margin-left: auto; text-align: right; background: var(--accent-soft);
+  border-radius: 11px; padding: 6px 9px 5px; margin-bottom: 3px;
+}
+.focus__meta b { display: block; font-size: 10.5px; color: var(--accent-ink); font-weight: 600; white-space: nowrap; }
+.focus__meta small { font-size: 9.8px; color: var(--ink-3); white-space: nowrap; }
+
+.growth { margin-top: 13px; position: relative; z-index: 1; }
+.growth__rail {
+  display: grid; grid-template-columns: repeat(4, 1fr); align-items: center;
+  background: var(--paper-deep); border-radius: 14px; padding: 8px 12px;
+}
+.stage { display: flex; align-items: center; }
+.stage:last-child .stage__bar { display: none; }
+.stage__dot {
+  width: 18px; height: 18px; border-radius: 50%; flex: none;
+  background: var(--card); border: 1.4px solid var(--line);
+  display: grid; place-items: center;
+  font-family: 'Baloo 2', sans-serif; font-size: 9.5px; font-weight: 700; color: var(--ink-3);
+}
+.stage--done .stage__dot { background: var(--accent); border-color: var(--accent); color: #fff; }
+.stage--now .stage__dot {
+  background: var(--card); border-color: var(--accent); color: var(--accent);
+  box-shadow: 0 0 0 3.4px var(--accent-soft);
+}
+.stage__bar { height: 1.4px; flex: 1; background: var(--line); }
+.stage--done .stage__bar { background: var(--accent); }
+.growth__label { margin-top: 7px; font-size: 10.5px; color: var(--ink-2); }
+.growth__label b { color: var(--accent-ink); font-weight: 600; }
+
+.focus__quote {
+  margin: 12px 0 0; padding-left: 10px; border-left: 2px solid var(--accent-soft);
+  font-size: 11.5px; line-height: 1.55; color: var(--ink-2); position: relative; z-index: 1;
+}
+
+/* 小列表 */
+.more { margin: 15px 14px 0; }
+.more__head { font-size: 10.5px; color: var(--ink-3); padding: 0 5px 7px; letter-spacing: .04em; }
+.row {
+  display: flex; align-items: center; gap: 9px;
+  background: var(--card); border-radius: 19px; padding: 12px 15px; margin-bottom: 8px;
+  box-shadow: 0 4px 12px -12px rgba(78,58,38,.5);
+}
+.row__title { font-size: 12.5px; font-weight: 500; }
+.row__grow { flex: 1; }
+.row__num { font-family: 'Baloo 2', sans-serif; font-weight: 700; font-size: 15px; }
+.row__num small { font-family: 'Noto Sans SC', sans-serif; font-size: 9.5px; color: var(--ink-3); margin-left: 3px; }
+
+/* 本周 */
+.week {
+  margin: 12px 14px 0; background: var(--card); border-radius: 19px;
+  padding: 12px 15px 10px; box-shadow: 0 4px 12px -12px rgba(78,58,38,.5);
+}
+.week__head { display: flex; align-items: baseline; }
+.week__title { font-size: 11.5px; font-weight: 600; }
+.week__sum { margin-left: auto; font-size: 10.5px; color: var(--ink-2); }
+.week__bars { display: flex; align-items: flex-end; gap: 7px; height: 38px; margin-top: 10px; }
+.week__bar { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+.week__bar i { display: block; width: 100%; border-radius: 5px; height: var(--h, 7px); background: var(--paper-deep); }
+.week__bar.on i { background: linear-gradient(180deg, #ffb28c, var(--accent)); }
+.week__bar span { font-size: 9px; color: var(--ink-3); }
+.week__bar.today span { color: var(--accent); font-weight: 600; }
+.week__bar.is-future i { background: repeating-linear-gradient(45deg, var(--paper-deep) 0 3px, transparent 3px 6px); }
+
+.ps-foot {
+  margin-top: auto; text-align: center; font-size: 10.5px; color: var(--ink-3);
+  padding: 8px 0 4px;
+}
+.ps-pager { display: flex; justify-content: center; gap: 5px; padding-bottom: 8px; }
+.ps-pager i { width: 5px; height: 5px; border-radius: 99px; background: color-mix(in srgb, var(--ink) 18%, transparent); }
+.ps-pager i.on { width: 17px; background: var(--accent); }
+.ps-fab {
+  position: absolute; right: 16px; bottom: 22px; width: 46px; height: 46px;
+  border-radius: 16px; border: 0; color: #fff; font-size: 21px;
+  background: linear-gradient(160deg, #ffb08a, var(--accent));
+  box-shadow: 0 12px 22px -12px color-mix(in srgb, var(--accent) 90%, transparent);
+}
+.ps-home { position: absolute; left: 50%; bottom: 6px; width: 110px; height: 4px; margin-left: -55px; border-radius: 9px; background: color-mix(in srgb, var(--ink) 26%, transparent); }
+
+/* 角色 */
+.pet { position: relative; width: 30px; height: 30px; flex: none; }
+.pet__body {
+  position: absolute; inset: 5px 4px 1px; border-radius: 52% 52% 46% 46%;
+  background: linear-gradient(160deg, var(--pet-hi), var(--pet-lo));
+  box-shadow: inset 0 -4px 8px rgba(120,70,40,.16), 0 3px 6px -4px rgba(120,70,40,.45);
+}
+.pet__body::before {
+  content: ''; position: absolute; left: 22%; top: 14%; width: 26%; height: 22%;
+  border-radius: 50%; background: rgba(255,255,255,.7); filter: blur(1.2px);
+}
+.pet__leaf { position: absolute; width: 11px; height: 8px; background: var(--pet-leaf); border-radius: 100% 0 100% 0; top: 1px; }
+.pet__leaf--l { left: 8px; transform: rotate(-18deg); }
+.pet__leaf--r { right: 8px; transform: rotate(72deg); }
+.pet__eye { position: absolute; width: 3px; height: 3px; border-radius: 50%; background: #3a322c; top: 15px; }
+.pet__eye--l { left: 10px; }
+.pet__eye--r { right: 10px; }
+.pet__mouth {
+  position: absolute; left: 50%; top: 19px; width: 5px; height: 2.6px; margin-left: -2.5px;
+  border-bottom: 1.4px solid #3a322c; border-radius: 0 0 5px 5px;
+}
+.pet--seed .pet__leaf { display: none; }
+.pet--seed .pet__body { inset: 8px 6px 3px; }
+.pet--bloom { position: absolute; left: 50%; top: -3px; width: 12px; height: 12px; margin-left: -6px; }
+.pet--bloom i { position: absolute; width: 5.5px; height: 5.5px; border-radius: 50%; background: #ffc9d8; }
+.pet--bloom i:nth-child(1) { left: 3.2px; top: -1px; }
+.pet--bloom i:nth-child(2) { left: -0.6px; top: 3.4px; }
+.pet--bloom i:nth-child(3) { left: 6.9px; top: 3.4px; }
+.pet--bloom i:nth-child(4) { left: 1.2px; top: 8.2px; }
+.pet--bloom i:nth-child(5) { left: 5.2px; top: 8.2px; }
+.pet--bloom::after {
+  content: ''; position: absolute; left: 50%; top: 50%; width: 4px; height: 4px;
+  margin: -2px 0 0 -2px; border-radius: 50%; background: #ffb04d;
+}
+
+.pet--water .pet__body { background: linear-gradient(160deg, #bfe6f5, #7cc3e2); }
+.pet--water .pet__leaf { display: none; }
+.pet--water .pet__body::after {
+  content: ''; position: absolute; left: 50%; top: -6px; margin-left: -5px;
+  width: 10px; height: 10px; background: #8bcbe6; border-radius: 0 100% 0 100%; transform: rotate(45deg);
+}
+
+/* 皮肤画廊（原型内） */
+.gallery { padding: 0 14px; overflow: hidden; }
+.pack {
+  display: flex; gap: 11px; align-items: center; background: var(--card);
+  border-radius: 20px; padding: 10px; margin-bottom: 9px;
+  box-shadow: 0 4px 12px -12px rgba(78,58,38,.5);
+}
+.pack--on { box-shadow: 0 0 0 1.6px var(--accent); }
+.mini { width: 60px; height: 84px; border-radius: 12px; overflow: hidden; position: relative; flex: none; border: 1px solid var(--line); }
+.mini i { position: absolute; display: block; border-radius: 4px; }
+.pack__name { font-size: 12.5px; font-weight: 700; }
+.pack__desc { font-size: 10px; color: var(--ink-2); margin-top: 3px; line-height: 1.45; }
+.pack__tag { display: inline-block; margin-top: 6px; font-size: 9px; padding: 2px 7px; border-radius: 99px; background: var(--paper-deep); color: var(--ink-2); }
+
+/* 弹层 */
+.phone-screen--sheet .scrim { position: absolute; inset: 0; background: rgba(46,42,38,.34); backdrop-filter: blur(2px); }
+.sheet {
+  position: absolute; left: 0; right: 0; bottom: 0; background: var(--card);
+  border-radius: 24px 24px 0 0; padding: 8px 18px 18px;
+  box-shadow: 0 -18px 40px -26px rgba(46,42,38,.5);
+}
+.sheet__grab { width: 34px; height: 3.4px; border-radius: 9px; background: var(--line); margin: 0 auto 11px; }
+.sheet__title { font-size: 16px; font-weight: 700; margin: 0 0 3px; }
+.sheet__sub { font-size: 10.5px; color: var(--ink-2); margin: 0 0 13px; }
+.field { margin-bottom: 11px; }
+.field__head { display: flex; align-items: center; }
+.field__label { font-size: 10.5px; color: var(--ink-2); flex: 1; }
+.field__chip {
+  border: 0; background: var(--accent-soft); color: var(--accent-ink);
+  font-size: 10px; padding: 5px 9px; border-radius: 99px; font-family: inherit;
+}
+.input {
+  width: 100%; margin-top: 6px; padding: 11px 12px; border-radius: 12px;
+  border: 1.4px solid var(--line); background: color-mix(in srgb, var(--card) 92%, var(--paper-deep));
+  font-size: 12.5px; color: var(--ink); font-family: inherit;
+}
+.hint { display: block; margin-top: 5px; font-size: 10px; color: var(--ink-3); }
+.actions { margin-top: 14px; display: flex; flex-direction: column; gap: 7px; }
+.btn {
+  height: 42px; border: 0; border-radius: 13px; font-size: 13px; font-weight: 600; font-family: inherit;
+}
+.btn--primary { background: linear-gradient(150deg, #ffab84, var(--accent)); color: #fff; }
+.btn--danger { background: color-mix(in srgb, #c2503a 12%, var(--card)); color: #c2503a; }
+.device[data-theme='dark'] .btn--danger { background: #3a2620; color: #f0a48f; }
+
+/* ============ 02 色彩 ============ */
+.tokens { display: grid; grid-template-columns: repeat(auto-fill, minmax(212px, 1fr)); gap: 10px; }
+.token {
+  border: 1px solid var(--spec-line); background: #fff; border-radius: 14px; padding: 11px;
+  display: flex; gap: 10px; align-items: center;
+}
+.token__pair { display: flex; gap: 6px; flex: none; }
+.token__cell { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.token__cell span { font-size: 8.5px; color: var(--spec-ink-3); letter-spacing: .06em; }
+.token__sw { width: 34px; height: 34px; border-radius: 10px; display: block; border: 1px solid rgba(31,27,23,.12); }
+.token__n { font-size: 12.5px; font-weight: 600; }
+.token__v { font-size: 10.5px; color: var(--spec-ink-3); font-family: ui-monospace, monospace; margin-top: 2px; }
+.token__u { font-size: 10px; color: var(--spec-ink-3); margin-top: 3px; }
+
+table.spec { width: 100%; border-collapse: collapse; font-size: 12px; margin-top: 10px; }
+table.spec th {
+  text-align: left; font-weight: 600; color: var(--spec-ink-2);
+  padding: 8px 10px; border-bottom: 1px solid var(--spec-line); font-size: 11px;
+  letter-spacing: .04em; text-transform: uppercase;
+}
+table.spec td { padding: 9px 10px; border-bottom: 1px solid var(--spec-line); vertical-align: middle; }
+table.spec tr:last-child td { border-bottom: 0; }
+.mono { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px; color: var(--spec-ink-2); }
+
+/* ============ 03 排版 ============ */
+.type-row { display: flex; align-items: baseline; gap: 16px; padding: 12px 0; border-bottom: 1px dashed var(--spec-line); }
+.type-row:last-child { border-bottom: 0; }
+.type-row .sample { flex: 1; }
+.type-row .meta { font-size: 10.5px; color: var(--spec-ink-3); text-align: right; font-family: ui-monospace, monospace; white-space: nowrap; }
+
+/* ============ 04 组件 ============ */
+.demo-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 14px; }
+.demo {
+  background: #fff; border: 1px solid var(--spec-line); border-radius: 16px; padding: 16px;
+}
+.demo__cap { font-size: 10.5px; color: var(--spec-ink-3); margin-bottom: 12px; letter-spacing: .04em; }
+.btn-row { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.pill-btn {
+  border: 0; border-radius: 12px; padding: 10px 16px; font-size: 12.5px; font-weight: 600;
+  font-family: inherit;
+}
+.pill-btn--primary { background: linear-gradient(150deg, #ffab84, var(--brand)); color: #fff; }
+.pill-btn--soft { background: #fdf0e9; color: #b4552f; }
+.pill-btn--line { background: #fff; border: 1px solid var(--spec-line); color: var(--spec-ink-2); }
+.pill-btn--danger { background: #fdefe9; color: #c2503a; }
+.swatch-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.mini-chip {
+  display: inline-flex; align-items: center; height: 26px; padding: 0 11px;
+  border-radius: 99px; font-size: 11.5px; background: #fce9dd; color: #b5542f;
+}
+.mini-chip--line { background: #fff; border: 1px solid var(--spec-line); color: var(--spec-ink-2); }
+
+/* ============ 05 动效 ============ */
+.motion-demo {
+  display: flex; align-items: center; gap: 18px; flex-wrap: wrap;
+  background: #fff; border: 1px solid var(--spec-line); border-radius: 16px; padding: 16px;
+}
+.hold {
+  width: 132px; height: 46px; border-radius: 14px; border: 0; position: relative;
+  background: #fce9dd; color: #b4552f; font-family: inherit; font-weight: 600; font-size: 12.5px;
+  overflow: hidden; user-select: none;
+}
+.hold span { position: relative; z-index: 1; }
+.hold i {
+  position: absolute; left: 0; top: 0; bottom: 0; width: 0;
+  background: linear-gradient(90deg, #ffb894, var(--brand));
+}
+.hold.charging i { width: 100%; transition: width .5s linear; }
+
+/* ============ 06 适配 ============ */
+.checklist { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; }
+.check-item {
+  display: flex; gap: 9px; align-items: flex-start;
+  background: #fff; border: 1px solid var(--spec-line); border-radius: 13px; padding: 12px 14px;
+  font-size: 12px; line-height: 1.6; color: var(--spec-ink-2);
+}
+.check-item b { color: var(--spec-ink); font-weight: 600; }
+.check-item::before {
+  content: '✓'; color: #4f9f7a; font-weight: 700; font-size: 12px; margin-top: 1px;
+}
+
+/* ============ 移动端适配 ============ */
+@media (max-width: 900px) {
+  .layout { grid-template-columns: 1fr; }
+  .side {
+    position: static; height: auto; border-right: 0;
+    border-bottom: 1px solid var(--spec-line);
+    flex-direction: row; overflow-x: auto; gap: 6px; padding: 10px 12px;
+    scrollbar-width: none; -webkit-overflow-scrolling: touch;
+    -webkit-mask-image: linear-gradient(90deg, #000 84%, transparent 100%);
+    mask-image: linear-gradient(90deg, #000 84%, transparent 100%);
+  }
+  .side::-webkit-scrollbar { display: none; }
+  .side__cap, .side__foot { display: none; }
+  .side a { white-space: nowrap; }
+  .main { padding: 22px 16px 70px; }
+  h1 { font-size: 22px; }
+  .stage { padding: 16px 10px 20px; gap: 16px; }
+  .device { width: 244px; height: 530px; }
+  .device__screen { --scale: .5785; }
+  .topbar { flex-wrap: wrap; gap: 8px; padding: 10px 14px; }
+  .seg { flex: 1 1 auto; justify-content: center; }
+  .seg button { flex: 1; text-align: center; }
+  .brand__s { display: none; }
+  .live { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <div class="brand">
+    <div class="brand__logo">刻</div>
+    <div>
+      <div class="brand__t">刻度 Daymark · 设计规范</div>
+      <div class="brand__s">萌系皮肤 v1.0 · 手机端 402 × 874 · 深浅双主题</div>
+    </div>
+  </div>
+  <span class="topbar__spacer"></span>
+  <span class="live">系统：浅色 · 跟随中</span>
+  <div class="seg" role="group" aria-label="主题">
+    <button data-theme-btn="system" aria-pressed="true">跟随系统</button>
+    <button data-theme-btn="light">浅色</button>
+    <button data-theme-btn="dark">深色</button>
+  </div>
+  <div class="seg" role="group" aria-label="视图">
+    <button data-view-btn="single" aria-pressed="false">单屏</button>
+    <button data-view-btn="both" aria-pressed="true">双主题对照</button>
+  </div>
+</header>
+
+<div class="layout">
+  <nav class="side">
+    <div class="side__cap">交付内容</div>
+    <a href="#s1" class="on"><b>01</b> 高保真 Demo</a>
+    <a href="#s2"><b>02</b> 色彩系统</a>
+    <a href="#s3"><b>03</b> 排版与 Token</a>
+    <a href="#s4"><b>04</b> 组件库</a>
+    <a href="#s5"><b>05</b> 动效规范</a>
+    <a href="#s6"><b>06</b> 适配与交付</a>
+    <div class="side__foot">
+      刻度 Design Spec v1.0<br />
+      基于现有产品（走过的日子 / 倒数日 / 打卡）与产品方向备忘整理。<br />
+      Token 命名与前端 CSS 变量一致。
+    </div>
+  </nav>
+
+  <main class="main">
+
+    <section id="s1">
+      <div class="eyebrow">01 · High-Fidelity Demo</div>
+      <h1>可点击的高保真原型</h1>
+      <p class="lede">
+        四屏覆盖核心路径：焦点卡（走过的日子）、打卡、皮肤画廊、编辑弹层。每屏都按 402 × 874 的真实版面绘制，
+        深浅两套主题分别校色——不是把浅色调暗，而是重选了底、卡、文字三层的关系。
+        右上角可切「跟随系统 / 浅色 / 深色」，或切「手机 / 双主题对照」。
+      </p>
+
+      <div class="tabs" id="screenTabs">
+        <button data-screen-btn="home" aria-pressed="true">走过的日子</button>
+        <button data-screen-btn="checkin" aria-pressed="false">打卡</button>
+        <button data-screen-btn="skins" aria-pressed="false">皮肤画廊</button>
+        <button data-screen-btn="sheet" aria-pressed="false">编辑弹层</button>
+      </div>
+
+      <div class="stage" id="stage"></div>
+    </section>
+
+    <section id="s2">
+      <div class="eyebrow">02 · Color</div>
+      <h2>色彩系统</h2>
+      <p class="lede">
+        底色不是纯白，是带暖度的纸白；主色只有一支杏橙，薄荷、天蓝、淡紫只用来区分角色，不做强调。
+        深色主题不用纯黑，用暖炭色——夜里看屏幕不刺眼，也让杏橙仍然像杏橙。
+      </p>
+
+      <h3>基础色 · 浅色 / 深色</h3>
+      <div class="tokens" id="colorTokens"></div>
+
+      <h3>对比度（正文目标 ≥ 4.5:1 · WCAG AA）</h3>
+      <table class="spec">
+        <thead><tr><th>组合</th><th style="text-align:right">浅色</th><th style="text-align:right">深色</th><th>结论</th></tr></thead>
+        <tbody>
+          <tr><td><span class="mono">ink</span> / <span class="mono">surface</span></td><td class="mono" style="text-align:right">13.9:1</td><td class="mono" style="text-align:right">13.4:1</td><td>AAA</td></tr>
+          <tr><td><span class="mono">ink-2</span> / <span class="mono">surface</span></td><td class="mono" style="text-align:right">4.7:1</td><td class="mono" style="text-align:right">6.1:1</td><td>AA</td></tr>
+          <tr><td><span class="mono">ink-3</span> / <span class="mono">paper</span></td><td class="mono" style="text-align:right">3.4:1</td><td class="mono" style="text-align:right">4.9:1</td><td>浅：仅非正文 / 深：AA</td></tr>
+          <tr><td><span class="mono">accent-ink</span> / <span class="mono">accent-soft</span></td><td class="mono" style="text-align:right">5.2:1</td><td class="mono" style="text-align:right">7.0:1</td><td>AA</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="s3">
+      <div class="eyebrow">03 · Typography &amp; Tokens</div>
+      <h2>排版与 Token</h2>
+      <p class="lede">
+        数字用 Baloo 2（圆润、有重量），中文用思源黑体，品牌名用站酷快乐体——只在「刻度」两个字上出现。
+        层级靠字号与字重拉开，不靠框线。
+      </p>
+
+      <div class="type-row">
+        <span class="sample" style="font-family:'Baloo 2',sans-serif;font-weight:800;font-size:44px;line-height:1;letter-spacing:-1.5px">128</span>
+        <span class="meta">Display · Baloo 2 800 · 60/0.9 · -1.5</span>
+      </div>
+      <div class="type-row">
+        <span class="sample" style="font-size:20px;font-weight:700">一点点积累的日子</span>
+        <span class="meta">Title · 20 / 700 / -.2</span>
+      </div>
+      <div class="type-row">
+        <span class="sample" style="font-size:14px;font-weight:700">戒烟</span>
+        <span class="meta">Card title · 14 / 700</span>
+      </div>
+      <div class="type-row">
+        <span class="sample" style="font-size:11.5px;line-height:1.6;color:#7a7268">你已经比自己以为的更能撑。</span>
+        <span class="meta">Body · 11.5 / 400 / 1.55</span>
+      </div>
+      <div class="type-row">
+        <span class="sample" style="font-size:10.5px;color:#a49a8d;letter-spacing:.04em">另外 3 件</span>
+        <span class="meta">Caption · 10.5 / 400</span>
+      </div>
+
+      <h3>形状与间距</h3>
+      <table class="spec">
+        <thead><tr><th>Token</th><th>值</th><th>用在哪</th></tr></thead>
+        <tbody>
+          <tr><td class="mono">--r-card</td><td class="mono">24px</td><td>焦点卡</td></tr>
+          <tr><td class="mono">--r-row</td><td class="mono">19px</td><td>折叠列表行、本周卡</td></tr>
+          <tr><td class="mono">--r-chip</td><td class="mono">999px</td><td>胶囊、标签</td></tr>
+          <tr><td class="mono">--gap-page</td><td class="mono">14px</td><td>卡片左右外边距</td></tr>
+          <tr><td class="mono">--gap-stack</td><td class="mono">8px</td><td>列表行之间</td></tr>
+          <tr><td class="mono">--shadow-card</td><td class="mono">0 10px 24px -14px</td><td>卡片投影，不用描边</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="s4">
+      <div class="eyebrow">04 · Components</div>
+      <h2>组件库</h2>
+      <p class="lede">按钮只有三档权重；角色是最小的视觉单元，同一个组件在四个形态之间切换。</p>
+
+      <div class="demo-grid">
+        <div class="demo">
+          <div class="demo__cap">按钮 · 主 / 次 / 描边 / 危险</div>
+          <div class="btn-row" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
+            <button class="pill-btn pill-btn--primary">保存修改</button>
+            <button class="pill-btn pill-btn--soft">设为今天</button>
+            <button class="pill-btn pill-btn--line">取消</button>
+            <button class="pill-btn pill-btn--danger">删除</button>
+          </div>
+        </div>
+
+        <div class="demo">
+          <div class="demo__cap">胶囊 · 状态 / 描边</div>
+          <div class="swatch-row">
+            <span class="mini-chip">今天也在长</span>
+            <span class="mini-chip mini-chip--line">历史 · 23 天</span>
+          </div>
+        </div>
+
+        <div class="demo">
+          <div class="demo__cap">角色 · 种子 → 发芽 → 长叶 → 开花（3 / 7 / 30 / 100 天）</div>
+          <div class="btn-row" style="gap:18px;align-items:flex-end">
+            <div class="pet pet--seed" style="--pet-hi:#ffd8c2;--pet-lo:#f3a482"><span class="pet__body"></span><span class="pet__eye pet__eye--l"></span><span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span></div>
+            <div class="pet" style="--pet-hi:#ffd2b4;--pet-lo:#f2a179;--pet-leaf:#8cc79a"><span class="pet__leaf pet__leaf--l"></span><span class="pet__body"></span><span class="pet__eye pet__eye--l"></span><span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span></div>
+            <div class="pet" style="--pet-hi:#ffc4a3;--pet-lo:#f0926a;--pet-leaf:#7fc08f"><span class="pet__leaf pet__leaf--l"></span><span class="pet__leaf pet__leaf--r"></span><span class="pet__body"></span><span class="pet__eye pet__eye--l"></span><span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span></div>
+            <div class="pet" style="--pet-hi:#ffc4a3;--pet-lo:#e8835c;--pet-leaf:#7fc08f">
+              <span class="pet--bloom"><i></i><i></i><i></i><i></i><i></i></span>
+              <span class="pet__leaf pet__leaf--l"></span><span class="pet__leaf pet__leaf--r"></span>
+              <span class="pet__body"></span><span class="pet__eye pet__eye--l"></span><span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="demo">
+          <div class="demo__cap">成长轨道 · 已完成 / 当前 / 未达</div>
+          <div class="growth" style="margin:0">
+            <div class="growth__rail" style="background:#f4eee3;padding-right:16px">
+              <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+              <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+              <span class="stage stage--now"><i class="stage__dot">3</i><i class="stage__bar"></i></span>
+              <span class="stage"><i class="stage__dot">4</i></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="s5">
+      <div class="eyebrow">05 · Motion</div>
+      <h2>动效规范</h2>
+      <p class="lede">
+        动效只做三件事：告诉用户按下去了、告诉用户记上了、告诉用户它长大了。
+        日常交互最多三个动效节点（按住演示见下）；过场动画只挂在里程碑这种低频节点。
+      </p>
+      <div class="motion-demo">
+        <button class="hold" id="holdBtn"><i></i><span>按住试试</span></button>
+        <div style="font-size:12px;line-height:1.8;color:var(--spec-ink-2)">
+          <b style="color:var(--spec-ink)">蓄力 · 500ms</b><br />
+          按下即开始，松手回退不记数；<br />
+          填充曲线 <span class="mono">linear</span>，完成时叠加涟漪 + 「+1」。
+        </div>
+      </div>
+      <table class="spec">
+        <thead><tr><th>场景</th><th>时长</th><th>曲线</th><th>说明</th></tr></thead>
+        <tbody>
+          <tr><td>卡片按下</td><td class="mono">120ms</td><td class="mono">ease-out</td><td>缩放 0.988，抬手回弹</td></tr>
+          <tr><td>蓄力填满</td><td class="mono">500ms</td><td class="mono">linear</td><td>松手立即归零，不记数</td></tr>
+          <tr><td>数字翻牌</td><td class="mono">320ms</td><td class="mono">cubic-bezier(.22,.9,.3,1)</td><td>只做淡入与轻微上移</td></tr>
+          <tr><td>弹层上滑</td><td class="mono">320ms</td><td class="mono">cubic-bezier(.22,.9,.3,1)</td><td>遮罩同步淡入</td></tr>
+          <tr><td>形态进化</td><td class="mono">600ms</td><td class="mono">spring</td><td>低频，可跳过</td></tr>
+        </tbody>
+      </table>
+      <p class="lede" style="margin-top:12px">
+        系统开启「减弱动态效果」时：蓄力与翻牌保留（它们是反馈），涟漪与火花降级为静态淡出。
+      </p>
+    </section>
+
+    <section id="s6">
+      <div class="eyebrow">06 · Adaptation</div>
+      <h2>适配与交付</h2>
+      <div class="checklist">
+        <div class="check-item"><span><b>版心</b>：以 402 × 874 为基准，宽度自适应；卡片左右边距固定 14px，不随屏宽放大。</span></div>
+        <div class="check-item"><span><b>安全区</b>：顶部留给状态栏 44px，底部留给 Home 指示条 20px；FAB 距底 22px。</span></div>
+        <div class="check-item"><span><b>触控</b>：所有可点区域 ≥ 44 × 44；视觉尺寸可以更小，用透明热区补。</span></div>
+        <div class="check-item"><span><b>文字</b>：正文最小 11.5px；说明文字对比度 ≥ 4.5（浅色下 <span class="mono">--ink-2</span> 达标，<span class="mono">--ink-3</span> 只用于非正文）。</span></div>
+        <div class="check-item"><span><b>深色</b>：不用纯黑，用暖炭 <span class="mono">#17130F</span>；卡片比底色亮一档，投影几乎不可见，靠明度分层。</span></div>
+        <div class="check-item"><span><b>数字</b>：等宽（tabular-nums），避免每秒跳动时左右抖。</span></div>
+        <div class="check-item"><span><b>皮肤</b>：一套皮肤 = 一份变量表，组件不写死颜色；切换皮肤不触碰任何数据结构。</span></div>
+        <div class="check-item"><span><b>降级</b>：不支持 <span class="mono">color-mix</span> 时回退到预设的淡色十六进制。</span></div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+/* ---------- 造型模块：把一套屏的 HTML 拼出来 ---------- */
+const statusBar = `
+  <div class="ps-status">
+    <span>9:41</span>
+    <span style="display:flex;align-items:center">
+      <span class="bars"><i></i><i></i><i></i><i></i></span>
+      <span class="batt"></span>
+    </span>
+  </div>`
+
+const topBar = `
+  <div class="ps-top">
+    <div class="ps-brand">
+      <span class="mark"><i></i><i></i><i></i></span>
+      <span>刻度</span>
+    </div>
+    <span style="flex:1"></span>
+    <span class="ps-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 0 0 18z" fill="currentColor" stroke="none"/></svg></span>
+    <span class="ps-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M11 5 6.5 9H3v6h3.5L11 19z"/><path d="M15.5 8.5a5 5 0 0 1 0 7"/></svg></span>
+  </div>`
+
+const petMain = `
+  <div class="pet"><span class="pet__leaf pet__leaf--l"></span><span class="pet__leaf pet__leaf--r"></span>
+    <span class="pet__body"></span><span class="pet__eye pet__eye--l"></span>
+    <span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span></div>`
+
+const petWater = `
+  <div class="pet pet--water"><span class="pet__body"></span>
+    <span class="pet__eye pet__eye--l"></span><span class="pet__eye pet__eye--r"></span>
+    <span class="pet__mouth"></span></div>`
+
+const row = (hi, lo, leaf, name, n, unit) => `
+  <div class="row">
+    <div class="pet" style="--pet-hi:${hi};--pet-lo:${lo};--pet-leaf:${leaf};width:26px;height:26px">
+      <span class="pet__body"></span><span class="pet__eye pet__eye--l"></span>
+      <span class="pet__eye pet__eye--r"></span><span class="pet__mouth"></span>
+    </div>
+    <span class="row__title">${name}</span>
+    <span class="row__grow"></span>
+    <span class="row__num">${n}<small>${unit}</small></span>
+  </div>`
+
+const screens = {
+  home: () => `
+    ${statusBar}${topBar}
+    <div class="ps-head">
+      <div class="ps-date">2026年10月21日 · 星期三</div>
+      <h1 class="ps-title">一点点积累的日子</h1>
+      <p class="ps-sub">共 4 件事</p>
+    </div>
+    <article class="focus">
+      <div class="focus__head">${petMain}<span class="focus__title">戒烟</span>
+        <span class="grow"></span><span class="chip">今天也在长</span></div>
+      <div class="focus__body">
+        <span class="focus__num">128</span><span class="focus__unit">天</span>
+        <span class="focus__meta"><b>6 月 15 日 起</b><small>4 个月 6 天</small></span>
+      </div>
+      <div class="growth">
+        <div class="growth__rail">
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--now"><i class="stage__dot">4</i></span>
+        </div>
+        <p class="growth__label">下一形态 <b>开花</b> · 还差 22 天</p>
+      </div>
+      <p class="focus__quote">你已经比自己以为的更能撑。</p>
+    </article>
+    <div class="more">
+      <div class="more__head">另外 3 件</div>
+      ${row('#bfe6f5','#7cc3e2','#8bcbe6','喝水',23,'天')}
+      ${row('#d3c8f5','#a892e6','#c0b0f0','跑步',7,'天')}
+      ${row('#ffe3a8','#efc164','#f3d68c','读书',12,'天')}
+    </div>
+    <div class="week">
+      <div class="week__head"><span class="week__title">本周</span><span class="week__sum">已记 3 天</span></div>
+      <div class="week__bars">
+        <span class="week__bar on" style="--h:22px"><i></i><span>一</span></span>
+        <span class="week__bar on" style="--h:29px"><i></i><span>二</span></span>
+        <span class="week__bar on today" style="--h:18px"><i></i><span>三</span></span>
+        <span class="week__bar is-future" style="--h:7px"><i></i><span>四</span></span>
+        <span class="week__bar is-future" style="--h:7px"><i></i><span>五</span></span>
+        <span class="week__bar is-future" style="--h:7px"><i></i><span>六</span></span>
+        <span class="week__bar is-future" style="--h:7px"><i></i><span>日</span></span>
+      </div>
+    </div>
+    <p class="ps-foot">轻点卡片看看它</p>
+    <div class="ps-pager"><i class="on"></i><i></i><i></i></div>
+    <button class="ps-fab">+</button>
+    <span class="ps-home"></span>`,
+
+  checkin: () => `
+    ${statusBar}${topBar}
+    <div class="ps-head">
+      <div class="ps-date">2026年10月21日 · 星期三</div>
+      <h1 class="ps-title">一点点积累的日子</h1>
+      <p class="ps-sub">今天记了 3 次</p>
+    </div>
+    <article class="focus">
+      <div class="focus__head">${petWater}<span class="focus__title">喝水</span>
+        <span class="grow"></span><span class="chip chip--line">历史 · 23 天</span></div>
+      <div class="focus__body">
+        <span class="focus__num">3</span><span class="focus__unit">次</span>
+        <span class="focus__meta"><b>昨天 8 次</b><small>连续 6 天</small></span>
+      </div>
+      <div class="growth">
+        <div class="growth__rail">
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--now"><i class="stage__dot">4</i></span>
+        </div>
+        <p class="growth__label">再记 <b>1 次</b>，它就鼓起来了</p>
+      </div>
+      <p class="focus__quote">今天的水，是明天脸色的伏笔。</p>
+    </article>
+    <div class="more">
+      <div class="more__head">另外 1 件</div>
+      ${row('#d3c8f5','#a892e6','#c0b0f0','跑步',0,'次')}
+    </div>
+    <p class="ps-foot">按住卡片记一次 · 轻点编辑</p>
+    <div class="ps-pager"><i></i><i></i><i class="on"></i></div>
+    <button class="ps-fab">+</button>
+    <span class="ps-home"></span>`,
+
+  skins: () => `
+    ${statusBar}${topBar}
+    <div class="ps-head" style="padding-bottom:8px">
+      <h1 class="ps-title">换一个世界</h1>
+      <p class="ps-sub">换的是它长什么样，记下的东西一件都不会动</p>
+    </div>
+    <div class="gallery">
+      <div class="pack pack--on">
+        <div class="mini" style="background:linear-gradient(170deg,#fdf2e5,#ffe6d6)">
+          <i style="left:6px;top:8px;width:48px;height:26px;background:#fff"></i>
+          <i style="left:11px;top:14px;width:17px;height:6px;background:#f0b39a"></i>
+          <i style="left:11px;top:23px;width:26px;height:5px;background:#e6d7c8"></i>
+          <i style="left:6px;top:39px;width:48px;height:18px;background:#fff"></i>
+          <i style="left:6px;top:62px;width:48px;height:15px;background:#fff"></i>
+        </div>
+        <div><div class="pack__name">萌系</div><div class="pack__desc">会长大的小东西，圆手圆脚</div>
+          <span class="pack__tag">正在使用</span></div>
+      </div>
+      <div class="pack">
+        <div class="mini" style="background:linear-gradient(170deg,#0c0d12,#161826)">
+          <i style="left:6px;top:8px;width:48px;height:26px;background:#232637"></i>
+          <i style="left:11px;top:14px;width:17px;height:6px;background:#8b7bff"></i>
+          <i style="left:11px;top:23px;width:26px;height:5px;background:#3a3f57"></i>
+          <i style="left:6px;top:39px;width:48px;height:18px;background:#232637"></i>
+          <i style="left:6px;top:62px;width:48px;height:15px;background:#232637"></i>
+        </div>
+        <div><div class="pack__name">夜刻</div><div class="pack__desc">现在这一套，深、准、克制</div>
+          <span class="pack__tag">经典</span></div>
+      </div>
+      <div class="pack">
+        <div class="mini" style="background:linear-gradient(170deg,#f7f3ea,#efe8da)">
+          <i style="left:6px;top:8px;width:48px;height:26px;background:#fffdf8;border:1px solid #e3dacb"></i>
+          <i style="left:11px;top:14px;width:17px;height:6px;background:#a89373"></i>
+          <i style="left:11px;top:23px;width:26px;height:5px;background:#d9cdb8"></i>
+          <i style="left:6px;top:39px;width:48px;height:18px;background:#fffdf8;border:1px solid #e3dacb"></i>
+          <i style="left:6px;top:62px;width:48px;height:15px;background:#fffdf8;border:1px solid #e3dacb"></i>
+        </div>
+        <div><div class="pack__name">纸感</div><div class="pack__desc">像写在纸上，轻、慢、有纹理</div>
+          <span class="pack__tag">安静</span></div>
+      </div>
+      <div class="pack">
+        <div class="mini" style="background:#1d2430">
+          <i style="left:6px;top:8px;width:48px;height:24px;background:#2d3a4f;border-radius:0"></i>
+          <i style="left:11px;top:14px;width:16px;height:5px;background:#7fe0a8;border-radius:0"></i>
+          <i style="left:11px;top:22px;width:26px;height:4px;background:#4a5f7d;border-radius:0"></i>
+          <i style="left:6px;top:38px;width:48px;height:17px;background:#2d3a4f;border-radius:0"></i>
+          <i style="left:6px;top:60px;width:48px;height:14px;background:#2d3a4f;border-radius:0"></i>
+        </div>
+        <div><div class="pack__name">像素</div><div class="pack__desc">一格一格攒出来的成就感</div>
+          <span class="pack__tag">怀旧</span></div>
+      </div>
+    </div>
+    <p class="ps-foot">皮肤只是外观 · 数据永远留在本机</p>
+    <span class="ps-home"></span>`,
+
+  sheet: () => `
+    ${statusBar}${topBar}
+    <div class="ps-head">
+      <div class="ps-date">2026年10月21日 · 星期三</div>
+      <h1 class="ps-title">一点点积累的日子</h1>
+      <p class="ps-sub">共 4 件事</p>
+    </div>
+    <article class="focus">
+      <div class="focus__head">${petMain}<span class="focus__title">戒烟</span>
+        <span class="grow"></span><span class="chip">今天也在长</span></div>
+      <div class="focus__body">
+        <span class="focus__num">128</span><span class="focus__unit">天</span>
+        <span class="focus__meta"><b>6 月 15 日 起</b><small>4 个月 6 天</small></span>
+      </div>
+      <div class="growth">
+        <div class="growth__rail">
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--done"><i class="stage__dot">✓</i><i class="stage__bar"></i></span>
+          <span class="stage stage--now"><i class="stage__dot">4</i></span>
+        </div>
+        <p class="growth__label">下一形态 <b>开花</b> · 还差 22 天</p>
+      </div>
+    </article>
+    <div class="scrim"></div>
+    <section class="sheet">
+      <div class="sheet__grab"></div>
+      <h2 class="sheet__title">编辑这个日子</h2>
+      <p class="sheet__sub">时间从起始日开始累计，按自然日计算。</p>
+      <div class="field">
+        <div class="field__head"><span class="field__label">起始日期</span><button class="field__chip">设为今天</button></div>
+        <input class="input" value="2026-06-15" readonly />
+        <span class="hint">2026年6月15日 起算 · 已经过去 128 天</span>
+      </div>
+      <div class="actions">
+        <button class="btn btn--primary">保存修改</button>
+        <button class="btn btn--danger">删除这个日子</button>
+      </div>
+    </section>
+    <span class="ps-home"></span>`
+}
+
+/* ---------- 渲染 ---------- */
+const narrow = window.matchMedia('(max-width: 900px)').matches
+const state = { screen: 'home', view: narrow ? 'single' : 'both', theme: 'system' }
+
+function frame(theme) {
+  const label = theme === 'dark' ? ['Dark', '深色'] : ['Light', '浅色']
+  return `
+    <div class="frame">
+      <div class="frame__cap"><b>${label[0]}</b>${label[1]} · iPhone 402 × 874</div>
+      <div class="device" data-theme="${theme}">
+        <div class="device__screen"><div class="device__inner">
+          <div class="phone-screen ${state.screen === 'sheet' ? 'phone-screen--sheet' : ''}">
+            ${screens[state.screen]()}
+          </div>
+        </div></div>
+      </div>
+    </div>`
+}
+
+function renderStage() {
+  const dark = state.theme === 'dark' ||
+    (state.theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+  const stage = document.getElementById('stage')
+  if (state.view === 'both') stage.innerHTML = frame('light') + frame('dark')
+  else stage.innerHTML = frame(dark ? 'dark' : 'light')
+}
+
+document.querySelectorAll('[data-theme-btn]').forEach((b) => {
+  b.addEventListener('click', () => {
+    state.theme = b.dataset.themeBtn
+    document.querySelectorAll('[data-theme-btn]').forEach((x) => x.setAttribute('aria-pressed', x === b))
+    renderStage()
+  })
+})
+document.querySelectorAll('[data-view-btn]').forEach((b) => {
+  b.setAttribute('aria-pressed', String(b.dataset.viewBtn === state.view))
+  b.addEventListener('click', () => {
+    state.view = b.dataset.viewBtn
+    document.querySelectorAll('[data-view-btn]').forEach((x) => x.setAttribute('aria-pressed', x === b))
+    renderStage()
+  })
+})
+document.querySelectorAll('[data-screen-btn]').forEach((b) => {
+  b.addEventListener('click', () => {
+    state.screen = b.dataset.screenBtn
+    document.querySelectorAll('[data-screen-btn]').forEach((x) => x.setAttribute('aria-pressed', x === b))
+    renderStage()
+  })
+})
+renderStage()
+
+/* ---------- 02 色彩令牌 ---------- */
+const tokens = [
+  ['纸白 paper', '#FAF6EF', '#17130F', '页面底色'],
+  ['卡片 surface', '#FFFFFF', '#241F1A', '卡片、列表行'],
+  ['浅槽 surface-2', '#F4EEE3', '#201B16', '成长轨道、标签底'],
+  ['正文 ink', '#2E2A26', '#F6EFE6', '标题与大数字'],
+  ['次级 ink-2', '#7A7268', '#B3A798', '说明文字、脚注'],
+  ['辅助 ink-3', '#A49A8D', '#8B7F71', '非正文的碎信息'],
+  ['杏橙 accent', '#EF8F66', '#F5A17A', '主按钮、强调'],
+  ['淡杏 accent-soft', '#FCE9DD', '#3A2A21', '胶囊底、元信息底'],
+  ['深杏 accent-ink', '#B5542F', '#F7B694', '淡底上的强调文字'],
+  ['薄荷 mint', '#62B998', '#7ED0AC', '第二类角色、成功'],
+  ['天蓝 sky', '#7CC3E2', '#8FD0E8', '第三类角色'],
+  ['淡紫 lilac', '#A892E6', '#B7A4E8', '第四类角色'],
+  ['描边 line', '#EEE5D8', '#362D26', '分隔线、输入框'],
+]
+document.getElementById('colorTokens').innerHTML = tokens.map(([n, l, d, u]) => `
+  <div class="token">
+    <span class="token__pair">
+      <span class="token__cell"><i class="token__sw" style="background:${l}"></i><span>浅</span></span>
+      <span class="token__cell"><i class="token__sw" style="background:${d}"></i><span>深</span></span>
+    </span>
+    <span>
+      <div class="token__n">${n}</div>
+      <div class="token__v">${l} / ${d}</div>
+      <div class="token__u">${u}</div>
+    </span>
+  </div>`).join('')
+
+/* ---------- 左侧目录高亮 ---------- */
+const links = [...document.querySelectorAll('.side a')]
+const sections = links.map((a) => document.querySelector(a.getAttribute('href')))
+const io = new IntersectionObserver((entries) => {
+  entries.forEach((e) => {
+    if (!e.isIntersecting) return
+    const i = sections.indexOf(e.target)
+    links.forEach((l, k) => l.classList.toggle('on', k === i))
+  })
+}, { rootMargin: '-72px 0px -70% 0px' })
+sections.forEach((s) => s && io.observe(s))
+
+/* ---------- 05 蓄力演示 ---------- */
+const holdBtn = document.getElementById('holdBtn')
+let timer = 0
+holdBtn.addEventListener('pointerdown', () => {
+  holdBtn.classList.add('charging')
+  timer = setTimeout(() => {
+    holdBtn.classList.remove('charging')
+    holdBtn.querySelector('span').textContent = '记上了 +1'
+    setTimeout(() => { holdBtn.querySelector('span').textContent = '按住试试' }, 900)
+  }, 500)
+})
+;['pointerup', 'pointerleave', 'pointercancel'].forEach((ev) =>
+  holdBtn.addEventListener(ev, () => {
+    clearTimeout(timer)
+    holdBtn.classList.remove('charging')
+  }))
+</script>
+</body>
+</html>
