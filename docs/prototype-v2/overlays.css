@@ -1,0 +1,101 @@
+/* 覆盖层补充样式（基础件在 proto.css） */
+
+/* 切换 */
+.sw-av .cr { overflow: visible; }
+.sw-add { margin-top: 8px; }
+
+/* 新建 */
+.add-top { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; min-height: 36px; }
+.add-top > span:first-child, .add-back { min-width: 84px; }
+.add-top .x { margin-left: 26px; }
+.add-back { display: inline-flex; align-items: center; gap: 0; border: 0; background: transparent; padding: 0; font-weight: 700; font-size: 14px; color: var(--ink2); }
+.add-back svg { width: 18px; height: 18px; }
+.add-note { margin: 8px 2px 0; font-size: 12.5px; color: var(--ink3); font-weight: 500; }
+.photo-pick.on { border-style: solid; border-color: var(--line); background: var(--surface); }
+.photo-pick .thumb svg { width: 100%; height: 100%; }
+.stepper .icon-btn { width: 38px; height: 38px; border-radius: 12px; font-size: 20px; font-weight: 700; }
+.egg-btn { width: 70px; display: grid; place-items: end center; }
+.egg-rec { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 99px; background: var(--ink); color: var(--bg); white-space: nowrap; }
+.egg-grow { font-size: 12.5px !important; color: var(--ink3) !important; margin-top: 6px !important; }
+.input.shake { animation: inputShake 0.4s; }
+@keyframes inputShake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
+
+/* 孵化 */
+.hatch-mid { display: flex; flex-direction: column; align-items: center; min-height: 320px; justify-content: flex-end; }
+.hatch-mid .bubble { animation: pop 0.45s var(--ease-pop) 0.35s both; }
+.hatch .btn.block { width: 100%; margin-top: 18px; animation: up 0.5s var(--ease-pop) 0.6s both; }
+.hatch .confetti { position: absolute; }
+
+/* 档案 */
+.page-h { position: sticky; top: 0; z-index: 3; }
+.page-t { font-size: 16px; font-weight: 800; }
+.page-h .icon-btn { width: 38px; height: 38px; border-radius: 13px; }
+.detail .d-hero .sw-av { overflow: visible; }
+.d-big { display: inline-block; margin-top: 8px; font-family: var(--font-num); font-weight: var(--num-w); font-style: var(--num-style); font-size: 20px; padding: 2px 12px; border-radius: 99px; background: color-mix(in oklab, var(--c) 40%, var(--surface)); border: var(--bw) solid var(--line); }
+[data-theme='paper'] .d-big { border-color: var(--hair); }
+.path { padding: 14px 10px 12px; }
+.path-node { width: 64px; }
+.path-node.off b { color: var(--ink3); }
+.path-node .pn-art .cr { margin-top: 4px; }
+.path-note { margin-top: 8px; }
+.li-sub { display: block; font-size: 12px !important; font-weight: 500 !important; color: var(--ink3); }
+.ch-line { display: block; font-size: 12.5px !important; font-weight: 500 !important; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 190px; }
+.list .li .grow { min-width: 0; }
+.detail-memo { margin: 10px 16px 0; }
+.detail .d-actions + .danger-link { margin-bottom: 10px; }
+
+/* 告别 */
+.ask-art { display: flex; justify-content: center; margin: 2px 0 6px; }
+.ask-h { justify-content: center; text-align: center; }
+.ask-h h3 { font-size: 20px; }
+.sheet-sub.center { text-align: center; line-height: 1.65; }
+.rite-cr { margin: 18px auto 10px; height: auto; }
+.rite-cr .ground { background: #000; opacity: 0.35; }
+.suitcase { position: absolute; right: -12px; bottom: 14px; font-size: 40px; z-index: 3; animation: wave 1.6s ease-in-out infinite; }
+.rite .big-u { font-family: var(--font-ui); font-size: 18px; font-weight: 700; margin-left: 6px; text-shadow: none; font-style: normal; }
+.rite .btn.block { width: 100%; }
+.rite .soft b { color: #fff; font-family: var(--font-num); font-size: 18px; }
+.after-book h3 { margin-top: 30px; }
+.done-btns { width: 100%; }
+.book-cover small:first-child { margin-bottom: 6px; }
+
+/* 进化 */
+.ev-stage .ev-spark { margin: -8px; }
+.evolve .ev-text h3 { color: #fff; }
+
+/* 分享 */
+.sc-sticker { justify-content: flex-start; }
+.sc-cr { margin: 4px 0 -2px; }
+.sc .sc-n small.pre { margin: 0 6px 0 0; }
+.sc-l.left { text-align: left; padding: 0; }
+.sc-f-photo { margin-top: 12px !important; }
+.sc-photo .sc-t { color: #fff; }
+.tk-cr { margin: 2px 0 0; }
+.tk-top .sc-k { color: var(--ink2); }
+.tk-cut::before, .tk-cut::after { content: ''; position: absolute; top: -13px; width: 24px; height: 24px; border-radius: 50%; background: #17132a; border: 3px solid var(--cr-line); }
+.tk-cut::before { left: -27px; clip-path: inset(0 0 0 50%); }
+.tk-cut::after { right: -27px; clip-path: inset(0 50% 0 0); }
+.share-tip { font-size: 12px; color: rgba(255, 255, 255, 0.5); margin: 12px 0 0; }
+
+/* 小纸条 */
+.note-modal .note-from { margin-bottom: -30px; }
+
+/* 翻开一章 */
+.chapter-modal .bookpage { padding-top: 18px; }
+.bp-x { position: absolute; top: 12px; right: 12px; width: 32px; height: 32px; }
+.bp-word { font-family: var(--font-cute); font-size: 40px; }
+
+/* 徽章 */
+.bp-badge { display: flex; justify-content: center; margin: 8px 0 2px; }
+
+/* —— 修正 —— */
+.sw-title, .sw-meta { display: block; }
+.sw-title { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.hatch-egg.born { height: auto; margin-top: -34px; }
+.hatch-mid .bubble { margin-bottom: 0; }
+.ev-text { width: 100%; }
+.ev-btns .btn { white-space: nowrap; padding: 0 12px; }
+/* 深色覆盖层上，状态栏换成白字 */
+.screen:has(.ov .rite, .ov .evolve, .ov .share) .sb { color: #fff; }
+.after-book h3 { margin-top: 0; }
+.rite .book3d.fly + .after-book { margin-top: -120px; }
