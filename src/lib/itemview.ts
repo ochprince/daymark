@@ -5,7 +5,15 @@
  * 顺序口径（docs/plan-v2.md 6.10）：先坚持（按 sortEvents），再习惯（按 sortCheckIns），
  * 再等待的日子（按距离正序）。舞台横滑与底部圆点共用这个顺序。
  */
-import { anchorOf, buildCountdownList, daysSince, sortEvents } from './days'
+import {
+  DAY_MS,
+  anchorOf,
+  buildCountdownList,
+  daysSince,
+  daysUntil,
+  nextOccurrence,
+  sortEvents,
+} from './days'
 import { sortCheckIns, countInPeriod } from './checkins'
 import { displayStage, growthOfSince, habitGrowthDays, isSleeping, recordedOn } from './growth'
 import type {
@@ -134,6 +142,13 @@ export function buildItemViews(
   for (const view of buildCountdownList(sources.countdowns, now)) {
     const event = view.event
     const key = itemKey('countdown', event.id)
+    // 今天已经「说过了」：跳到下一次发生，当天态结束
+    let next = view.next
+    let days = view.days
+    if (days === 0 && (event.ackedFor ?? []).includes(next)) {
+      next = nextOccurrence(event.startedAt, event.repeat, next + DAY_MS, event.festivalId)
+      days = daysUntil(next, now)
+    }
     views.push({
       key,
       kind: 'countdown',
@@ -144,9 +159,9 @@ export function buildItemViews(
       species: 'post',
       stage: 0,
       growth: 0,
-      days: view.days,
-      next: view.next,
-      mood: view.days === 0 ? 'happy' : 'idle',
+      days,
+      next,
+      mood: days === 0 ? 'happy' : 'idle',
       event,
     })
   }

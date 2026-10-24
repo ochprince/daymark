@@ -50,6 +50,15 @@ export function addCountdown(draft: CountdownDraft): CountdownEvent {
   })
 }
 
+/** 当天点「说过了」：记进 ackedFor 与 history，当天态结束，重复型自动显示下一次 */
+export function markSaid(id: string, occurrence: number): void {
+  const current = countdowns.getAll().find((item) => item.id === id)
+  if (!current) return
+  const ackedFor = [...new Set([...(current.ackedFor ?? []), occurrence])]
+  const history = [{ at: occurrence }, ...(current.history ?? [])].slice(0, 200)
+  countdowns.update(id, { ackedFor, history })
+}
+
 export function updateCountdown(id: string, patch: Partial<CountdownDraft>): void {
   countdowns.update(id, {
     ...(patch.title !== undefined ? { title: patch.title.trim().slice(0, 40) } : {}),

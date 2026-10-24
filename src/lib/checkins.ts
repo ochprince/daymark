@@ -1,6 +1,7 @@
 import { createStore } from './store'
 import { formatMonth, formatShortDate, formatWeekday, startOfDay } from './days'
 import { t } from './i18n'
+import { habitGrowthDays, nextGrowthDays } from './growth'
 import type { SfxId } from './sfx'
 import type { CheckInCadence, CheckInDraft, CheckInEvent } from './types'
 
@@ -421,10 +422,13 @@ export function tapCheckIn(id: string, now: number): TapResult | null {
   const event = checkins.getAll().find((item) => item.id === id)
   if (!event) return null
   const key = dayKey(now)
-  const count = Math.max(0, Math.trunc(event.days[key] ?? 0)) + 1
+  const before = Math.max(0, Math.trunc(event.days[key] ?? 0))
+  const count = before + 1
   const times = { ...(event.times ?? {}) }
   times[key] = [...timesOf(event, key), now].slice(-MAX_TIMES_PER_DAY)
-  checkins.update(id, { days: { ...event.days, [key]: count }, times })
+  // 成长天数单独记账：某天从 0 变 1 才 +1（days 只保留 240 个周期，不能按天推算）
+  const growthDays = nextGrowthDays(before, count, habitGrowthDays(event))
+  checkins.update(id, { days: { ...event.days, [key]: count }, times, growthDays })
   return { key, count }
 }
 
@@ -444,7 +448,12 @@ export function untapCheckIn(id: string, key: string): void {
   }
   if (count > 0) days[key] = count
   else delete days[key]
-  checkins.update(id, { days, times })
+  const growthDays = nextGrowthDays(
+    Math.max(0, Math.trunc(event.days[key] ?? 0)),
+    count,
+    habitGrowthDays(event),
+  )
+  checkins.update(id, { days, times, growthDays })
 }
 
 /* ------------------------------------------------------------------ *

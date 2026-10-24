@@ -68,6 +68,14 @@ export function formatWeekday(ts: number): string {
   return formatter('weekday', { weekday: 'long' }).format(new Date(ts))
 }
 
+/** 页面标题上的日期：中文「10月25日 星期日」，英文「Sunday, October 25」 */
+export function formatDateHeading(ts: number): string {
+  if (intlLocale().startsWith('zh')) {
+    return `${formatShortDate(ts)} ${formatWeekday(ts)}`
+  }
+  return formatter('heading', { weekday: 'long', month: 'long', day: 'numeric' }).format(new Date(ts))
+}
+
 /** 2026年8月 / August 2026 */
 export function formatMonth(ts: number): string {
   return formatter('month', { year: 'numeric', month: 'long' }).format(new Date(ts))

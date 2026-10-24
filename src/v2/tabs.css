@@ -18,10 +18,10 @@
 .m-stat b small { font-size: 13px; color: var(--ink3); font-family: var(--font-ui); font-style: normal; font-weight: 700; }
 .recap-art { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: var(--surface); border: var(--bw) solid var(--line); color: var(--h-grape-2); flex: none; }
 .recap-art svg { width: 18px; height: 18px; }
-[data-theme='paper'] .recap-art, [data-theme='paper'] .recap .lock { border-color: var(--hair); }
-[data-theme='pixel'] .recap-art, [data-theme='pixel'] .recap .lock { border-radius: 0; }
-[data-theme='night'] .recap { background: linear-gradient(120deg, #3a2f7a, #24407a); }
-[data-theme='night'] .recap .lock { background: rgba(255, 255, 255, 0.1); }
+[data-skin='paper'] .recap-art, [data-skin='paper'] .recap .lock { border-color: var(--hair); }
+[data-skin='pixel'] .recap-art, [data-skin='pixel'] .recap .lock { border-radius: 0; }
+[data-skin='night'] .recap { background: linear-gradient(120deg, #3a2f7a, #24407a); }
+[data-skin='night'] .recap .lock { background: rgba(255, 255, 255, 0.1); }
 .shelf-row:first-of-type { margin-top: 22px; }
 .shelf-row + .shelf-row { margin-top: 30px; }
 .spine { padding-left: 0; padding-right: 0; cursor: pointer; font: inherit; }
@@ -70,16 +70,16 @@
 
 /* 状态栏下面垫一层底色，内容滚上去不会压在时间上 */
 .sb { background: linear-gradient(var(--bg) 62%, transparent); }
-[data-theme='night'] .sb { background: linear-gradient(#20236a 62%, transparent); }
+[data-skin='night'] .sb { background: linear-gradient(#20236a 62%, transparent); }
 
 /* 按钮文字不折行 */
 .sc-actions .btn { white-space: nowrap; padding: 0 14px; }
 
 /* 像素：今天页里漏掉的圆角 */
-[data-theme='pixel'] .todo button, [data-theme='pixel'] .remind-chip, [data-theme='pixel'] .growth, [data-theme='pixel'] .memo,
-[data-theme='pixel'] .stack .av, [data-theme='pixel'] .focus-dots button, [data-theme='pixel'] .recap .lock, [data-theme='pixel'] .m-stat,
-[data-theme='pixel'] .bdg, [data-theme='pixel'] .opt, [data-theme='pixel'] .list, [data-theme='pixel'] .card { border-radius: 0; }
-[data-theme='pixel'] .mini { border-radius: 6px; }
+[data-skin='pixel'] .todo button, [data-skin='pixel'] .remind-chip, [data-skin='pixel'] .growth, [data-skin='pixel'] .memo,
+[data-skin='pixel'] .stack .av, [data-skin='pixel'] .focus-dots button, [data-skin='pixel'] .recap .lock, [data-skin='pixel'] .m-stat,
+[data-skin='pixel'] .bdg, [data-skin='pixel'] .opt, [data-skin='pixel'] .list, [data-skin='pixel'] .card { border-radius: 0; }
+[data-skin='pixel'] .mini { border-radius: 6px; }
 .spine .sp-t { font-size: 13px; white-space: nowrap; flex: 0 1 auto; }
 .shelf-row:first-of-type { margin-top: 34px; }
 .recap + .shelf-row { margin-top: 40px; }

@@ -1,0 +1,179 @@
+/* v2 应用外壳：占满视口、安全区、纹理与占位页。组件样式在 components.css。 */
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  -webkit-font-smoothing: antialiased;
+  overscroll-behavior: none;
+}
+
+.dm-screen {
+  position: relative;
+  min-height: 100dvh;
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: calc(96px + env(safe-area-inset-bottom));
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dm-texture {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: var(--texture);
+}
+
+.today,
+.placeholder {
+  position: relative;
+  z-index: 1;
+}
+
+.today {
+  padding-top: 6px;
+}
+
+/* 英文标题更长：给左侧留着，超了就省略，不挤压右侧的操作按钮 */
+.t-head > div:first-child {
+  overflow: hidden;
+}
+
+/* 320 宽的小屏：让出空间给切换按钮，不出现横向滚动 */
+@media (max-width: 360px) {
+  .t-head {
+    padding-left: 16px;
+    padding-right: 12px;
+    gap: 6px;
+  }
+
+  .pill-switch {
+    padding: 0 10px;
+    font-size: 13px;
+  }
+
+  .pill-switch .stack {
+    display: none;
+  }
+
+  .tabbar {
+    max-width: calc(100% - 24px);
+  }
+
+  .tabbar button {
+    padding: 0 12px;
+    font-size: 13px;
+  }
+}
+
+.t-greet {
+  font-size: 19px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 空态 */
+.empty {
+  margin: 40px 24px;
+  text-align: center;
+}
+
+.empty-egg {
+  display: flex;
+  justify-content: center;
+  animation: bob 3.2s ease-in-out infinite;
+}
+
+.empty h2 {
+  margin: 14px 0 6px;
+  font-size: 24px;
+  font-weight: 800;
+  font-family: var(--font-title);
+}
+
+.empty p {
+  margin: 0 0 22px;
+  color: var(--ink2);
+  font-size: 14.5px;
+  line-height: 1.6;
+}
+
+/* 占位页（藏馆 / 装扮 尚未实现） */
+.placeholder {
+  padding: 28px 24px;
+}
+
+.placeholder h2 {
+  font-size: 26px;
+  font-weight: 800;
+  font-family: var(--font-title);
+  margin: 8px 0 10px;
+}
+
+.placeholder p {
+  color: var(--ink2);
+  font-size: 14.5px;
+  line-height: 1.65;
+}
+
+/* 新建面板 */
+.add-kinds {
+  display: grid;
+  gap: 10px;
+  margin: 6px 0 4px;
+}
+
+.add-kind {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  align-items: flex-start;
+  padding: 15px 16px;
+  border-radius: var(--r3);
+  border: var(--bw) solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--pop-sm);
+  text-align: left;
+}
+
+.add-kind b {
+  font-size: 16px;
+  font-weight: 800;
+}
+
+.add-kind span {
+  font-size: 13px;
+  color: var(--ink2);
+  font-weight: 500;
+}
+
+/* 提示条 */
+.toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(100px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  z-index: 60;
+  max-width: 82vw;
+  padding: 11px 18px;
+  border-radius: 99px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+  animation: up 0.28s var(--ease-pop);
+}

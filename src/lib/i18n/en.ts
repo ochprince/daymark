@@ -52,6 +52,23 @@ export const en: Record<MessageKey, Msg> = {
   'unit.weekShort': 'weeks',
   'unit.monthShort': 'months',
 
+  'tag.daily': 'Daily',
+  'tag.weekly': 'Weekly',
+  'tag.monthly': 'Monthly',
+  'stage.number.lead.day': 'Day',
+  'stage.number.lead.left': '',
+  'unit.timesShort': '×',
+  'unit.daySuffix': '',
+  'growth.total': 'Grown {n} days',
+  'growth.next': '{n} days → {name}',
+
+  'greet.night': 'Late night',
+  'greet.morning': 'Morning',
+  'greet.noon': 'Lunch time',
+  'greet.afternoon': 'Afternoon',
+  'greet.evening': 'Evening',
+  'today.hint': 'One thing at a time · swipe or tap to switch',
+
   /* Stage */
   'stage.empty.title': 'Nothing here yet',
   'stage.empty.body': 'Write down one thing, and a little creature moves in.',
@@ -136,6 +153,8 @@ export const en: Record<MessageKey, Msg> = {
   'add.startPast': 'Starting in the past',
   'add.repeat': 'Repeat',
   'add.target': 'Times per period',
+  'add.period.daily': '{n}× a day',
+  'add.period.weekly': '{n}× a week',
 
   /* Hatch */
   'hatch.title': 'Hatch',
@@ -171,6 +190,27 @@ export const en: Record<MessageKey, Msg> = {
   'stageName.star.2': 'Star ears',
   'stageName.star.3': 'Headband',
   'stageName.star.4': 'Gold crown',
+
+  'line.since.start': 'Counting from this moment. Doing nothing today is fine too.',
+  'line.since.early': 'It started. No rush — it just woke up too.',
+  'line.since.week': 'A whole week. You are steadier than you think.',
+  'line.since.month': 'Thirty days — enough for something to become part of you.',
+  'line.since.hundred': 'A hundred days. Thank you for not letting go.',
+  'line.since.long': 'Day {n}. This is no longer effort — it is who you are.',
+  'line.since.year': 'Over a year. Thank you for keeping it close.',
+  'line.habit.idle': 'It has not seen you yet today. Hold it to log one.',
+  'line.habit.done': 'Logged. The rest of today is yours.',
+  'line.habit.sleep': 'It fell asleep waiting. No rush.',
+  'line.habit.wake': 'You are back! It did not shrink — it only slept a little.',
+  'line.habit.weekly': 'Nothing yet this week. Take your time, it is here.',
+  'line.habit.count': 'Number {n}. Noted.',
+  'line.countdown.far': '{n} days to go. A good time to start thinking about a gift.',
+  'line.countdown.week': 'One week to go — just enough time to prepare slowly.',
+  'line.countdown.soon': 'Only {n} days left. Is everything ready?',
+  'line.countdown.today': 'It is today!',
+  'line.poke.1': 'Hm?',
+  'line.poke.2': 'Okay, okay — I am here.',
+  'line.poke.3': 'You worked hard today too.',
 
   /* Monetization */
   'pro.title': 'Unlock everything',

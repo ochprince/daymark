@@ -52,6 +52,23 @@ export const zh = {
   'unit.weekShort': '周',
   'unit.monthShort': '个月',
 
+  'tag.daily': '每天',
+  'tag.weekly': '每周',
+  'tag.monthly': '每月',
+  'stage.number.lead.day': '第',
+  'stage.number.lead.left': '还有',
+  'unit.timesShort': '次',
+  'unit.daySuffix': '天',
+  'growth.total': '成长 {n} 天',
+  'growth.next': '再 {n} 天 → {name}',
+
+  'greet.night': '早点睡吧',
+  'greet.morning': '早上好呀',
+  'greet.noon': '中午好呀',
+  'greet.afternoon': '下午好呀',
+  'greet.evening': '晚上好呀',
+  'today.hint': '一次只看一件 · 左右滑或点右上角切换',
+
   /* 舞台 */
   'stage.empty.title': '这里还空着',
   'stage.empty.body': '记下第一件事，就有一只小伙伴搬进来。',
@@ -136,6 +153,8 @@ export const zh = {
   'add.startPast': '从过去某一天',
   'add.repeat': '重复',
   'add.target': '每个周期几次',
+  'add.period.daily': '每天 {n} 次',
+  'add.period.weekly': '每周 {n} 次',
 
   /* 孵化 */
   'hatch.title': '孵化',
@@ -171,6 +190,27 @@ export const zh = {
   'stageName.star.2': '星耳',
   'stageName.star.3': '汗带',
   'stageName.star.4': '金冠',
+
+  'line.since.start': '从这一刻开始算。今天也可以什么都不做。',
+  'line.since.early': '开始了。不用急，它也才刚醒。',
+  'line.since.week': '一整周了。你比自己以为的更能坚持。',
+  'line.since.month': '三十天，足够让一件事变成你的一部分。',
+  'line.since.hundred': '一百天。谢谢你，没有放下它。',
+  'line.since.long': '第 {n} 天。这已经不是坚持，是你本来的样子。',
+  'line.since.year': '一年多了。谢谢你一直把它放在心上。',
+  'line.habit.idle': '今天还没来找它。按住它，记一下就好。',
+  'line.habit.done': '记下了。今天剩下的时间，都是你的。',
+  'line.habit.sleep': '它睡着了，等你回来。不急。',
+  'line.habit.wake': '你回来啦！它没有变小，只是睡了一会儿。',
+  'line.habit.weekly': '这周还没记。慢慢来，它陪着你。',
+  'line.habit.count': '第 {n} 次，记下了。',
+  'line.countdown.far': '还有 {n} 天。现在开始想礼物，刚刚好。',
+  'line.countdown.week': '还有一周，刚好来得及慢慢准备。',
+  'line.countdown.soon': '只剩 {n} 天了，东西都准备好了吗？',
+  'line.countdown.today': '就是今天！',
+  'line.poke.1': '嗯？',
+  'line.poke.2': '好啦好啦，我在呢。',
+  'line.poke.3': '今天也辛苦你了。',
 
   /* 货币化（国际版） */
   'pro.title': '解锁全部',

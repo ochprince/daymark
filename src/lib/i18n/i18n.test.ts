@@ -46,9 +46,13 @@ test('Intl 地区码', () => {
   assert.equal(intlLocale('en'), 'en-US')
 })
 
-test('文案表没有空串', () => {
+// 这几个是「前后缀」槽位：英文里天然可以为空（Day 128 不需要再补 days）
+const ALLOW_EMPTY = new Set(['stage.number.lead.left', 'unit.daySuffix'])
+
+test('文案表没有空串（前后缀槽位除外）', () => {
   for (const [locale, table] of Object.entries(MESSAGES)) {
     for (const [key, value] of Object.entries(table)) {
+      if (ALLOW_EMPTY.has(key)) continue
       const texts = typeof value === 'string' ? [value] : [value.one, value.other]
       for (const text of texts) {
         assert.ok(text.trim().length > 0, `${locale}:${key} 是空的`)

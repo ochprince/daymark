@@ -2,6 +2,8 @@ import { useMemo } from 'react'
 import { badge as badgeSvg, creature as creatureSvg } from './creature-art'
 import type { CreatureMood, CreatureOptions, CreatureSpecies } from './creature-art'
 
+export type { CreatureMood, CreatureSpecies }
+
 type CreatureProps = {
   species?: CreatureSpecies
   stage?: CreatureOptions['stage']
