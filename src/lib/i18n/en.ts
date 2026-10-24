@@ -1,0 +1,182 @@
+/**
+ * English messages (international build). Same keys as zh.ts — a missing key is a type error.
+ * Voice: warm, specific, never nagging. No "streak broken", no warnings, no countdown pressure.
+ */
+import type { MessageKey, Msg } from './zh'
+
+export const en: Record<MessageKey, Msg> = {
+  /* Common */
+  'common.ok': 'OK',
+  'common.cancel': 'Cancel',
+  'common.close': 'Close',
+  'common.back': 'Back',
+  'common.save': 'Save',
+  'common.delete': 'Delete',
+  'common.undo': 'Undo',
+  'common.next': 'Next',
+  'common.skip': 'Skip',
+  'common.done': 'Done',
+  'common.retry': 'Try again',
+  'common.loading': 'Loading…',
+
+  /* Tabs */
+  'tab.today': 'Today',
+  'tab.museum': 'Museum',
+  'tab.dress': 'Style',
+
+  /* Kinds */
+  'kind.since': 'Since',
+  'kind.habit': 'Habit',
+  'kind.countdown': 'Countdown',
+  'kind.since.desc': 'Days that keep adding up',
+  'kind.habit.desc': 'Small things you do often',
+  'kind.countdown.desc': 'How long until a day',
+
+  /* Units and time */
+  'unit.day': { one: '{n} day', other: '{n} days' },
+  'unit.daysCount': { one: '{n} day', other: '{n} days' },
+  'unit.week': { one: '{n} week', other: '{n} weeks' },
+  'unit.month': { one: '{n} month', other: '{n} months' },
+  'unit.year': { one: '{n} year', other: '{n} years' },
+  'time.today': 'Today',
+  'time.yesterday': 'Yesterday',
+  'time.dayBefore': 'Two days ago',
+  'time.thisWeek': 'This week',
+  'time.lastWeek': 'Last week',
+  'time.weekBeforeLast': 'Two weeks ago',
+  'time.thisMonth': 'This month',
+  'time.lastMonth': 'Last month',
+  'period.weekOf': 'Week of {date}',
+  'period.dayWithWeekday': '{weekday}, {date}',
+  'unit.dayShort': 'days',
+  'unit.weekShort': 'weeks',
+  'unit.monthShort': 'months',
+
+  /* Stage */
+  'stage.empty.title': 'Nothing here yet',
+  'stage.empty.body': 'Write down one thing, and a little creature moves in.',
+  'stage.empty.cta': 'Add one',
+  'stage.since.label': 'Day {n}',
+  'stage.since.sub': 'Since {date}',
+  'stage.habit.today': '{n} today',
+  'stage.habit.todayTarget': '{n} / {target} today',
+  'stage.habit.weekTarget': '{n} / {target} this week',
+  'stage.habit.monthTarget': '{n} / {target} this month',
+  'stage.countdown.days': '{n} days to go',
+  'stage.countdown.today': 'It’s today',
+  'stage.countdown.past': '{n} days ago',
+
+  /* Actions */
+  'action.hold': 'Hold to log',
+  'action.holdWake': 'Hold to wake it up',
+  'action.logged': 'Logged · see you tomorrow',
+  'action.poke': 'Pat it',
+  'action.share': 'Share this day',
+  'action.archive': 'Profile',
+  'action.endChapter': 'End this chapter',
+  'action.travel': 'Send it traveling',
+  'action.chapters': 'Past chapters',
+  'action.newItem': 'New thing',
+  'action.switch': 'Switch',
+  'action.said': 'It happened — see you next year',
+  'action.sound': 'Sound',
+  'action.soundOn': 'Sound on',
+  'action.soundOff': 'Sound off',
+
+  /* Growth */
+  'growth.progress': 'Grown {n} days · {rest} more → {next}',
+  'growth.maxed': 'Already the best it can be',
+  'growth.sleeping': 'Paused · waiting for you',
+  'growth.nextStage': 'Day {n} · it grew up',
+
+  /* Switcher */
+  'switcher.title': 'Everything',
+  'switcher.current': 'Viewing',
+  'switcher.notToday': 'Not logged today',
+  'switcher.sleeping': 'Resting, waiting for you',
+  'switcher.count': { one: '{n} item', other: '{n} items' },
+
+  /* Museum */
+  'museum.title': 'Museum',
+  'museum.tab.chapters': 'Chapters',
+  'museum.tab.dex': 'Dex',
+  'museum.tab.badges': 'Badges',
+  'museum.tab.notes': 'Notes',
+  'museum.chapters.empty': 'The shelf is empty. Finish a chapter and it lands here.',
+  'museum.dex.empty': 'No creatures met yet.',
+  'museum.badges.empty': 'No badges yet.',
+  'museum.notes.empty': 'No notes yet.',
+  'museum.yearReview': 'Year in review',
+  'museum.yearReview.opens': 'Opens in {n} days',
+
+  /* Style */
+  'dress.title': 'Style',
+  'dress.skin': 'Skins',
+  'dress.accent': 'Accent',
+  'dress.num': 'Number font',
+  'dress.texture': 'Background',
+  'dress.other': 'More',
+  'dress.haptic': 'Haptics',
+  'dress.reduceMotion': 'Reduce motion',
+  'dress.sound': 'Sound',
+  'dress.followSystem': 'Match system appearance',
+  'dress.dataNote': 'Everything stays on this device.',
+  'dress.export': 'Export backup',
+  'dress.language': 'Language',
+  'dress.about': 'About',
+
+  /* Add flow */
+  'add.title': 'What do you want to keep?',
+  'add.step1': 'Pick a kind',
+  'add.step2': 'Give it a name',
+  'add.step3': 'Pick a companion',
+  'add.fromFestival': 'Pick a holiday',
+  'add.name.placeholder': 'e.g. Quit smoking, Water, Mom’s birthday',
+  'add.startNow': 'Starting now',
+  'add.startPast': 'Starting in the past',
+  'add.repeat': 'Repeat',
+  'add.target': 'Times per period',
+
+  /* Hatch */
+  'hatch.title': 'Hatch',
+  'hatch.tap': 'Tap three times to wake it',
+  'hatch.hello': 'Hi, I’m {name}!',
+  'hatch.start': 'Let’s begin',
+
+  /* Creature names */
+  'creature.sprout': 'Sprout',
+  'creature.moon': 'Moonie',
+  'creature.drop': 'Droppy',
+  'creature.star': 'Dash',
+  'creature.post': 'Posty',
+
+  /* Stage names */
+  'stageName.sprout.0': 'Shell baby',
+  'stageName.sprout.1': 'Budding',
+  'stageName.sprout.2': 'Two leaves',
+  'stageName.sprout.3': 'Blooming',
+  'stageName.sprout.4': 'Flower crown',
+  'stageName.moon.0': 'Shell baby',
+  'stageName.moon.1': 'Crescent',
+  'stageName.moon.2': 'Nightcap',
+  'stageName.moon.3': 'Star hat',
+  'stageName.moon.4': 'Starry night',
+  'stageName.drop.0': 'Shell baby',
+  'stageName.drop.1': 'Droplet',
+  'stageName.drop.2': 'Wave',
+  'stageName.drop.3': 'Bubbles',
+  'stageName.drop.4': 'Rainbow',
+  'stageName.star.0': 'Shell baby',
+  'stageName.star.1': 'Star sprout',
+  'stageName.star.2': 'Star ears',
+  'stageName.star.3': 'Headband',
+  'stageName.star.4': 'Gold crown',
+
+  /* Monetization */
+  'pro.title': 'Unlock everything',
+  'pro.body': 'One purchase, yours forever.',
+  'pro.cta': 'Unlock · {price}',
+  'pro.restore': 'Restore purchase',
+  'pro.freeLimit': 'Free version: up to {n} items',
+  'pro.locked': 'This is a full-version feature',
+}

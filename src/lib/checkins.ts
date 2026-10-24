@@ -1,5 +1,6 @@
 import { createStore } from './store'
-import { formatShortDate, formatWeekday, startOfDay } from './days'
+import { formatMonth, formatShortDate, formatWeekday, startOfDay } from './days'
+import { t } from './i18n'
 import type { SfxId } from './sfx'
 import type { CheckInCadence, CheckInDraft, CheckInEvent } from './types'
 
@@ -75,23 +76,28 @@ export function cadenceOption(cadence: CheckInCadence): CadenceOption {
 
 /** 当前周期的说法：今天 / 本周 / 本月 */
 export function periodNoun(cadence: CheckInCadence): string {
-  if (cadence === 'daily') return '今天'
-  if (cadence === 'weekly') return '本周'
-  return '本月'
+  if (cadence === 'daily') return t('time.today')
+  if (cadence === 'weekly') return t('time.thisWeek')
+  return t('time.thisMonth')
 }
 
 /** 上一个周期的说法：昨天 / 上周 / 上个月 */
 export function previousNoun(cadence: CheckInCadence): string {
-  if (cadence === 'daily') return '昨天'
-  if (cadence === 'weekly') return '上周'
-  return '上个月'
+  if (cadence === 'daily') return t('time.yesterday')
+  if (cadence === 'weekly') return t('time.lastWeek')
+  return t('time.lastMonth')
 }
 
 /** 历史每个周期的单位：天 / 周 / 个月 */
 export function periodUnit(cadence: CheckInCadence): string {
-  if (cadence === 'daily') return '天'
-  if (cadence === 'weekly') return '周'
-  return '个月'
+  if (cadence === 'daily') return t('unit.dayShort')
+  if (cadence === 'weekly') return t('unit.weekShort')
+  return t('unit.monthShort')
+}
+
+/** 周期名（新建 / 编辑表单用）：每天 / 每周 / 每月 */
+export function cadenceLabel(cadence: CheckInCadence): string {
+  return cadenceOption(cadence).label
 }
 
 /**
@@ -119,9 +125,11 @@ function relativePeriodLabel(
       (currentDate.getMonth() - startDate.getMonth())
   }
 
-  if (back === 0) return cadence === 'daily' ? '今天' : cadence === 'weekly' ? '本周' : '本月'
-  if (back === 1) return cadence === 'daily' ? '昨天' : cadence === 'weekly' ? '上周' : '上月'
-  if (back === 2 && cadence !== 'monthly') return cadence === 'daily' ? '前天' : '上上周'
+  if (back === 0) return periodNoun(cadence)
+  if (back === 1) return previousNoun(cadence)
+  if (back === 2 && cadence !== 'monthly') {
+    return cadence === 'daily' ? t('time.dayBefore') : t('time.weekBeforeLast')
+  }
   return null
 }
 
@@ -136,10 +144,11 @@ export function periodLabel(cadence: CheckInCadence, start: number, now?: number
     const relative = relativePeriodLabel(cadence, start, now)
     if (relative) return relative
   }
-  if (cadence === 'daily') return `${formatShortDate(start)} ${formatWeekday(start)}`
-  if (cadence === 'weekly') return `${formatShortDate(start)}那周`
-  const date = new Date(start)
-  return `${date.getFullYear()}年${date.getMonth() + 1}月`
+  if (cadence === 'daily') {
+    return t('period.dayWithWeekday', { date: formatShortDate(start), weekday: formatWeekday(start) })
+  }
+  if (cadence === 'weekly') return t('period.weekOf', { date: formatShortDate(start) })
+  return formatMonth(start)
 }
 
 /* ------------------------------------------------------------------ *

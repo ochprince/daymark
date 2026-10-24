@@ -1,4 +1,8 @@
 import assert from 'node:assert/strict'
+// 这些用例断言的是中文文案；语言默认按设备走（CI 上是 en），必须钉住
+import { setLocaleForTest } from './i18n/locale'
+
+setLocaleForTest('zh')
 import { test } from 'node:test'
 import {
   buildHistory,

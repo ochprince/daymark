@@ -1,4 +1,5 @@
 import { festivalById, nextFestivalDate } from './festivals'
+import { intlLocale, t } from './i18n'
 import type { CountdownEvent, DayEvent, Repeat } from './types'
 
 export const DAY_MS = 86_400_000
@@ -39,29 +40,37 @@ export function isToday(startedAt: number, now: number): boolean {
   return startOfDay(startedAt) === startOfDay(now)
 }
 
-const dateFormatter = new Intl.DateTimeFormat('zh-CN', {
-  year: 'numeric',
-  month: 'long',
-  day: 'numeric',
-})
+/* 日期格式按当前语言走，切换语言后立刻变（缓存按 locale 分开存） */
 
-const weekdayFormatter = new Intl.DateTimeFormat('zh-CN', { weekday: 'long' })
+const FORMATTERS = new Map<string, Intl.DateTimeFormat>()
 
-const shortFormatter = new Intl.DateTimeFormat('zh-CN', { month: 'long', day: 'numeric' })
+function formatter(kind: string, options: Intl.DateTimeFormatOptions): Intl.DateTimeFormat {
+  const key = `${intlLocale()}|${kind}`
+  const cached = FORMATTERS.get(key)
+  if (cached) return cached
+  const created = new Intl.DateTimeFormat(intlLocale(), options)
+  FORMATTERS.set(key, created)
+  return created
+}
 
-/** 2026年5月24日 */
+/** 2026年5月24日 / May 24, 2026 */
 export function formatDate(ts: number): string {
-  return dateFormatter.format(new Date(ts))
+  return formatter('long', { year: 'numeric', month: 'long', day: 'numeric' }).format(new Date(ts))
 }
 
-/** 5月24日 */
+/** 5月24日 / May 24 */
 export function formatShortDate(ts: number): string {
-  return shortFormatter.format(new Date(ts))
+  return formatter('short', { month: 'long', day: 'numeric' }).format(new Date(ts))
 }
 
-/** 星期一 */
+/** 星期一 / Monday */
 export function formatWeekday(ts: number): string {
-  return weekdayFormatter.format(new Date(ts))
+  return formatter('weekday', { weekday: 'long' }).format(new Date(ts))
+}
+
+/** 2026年8月 / August 2026 */
+export function formatMonth(ts: number): string {
+  return formatter('month', { year: 'numeric', month: 'long' }).format(new Date(ts))
 }
 
 function toDateInputValue(ts: number): string {
@@ -122,14 +131,14 @@ export function calendarBreakdown(startedAt: number, now: number): Breakdown {
   }
 }
 
-/** 「1 年 24 天」/「4 个月 6 天」；不足 31 天时返回空串（大数字已经说明一切） */
+/** 「1 年 24 天」/「1 year 24 days」；不足 31 天时返回空串（大数字已经说明一切） */
 export function formatSpan(anchorAt: number, now: number): string {
   if (daysSince(anchorAt, now) < 31) return ''
   const { years, months, days } = calendarBreakdown(anchorAt, now)
   const parts: string[] = []
-  if (years > 0) parts.push(`${years} 年`)
-  if (months > 0) parts.push(`${months} 个月`)
-  if (days > 0) parts.push(`${days} 天`)
+  if (years > 0) parts.push(t('unit.year', { n: years }))
+  if (months > 0) parts.push(t('unit.month', { n: months }))
+  if (days > 0) parts.push(t('unit.day', { n: days }))
   return parts.join(' ')
 }
 
