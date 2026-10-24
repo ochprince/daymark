@@ -1,0 +1,20 @@
+/* 主色 / 数字字体 / 纹理：只覆盖当前 App 根节点，画廊缩略图不受影响 */
+
+[data-accent='0'] { --accent: var(--h-0); --accent-2: var(--h-0-2); }
+[data-accent='1'] { --accent: var(--h-1); --accent-2: var(--h-1-2); }
+[data-accent='2'] { --accent: var(--h-2); --accent-2: var(--h-2-2); }
+[data-accent='3'] { --accent: var(--h-3); --accent-2: var(--h-3-2); }
+[data-accent='4'] { --accent: var(--h-4); --accent-2: var(--h-4-2); }
+[data-accent='5'] { --accent: var(--h-5); --accent-2: var(--h-5-2); }
+[data-accent='6'] { --accent: var(--h-6); --accent-2: var(--h-6-2); }
+[data-accent='7'] { --accent: var(--h-7); --accent-2: var(--h-7-2); }
+
+[data-num='round'] { --font-num: 'Baloo 2', ui-rounded, 'SF Pro Rounded', sans-serif; --num-w: 800; --num-style: normal; }
+[data-num='serif'] { --font-num: 'Instrument Serif', Georgia, serif; --num-w: 400; --num-style: italic; }
+[data-num='pixel'] { --font-num: 'Silkscreen', ui-monospace, monospace; --num-w: 700; --num-style: normal; }
+[data-num='hand'] { --font-num: 'Caveat', 'Bradley Hand', cursive; --num-w: 700; --num-style: normal; }
+
+[data-texture='plain'] { --texture: none; }
+[data-texture='dots'] { --texture: radial-gradient(var(--hair) 1.3px, transparent 1.6px) 0 0 / 16px 16px; }
+[data-texture='grid'] { --texture: linear-gradient(var(--hair) 1px, transparent 1px) 0 0 / 14px 14px, linear-gradient(90deg, var(--hair) 1px, transparent 1px) 0 0 / 14px 14px; }
+[data-texture='lines'] { --texture: repeating-linear-gradient(0deg, transparent 0 27px, var(--hair) 27px 28px); }

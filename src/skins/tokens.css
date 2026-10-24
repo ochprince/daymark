@@ -1,0 +1,328 @@
+/* ==========================================================================
+   Daymark · 风格包令牌
+   一套皮肤 = 一份令牌。组件只读令牌，不允许出现 if (skin === …)。
+   取值来自 docs/prototype-v2/proto.css（v2 交接文档第 10 节）。
+   ========================================================================== */
+
+[data-skin='jelly'] {
+  --bg: #fff5e6;
+  --bg2: #ffe9cf;
+  --surface: #ffffff;
+  --surface2: #fff8ee;
+  --ink: #2b2638;
+  --ink2: #5e566e;
+  --ink3: #9a91a8;
+  --line: #2b2638;
+  --hair: rgba(43, 38, 56, 0.1);
+  --bw: 2.5px;
+  --r1: 32px;
+  --r2: 22px;
+  --r3: 16px;
+  --pop: 0 4px 0 var(--line);
+  --pop-sm: 0 3px 0 var(--line);
+  --soft: 0 10px 24px -14px rgba(60, 40, 20, 0.35);
+  --accent: var(--h-coral);
+  --accent-2: var(--h-coral-2);
+  --accent-ink: #2b2638;
+  --font-ui: 'PingFang SC', -apple-system, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-title: var(--font-ui);
+  --font-num: 'Baloo 2', ui-rounded, 'SF Pro Rounded', var(--font-ui);
+  --font-cute: 'ZCOOL KuaiLe', var(--font-ui);
+  --num-w: 800;
+  --num-style: normal;
+  --num-color: var(--ink);
+  --num-shadow: 0 5px 0 var(--c);
+  --tint: 30%;
+  --ease-pop: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --texture: radial-gradient(rgba(43, 38, 56, 0.07) 1.3px, transparent 1.6px) 0 0 / 16px 16px;
+
+  --h-mint: #8fe3c0;
+  --h-mint-2: #2fa77a;
+  --h-sky: #a8d8ff;
+  --h-sky-2: #3d8fe0;
+  --h-grape: #cdb9ff;
+  --h-grape-2: #7a5ae0;
+  --h-lemon: #ffe07a;
+  --h-lemon-2: #e0a020;
+  --h-coral: #ffb4a2;
+  --h-coral-2: #e5664b;
+
+  --cr-line: #2b2638;
+  --cr-lw: 4.5;
+  --leaf: #7bd389;
+  --petal: #ffffff;
+  --pistil: #ffd45c;
+  --spark: #ffc93c;
+  --shell: #fffdf6;
+  --gold: #ffd45c;
+  --band: #ffffff;
+  --foam: #ffffff;
+  --bubble: rgba(255, 255, 255, 0.75);
+  --rb1: #ff9c8a;
+  --rb2: #ffe07a;
+  --rb3: #8fe3c0;
+  --mouth: #e5664b;
+  --blush: #ff9c9c;
+  --gift: #ffe07a;
+  --paper: #ffffff;
+  --b-ink: #2b2638;
+  --b-fill: #ffe07a;
+  --b-face: #fff6d6;
+  --b-ribbon: #ff9c8a;
+  --sil: rgba(43, 38, 56, 0.14);
+  --h-lime: #cfe89a; --h-lime-2: #6f9c3a;
+  --h-rose: #ffc0d8; --h-rose-2: #e0568f;
+  --h-slate: #cbc5d8; --h-slate-2: #6f6880;
+  /* 8 个颜色索引：按现有 PALETTE 顺序（琥珀/珊瑚/紫罗兰/靛蓝/青瓷/青柠/玫红/石墨） */
+  --h-0: var(--h-lemon); --h-0-2: var(--h-lemon-2);
+  --h-1: var(--h-coral); --h-1-2: var(--h-coral-2);
+  --h-2: var(--h-grape); --h-2-2: var(--h-grape-2);
+  --h-3: var(--h-sky); --h-3-2: var(--h-sky-2);
+  --h-4: var(--h-mint); --h-4-2: var(--h-mint-2);
+  --h-5: var(--h-lime); --h-5-2: var(--h-lime-2);
+  --h-6: var(--h-rose); --h-6-2: var(--h-rose-2);
+  --h-7: var(--h-slate); --h-7-2: var(--h-slate-2);
+}
+
+[data-skin='paper'] {
+  --bg: #f2eee5;
+  --bg2: #e9e3d6;
+  --surface: #fbf9f4;
+  --surface2: #f6f2ea;
+  --ink: #22201c;
+  --ink2: #5f5a50;
+  --ink3: #9c968a;
+  --line: rgba(34, 32, 28, 0.85);
+  --hair: rgba(34, 32, 28, 0.1);
+  --bw: 1px;
+  --r1: 18px;
+  --r2: 12px;
+  --r3: 10px;
+  --pop: 0 1px 0 rgba(34, 32, 28, 0.08);
+  --pop-sm: none;
+  --soft: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --accent: #22201c;
+  --accent-2: #000000;
+  --accent-ink: #fbf9f4;
+  --font-ui: 'PingFang SC', -apple-system, sans-serif;
+  --font-title: 'Songti SC', 'STSong', 'Noto Serif SC', serif;
+  --font-num: 'Instrument Serif', 'Times New Roman', serif;
+  --font-cute: 'Songti SC', 'STSong', serif;
+  --num-w: 400;
+  --num-style: italic;
+  --num-color: var(--ink);
+  --num-shadow: none;
+  --tint: 12%;
+  --ease-pop: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --texture: repeating-linear-gradient(0deg, transparent 0 27px, rgba(34, 32, 28, 0.05) 27px 28px);
+
+  --h-mint: #dbe9dc;
+  --h-mint-2: #4f7d5c;
+  --h-sky: #dbe5ee;
+  --h-sky-2: #49698a;
+  --h-grape: #e4dfec;
+  --h-grape-2: #66588a;
+  --h-lemon: #efe5c6;
+  --h-lemon-2: #94782b;
+  --h-coral: #f0ddd3;
+  --h-coral-2: #a35b46;
+
+  --cr-line: #22201c;
+  --cr-lw: 3;
+  --leaf: #dbe9dc;
+  --petal: #fbf9f4;
+  --pistil: #efe5c6;
+  --spark: #22201c;
+  --shell: #fbf9f4;
+  --gold: #efe5c6;
+  --band: #fbf9f4;
+  --foam: #fbf9f4;
+  --bubble: #fbf9f4;
+  --rb1: #f0ddd3;
+  --rb2: #efe5c6;
+  --rb3: #dbe9dc;
+  --mouth: #fbf9f4;
+  --blush: transparent;
+  --gift: #efe5c6;
+  --paper: #fbf9f4;
+  --b-ink: #22201c;
+  --b-fill: #fbf9f4;
+  --b-face: #fbf9f4;
+  --b-ribbon: #e9e3d6;
+  --sil: rgba(34, 32, 28, 0.1);
+  --h-lime: #dbe3ad; --h-lime-2: #7d8a35;
+  --h-rose: #eec3cc; --h-rose-2: #b5566c;
+  --h-slate: #cfc9bd; --h-slate-2: #6b6459;
+  /* 8 个颜色索引：按现有 PALETTE 顺序（琥珀/珊瑚/紫罗兰/靛蓝/青瓷/青柠/玫红/石墨） */
+  --h-0: var(--h-lemon); --h-0-2: var(--h-lemon-2);
+  --h-1: var(--h-coral); --h-1-2: var(--h-coral-2);
+  --h-2: var(--h-grape); --h-2-2: var(--h-grape-2);
+  --h-3: var(--h-sky); --h-3-2: var(--h-sky-2);
+  --h-4: var(--h-mint); --h-4-2: var(--h-mint-2);
+  --h-5: var(--h-lime); --h-5-2: var(--h-lime-2);
+  --h-6: var(--h-rose); --h-6-2: var(--h-rose-2);
+  --h-7: var(--h-slate); --h-7-2: var(--h-slate-2);
+}
+
+[data-skin='night'] {
+  --bg: #0f1233;
+  --bg2: #1b1e52;
+  --surface: #1c2050;
+  --surface2: #242966;
+  --ink: #f3efff;
+  --ink2: #bbb5de;
+  --ink3: #7f7aa8;
+  --line: rgba(255, 255, 255, 0.14);
+  --hair: rgba(255, 255, 255, 0.08);
+  --bw: 1px;
+  --r1: 30px;
+  --r2: 20px;
+  --r3: 14px;
+  --pop: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+  --pop-sm: 0 6px 16px -8px rgba(0, 0, 0, 0.5);
+  --soft: 0 12px 30px -14px rgba(0, 0, 0, 0.6);
+  --accent: #a98bff;
+  --accent-2: #7d5cff;
+  --accent-ink: #0f1233;
+  --font-ui: 'PingFang SC', -apple-system, sans-serif;
+  --font-title: var(--font-ui);
+  --font-num: 'Baloo 2', ui-rounded, var(--font-ui);
+  --font-cute: 'ZCOOL KuaiLe', var(--font-ui);
+  --num-w: 600;
+  --num-style: normal;
+  --num-color: #fff;
+  --num-shadow: 0 0 24px var(--c);
+  --tint: 18%;
+  --ease-pop: cubic-bezier(0.34, 1.4, 0.64, 1);
+  --texture: radial-gradient(1px 1px at 20px 30px, #fff8, transparent), radial-gradient(1px 1px at 80px 120px, #fff6, transparent),
+    radial-gradient(1.5px 1.5px at 140px 60px, #fff9, transparent), radial-gradient(1px 1px at 200px 170px, #fff5, transparent);
+  --texture-size: 240px 220px;
+
+  --h-mint: #5ee6b5;
+  --h-mint-2: #19a374;
+  --h-sky: #72c6ff;
+  --h-sky-2: #2a78d0;
+  --h-grape: #ad90ff;
+  --h-grape-2: #6a46e0;
+  --h-lemon: #ffd862;
+  --h-lemon-2: #d19316;
+  --h-coral: #ff9481;
+  --h-coral-2: #d44f37;
+
+  --cr-line: #12153a;
+  --cr-lw: 4;
+  --leaf: #6be08d;
+  --petal: #ffffff;
+  --pistil: #ffd862;
+  --spark: #ffe9a8;
+  --shell: #f5f2ff;
+  --gold: #ffd862;
+  --band: #f5f2ff;
+  --foam: #ffffff;
+  --bubble: rgba(255, 255, 255, 0.55);
+  --rb1: #ff9481;
+  --rb2: #ffd862;
+  --rb3: #5ee6b5;
+  --mouth: #d44f37;
+  --blush: #ff8fb0;
+  --gift: #ffd862;
+  --paper: #ffffff;
+  --b-ink: #12153a;
+  --b-fill: #ffd862;
+  --b-face: #fff3c8;
+  --b-ribbon: #ad90ff;
+  --sil: rgba(255, 255, 255, 0.1);
+  --h-lime: #bfe08c; --h-lime-2: #77a53f;
+  --h-rose: #f2a9c9; --h-rose-2: #c4588f;
+  --h-slate: #9ba4c6; --h-slate-2: #6d76a0;
+  /* 8 个颜色索引：按现有 PALETTE 顺序（琥珀/珊瑚/紫罗兰/靛蓝/青瓷/青柠/玫红/石墨） */
+  --h-0: var(--h-lemon); --h-0-2: var(--h-lemon-2);
+  --h-1: var(--h-coral); --h-1-2: var(--h-coral-2);
+  --h-2: var(--h-grape); --h-2-2: var(--h-grape-2);
+  --h-3: var(--h-sky); --h-3-2: var(--h-sky-2);
+  --h-4: var(--h-mint); --h-4-2: var(--h-mint-2);
+  --h-5: var(--h-lime); --h-5-2: var(--h-lime-2);
+  --h-6: var(--h-rose); --h-6-2: var(--h-rose-2);
+  --h-7: var(--h-slate); --h-7-2: var(--h-slate-2);
+}
+
+[data-skin='pixel'] {
+  --bg: #dfe8c8;
+  --bg2: #cfdcb0;
+  --surface: #f7f4e4;
+  --surface2: #eef0d8;
+  --ink: #1f2a1a;
+  --ink2: #44533a;
+  --ink3: #7c8a6e;
+  --line: #1f2a1a;
+  --hair: rgba(31, 42, 26, 0.16);
+  --bw: 3px;
+  --r1: 4px;
+  --r2: 2px;
+  --r3: 0px;
+  --pop: 5px 5px 0 var(--line);
+  --pop-sm: 3px 3px 0 var(--line);
+  --soft: none;
+  --accent: #f28b6b;
+  --accent-2: #b04a2c;
+  --accent-ink: #1f2a1a;
+  --font-ui: 'PingFang SC', -apple-system, sans-serif;
+  --font-title: 'Silkscreen', var(--font-ui);
+  --font-num: 'Silkscreen', 'Courier New', monospace;
+  --font-cute: var(--font-ui);
+  --num-w: 700;
+  --num-style: normal;
+  --num-color: var(--ink);
+  --num-shadow: 4px 4px 0 var(--c);
+  --tint: 34%;
+  --ease-pop: steps(4, end);
+  --texture: linear-gradient(rgba(31, 42, 26, 0.06) 1px, transparent 1px) 0 0 / 12px 12px,
+    linear-gradient(90deg, rgba(31, 42, 26, 0.06) 1px, transparent 1px) 0 0 / 12px 12px;
+
+  --h-mint: #86d38f;
+  --h-mint-2: #2e8b57;
+  --h-sky: #86bfe8;
+  --h-sky-2: #2f6ea8;
+  --h-grape: #b89ae4;
+  --h-grape-2: #6b44a8;
+  --h-lemon: #f5d04a;
+  --h-lemon-2: #b88a10;
+  --h-coral: #f49a7c;
+  --h-coral-2: #b04a2c;
+
+  --cr-line: #1f2a1a;
+  --cr-lw: 6;
+  --leaf: #4fb35f;
+  --petal: #ffffff;
+  --pistil: #f5d04a;
+  --spark: #f5d04a;
+  --shell: #ffffff;
+  --gold: #f5d04a;
+  --band: #ffffff;
+  --foam: #ffffff;
+  --bubble: #ffffff;
+  --rb1: #f28b6b;
+  --rb2: #f5d04a;
+  --rb3: #86d38f;
+  --mouth: #b04a2c;
+  --blush: #f49a7c;
+  --gift: #f5d04a;
+  --paper: #ffffff;
+  --b-ink: #1f2a1a;
+  --b-fill: #f5d04a;
+  --b-face: #fffbe0;
+  --b-ribbon: #f28b6b;
+  --sil: rgba(31, 42, 26, 0.16);
+  --h-lime: #c9dd8a; --h-lime-2: #6d8a2a;
+  --h-rose: #f4b8c8; --h-rose-2: #c2587a;
+  --h-slate: #b9c4b0; --h-slate-2: #66735c;
+  /* 8 个颜色索引：按现有 PALETTE 顺序（琥珀/珊瑚/紫罗兰/靛蓝/青瓷/青柠/玫红/石墨） */
+  --h-0: var(--h-lemon); --h-0-2: var(--h-lemon-2);
+  --h-1: var(--h-coral); --h-1-2: var(--h-coral-2);
+  --h-2: var(--h-grape); --h-2-2: var(--h-grape-2);
+  --h-3: var(--h-sky); --h-3-2: var(--h-sky-2);
+  --h-4: var(--h-mint); --h-4-2: var(--h-mint-2);
+  --h-5: var(--h-lime); --h-5-2: var(--h-lime-2);
+  --h-6: var(--h-rose); --h-6-2: var(--h-rose-2);
+  --h-7: var(--h-slate); --h-7-2: var(--h-slate-2);
+}
