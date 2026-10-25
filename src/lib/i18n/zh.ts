@@ -377,6 +377,16 @@ export const zh = {
   'pro.restore': '恢复购买',
   'pro.freeLimit': '免费版可以记 {n} 件事',
   'pro.locked': '这是完整版的功能',
+
+  /* 倒数日：一句备忘 + 待办清单 */
+  'notes.memo': '备忘',
+  'notes.memo.ph': '写一句就好…',
+  'notes.todo': '待办',
+  'notes.todo.ph': '加一条，回车确认',
+  'notes.todo.empty': '还没有待办。',
+  'notes.todo.add': '添加',
+  'notes.todo.done': '已完成 {done}/{total}',
+  'notes.remove': '删除',
 } as const
 
 export type MessageKey = keyof typeof zh

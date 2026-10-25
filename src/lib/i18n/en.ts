@@ -377,4 +377,14 @@ export const en: Record<MessageKey, Msg> = {
   'pro.restore': 'Restore purchase',
   'pro.freeLimit': 'Free version: up to {n} items',
   'pro.locked': 'This is a full-version feature',
+
+  /* Countdown: one-line note + to-do list */
+  'notes.memo': 'Note',
+  'notes.memo.ph': 'One line is enough…',
+  'notes.todo': 'To-do',
+  'notes.todo.ph': 'Add one, press Enter',
+  'notes.todo.empty': 'Nothing to do yet.',
+  'notes.todo.add': 'Add',
+  'notes.todo.done': 'Done {done}/{total}',
+  'notes.remove': 'Delete',
 }
