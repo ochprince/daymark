@@ -1,0 +1,138 @@
+name: iOS Release
+
+# 这个 workflow 只在手动触发时跑，而且**没有签名密钥时会干净地跳过**，
+# 不会把主干 CI 弄红。上架准备期可以先用它验证「能不能编译到 xcarchive」。
+on:
+  workflow_dispatch:
+    inputs:
+      upload:
+        description: '构建完成后上传 TestFlight（需要签名密钥）'
+        type: boolean
+        default: false
+
+concurrency:
+  group: ios-release
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build iOS
+    runs-on: macos-14
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install web deps
+        run: npm ci
+
+      - name: Web build for native
+        run: npm run build:native
+
+      - name: Install CocoaPods
+        run: |
+          sudo gem install cocoapods --no-document
+          pod --version
+
+      # 原生依赖（@capacitor/ios 等）装好之后这一步才有实际作用
+      - name: Capacitor sync
+        run: npx cap sync ios
+
+      - name: Pod install
+        working-directory: ios/App
+        run: pod install
+
+      - name: Check signing secrets
+        id: signing
+        env:
+          CERT: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+        run: |
+          if [ -z "$CERT" ]; then
+            echo "has_signing=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::没有 APPLE_CERTIFICATE_BASE64，跳过签名与归档，只做编译检查"
+          else
+            echo "has_signing=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Build without signing (verification only)
+        if: steps.signing.outputs.has_signing != 'true'
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            build
+
+      - name: Import signing certificate
+        if: steps.signing.outputs.has_signing == 'true'
+        env:
+          CERT: ${{ secrets.APPLE_CERTIFICATE_BASE64 }}
+          CERT_PASSWORD: ${{ secrets.APPLE_CERTIFICATE_PASSWORD }}
+          PROFILE: ${{ secrets.APPLE_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          KEYCHAIN=$RUNNER_TEMP/daymark.keychain-db
+          KEYCHAIN_PASSWORD=$(openssl rand -hex 16)
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          echo "$CERT" | base64 --decode > "$RUNNER_TEMP/cert.p12"
+          security import "$RUNNER_TEMP/cert.p12" -k "$KEYCHAIN" -P "$CERT_PASSWORD" -T /usr/bin/codesign
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN"
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          echo "$PROFILE" | base64 --decode > ~/Library/MobileDevice/Provisioning\ Profiles/daymark.mobileprovision
+
+      - name: Archive
+        if: steps.signing.outputs.has_signing == 'true'
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -workspace App.xcworkspace \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -destination 'generic/platform=iOS' \
+            -archivePath "$RUNNER_TEMP/Daymark.xcarchive" \
+            archive
+
+      - name: Export IPA
+        if: steps.signing.outputs.has_signing == 'true'
+        working-directory: ios/App
+        run: |
+          xcodebuild \
+            -exportArchive \
+            -archivePath "$RUNNER_TEMP/Daymark.xcarchive" \
+            -exportPath "$RUNNER_TEMP/export" \
+            -exportOptionsPlist "$GITHUB_WORKSPACE/ios/ExportOptions.plist" \
+            -allowProvisioningUpdates
+
+      - uses: actions/upload-artifact@v4
+        if: steps.signing.outputs.has_signing == 'true'
+        with:
+          name: Daymark-ipa
+          path: ${{ runner.temp }}/export/*.ipa
+          retention-days: 14
+
+      # 上传 TestFlight 需要 App Store Connect API Key：
+      # APPSTORE_KEY_ID / APPSTORE_ISSUER_ID / APPSTORE_PRIVATE_KEY
+      - name: Upload to TestFlight
+        if: steps.signing.outputs.has_signing == 'true' && inputs.upload
+        env:
+          KEY_ID: ${{ secrets.APPSTORE_KEY_ID }}
+          ISSUER_ID: ${{ secrets.APPSTORE_ISSUER_ID }}
+          PRIVATE_KEY: ${{ secrets.APPSTORE_PRIVATE_KEY }}
+        run: |
+          echo "::notice::若已配置 fastlane 或 altool，可在此上传 $RUNNER_TEMP/export/*.ipa"
+          echo "$PRIVATE_KEY" > "$RUNNER_TEMP/AuthKey.p8"
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$RUNNER_TEMP"/export/*.ipa \
+            --apiKey "$KEY_ID" \
+            --apiIssuer "$ISSUER_ID"
