@@ -17,6 +17,10 @@ import { ProfilePage } from './ProfilePage'
 import { MuseumPage } from './MuseumPage'
 import { DressPage } from './DressPage'
 import { PaywallSheet } from './PaywallSheet'
+import { ShareSheet } from './ShareSheet'
+import { canShareCard } from '../lib/entitlement'
+import { shareCopy } from '../lib/sharecard'
+import { hapticTap, setHapticsEnabled, setStatusBarTheme } from '../lib/native'
 import { canAddItem, grantPro, isPro, subscribe as subscribeEntitlement } from '../lib/entitlement'
 import { syncEntitlement } from '../lib/purchase'
 import { TodayPage } from './TodayPage'
@@ -77,6 +81,8 @@ function useApplySkin() {
     root.dataset.accent = typeof skin.accent === 'number' ? String(skin.accent) : 'auto'
     root.dataset.num = skin.num
     root.dataset.texture = skin.texture
+    // 原生状态栏跟着皮肤走（夜航配浅色字，其余配深色字）
+    setStatusBarTheme(skin.pack === 'night' || skin.followSystem ? 'dark' : 'light')
     if (skin.followSystem) {
       root.dataset.followSystem = 'true'
     } else {
@@ -107,6 +113,7 @@ export function AppV2() {
   const locale = useSyncExternalStore(subscribeLocale, getLocale)
   const pro = useSyncExternalStore(subscribeEntitlement, () => isPro())
   const [paywall, setPaywall] = useState<'limit' | 'upgrade' | null>(null)
+  const [shareOpen, setShareOpen] = useState(false)
 
   // 焦点不存在时把第一件写回存储，保证下次打开还是它
   useEffect(() => {
@@ -164,6 +171,8 @@ export function AppV2() {
     if (!focus || focus.kind !== 'habit') return
     const next = focus.count + 1
     tapCheckIn(focus.id, Date.now())
+    // 记一次落定：一下中等触感；动效已经够多，这里只加触感
+    hapticTap('medium')
     setOverride(next > 1 ? t('line.habit.count', { n: next }) : t('line.habit.done'))
     window.setTimeout(() => setOverride(null), 4000)
   }, [focus])
@@ -240,6 +249,11 @@ export function AppV2() {
     setSheet('add')
   }, [views.length])
 
+  // 偏好推给原生桥：轻震开关跟着走
+  useEffect(() => {
+    setHapticsEnabled(prefs.haptic)
+  }, [prefs.haptic])
+
   // 启动时对一次账（离线优先，失败就保持本地状态）
   useEffect(() => {
     void syncEntitlement()
@@ -311,6 +325,18 @@ export function AppV2() {
 
       <TabBar active={tab} onChange={setTab} />
 
+      {shareOpen && focus ? (
+        <ShareSheet
+          view={focus}
+          now={now}
+          onClose={() => setShareOpen(false)}
+          onShared={() => {
+            unlockBadges(['share'])
+            setToast(shareCopy('share.saved'))
+          }}
+        />
+      ) : null}
+
       {paywall ? (
         <PaywallSheet
           mode={paywall}
@@ -332,6 +358,13 @@ export function AppV2() {
           now={now}
           onClose={() => setProfileOpen(false)}
           onRename={(title) => renameFocus(focus, title)}
+          onShare={() => {
+            if (!canShareCard()) {
+              setPaywall('upgrade')
+              return
+            }
+            setShareOpen(true)
+          }}
           onChangeColor={(color) => recolorFocus(focus, color)}
           onEndChapter={() => {
             endChapter(focus)

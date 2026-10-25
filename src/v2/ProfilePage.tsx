@@ -8,6 +8,7 @@ import { STAGE_THRESHOLDS } from '../lib/growth'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
+import { shareCopy } from '../lib/sharecard'
 import { IconClose } from './icons'
 
 export type ProfilePageProps = {
@@ -20,6 +21,7 @@ export type ProfilePageProps = {
   onDelete: () => void
   onChangeColor: (color: number) => void
   onRename: (title: string) => void
+  onShare: () => void
 }
 
 function stageLabel(species: CreatureSpecies, stage: number): string {
@@ -37,6 +39,7 @@ export function ProfilePage({
   onDelete,
   onChangeColor,
   onRename,
+  onShare,
 }: ProfilePageProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(view.title)
@@ -212,13 +215,16 @@ export function ProfilePage({
           </div>
         ) : null}
 
-        {view.kind !== 'countdown' ? (
-          <div className="d-actions">
+        <div className="d-actions">
+          <button className="btn ghost" type="button" onClick={onShare}>
+            {shareCopy('share.title')}
+          </button>
+          {view.kind !== 'countdown' ? (
             <button className="btn" type="button" onClick={() => setConfirm('end')}>
               {t('profile.endChapter')}
             </button>
-          </div>
-        ) : null}
+          ) : null}
+        </div>
 
         <button className="danger-link" type="button" onClick={() => setConfirm('delete')}>
           {t('profile.delete')}

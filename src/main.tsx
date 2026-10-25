@@ -12,6 +12,7 @@ import { reload as reloadCheckins } from './lib/checkins'
 import { collectionStore } from './lib/collection'
 import { skinStore } from './lib/skin'
 import { applyDocumentLang, getLocale } from './lib/i18n/locale'
+import { hideSplash } from './lib/native'
 
 /**
  * 启动顺序很重要：迁移必须先写好 localStorage，再让各个 store 重新读一遍，
@@ -33,6 +34,11 @@ createRoot(container).render(
     <AppV2 />
   </StrictMode>,
 )
+
+// 首帧画完再收启动图，避免白闪；浏览器里这个调用是 no-op
+requestAnimationFrame(() => {
+  requestAnimationFrame(() => hideSplash())
+})
 
 // 离线可用：只在生产构建里注册 Service Worker
 if (import.meta.env.PROD && 'serviceWorker' in navigator) {
