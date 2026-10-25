@@ -36,6 +36,8 @@ import { useV2Data } from './useV2Data'
 import { EvolveOverlay } from './EvolveOverlay'
 import type { EvolveInfo } from './EvolveOverlay'
 import { BadgePopup } from './BadgePopup'
+import { HatchOverlay } from './HatchOverlay'
+import type { HatchInfo } from './HatchOverlay'
 import {
   dexKey,
   evaluateBadges,
@@ -54,6 +56,17 @@ type Sheet = 'switcher' | 'add' | null
 /** 所有事里最大的成长天数（徽章门槛用） */
 function maxGrowthOf(views: readonly ItemView[]): number {
   return views.reduce((max, view) => (view.growth > max ? view.growth : max), 0)
+}
+
+/** 孵化过没有：只播一次，之后新建直接回今天页 */
+const HATCHED_KEY = 'daymark.hatched.v1'
+
+function hasHatched(): boolean {
+  try {
+    return window.localStorage.getItem(HATCHED_KEY) === '1'
+  } catch {
+    return true
+  }
 }
 
 /** 每件事最近一次弹过的提醒日期，避免同一天重复弹 */
@@ -129,6 +142,7 @@ export function AppV2() {
   const pro = useSyncExternalStore(subscribeEntitlement, () => isPro())
   const [paywall, setPaywall] = useState<'limit' | 'upgrade' | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
+  const [hatch, setHatch] = useState<HatchInfo | null>(null)
   const [backupPending, setBackupPending] = useState<{ file: BackupFile; summary: BackupSummary } | null>(null)
 
   // 焦点不存在时把第一件写回存储，保证下次打开还是它
@@ -511,6 +525,26 @@ export function AppV2() {
           onCreated={(message) => {
             setSheet(null)
             setToast(message)
+          }}
+          onHatched={(info) => {
+            // 第一次建东西才播孵化，后续都直接落回今天页
+            if (hasHatched()) return
+            // 打招呼的是小伙伴自己，不是这件事的标题（「我是芽芽」而不是「我是戒烟」）
+            setHatch({ ...info, name: t(`creature.${info.species}` as MessageKey) })
+          }}
+        />
+      ) : null}
+
+      {hatch ? (
+        <HatchOverlay
+          info={hatch}
+          onDone={() => {
+            try {
+              window.localStorage.setItem(HATCHED_KEY, '1')
+            } catch {
+              /* 写不进去就下次再播，不影响使用 */
+            }
+            setHatch(null)
           }}
         />
       ) : null}

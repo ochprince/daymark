@@ -21,10 +21,36 @@
 @keyframes inputShake { 20%, 60% { transform: translateX(-6px); } 40%, 80% { transform: translateX(6px); } }
 
 /* 孵化 */
+.hatch {
+  position: fixed; inset: 0; display: flex; flex-direction: column;
+  align-items: center; justify-content: center;
+  padding: calc(32px + env(safe-area-inset-top)) 24px calc(32px + env(safe-area-inset-bottom));
+  background: var(--bg); text-align: center;
+}
 .hatch-mid { display: flex; flex-direction: column; align-items: center; min-height: 320px; justify-content: flex-end; }
 .hatch-mid .bubble { animation: pop 0.45s var(--ease-pop) 0.35s both; }
 .hatch .btn.block { width: 100%; margin-top: 18px; animation: up 0.5s var(--ease-pop) 0.6s both; }
 .hatch .confetti { position: absolute; }
+.hatch-egg {
+  position: relative; display: grid; place-items: center; padding: 0; border: 0;
+  background: transparent; cursor: pointer; -webkit-tap-highlight-color: transparent;
+}
+.hatch-egg.born { animation: hatchPop 0.5s var(--ease-pop) both; }
+@keyframes eggShake {
+  20% { transform: rotate(-7deg) scale(1.02); }
+  40% { transform: rotate(7deg) scale(1.02); }
+  60% { transform: rotate(-4deg); }
+  80% { transform: rotate(4deg); }
+}
+@keyframes hatchPop {
+  0% { transform: scale(0.86); }
+  55% { transform: scale(1.08); }
+  100% { transform: scale(1); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .hatch-egg.born { animation: none; }
+  .hatch .confetti { display: none; }
+}
 
 /* 档案 */
 .page-h { position: sticky; top: 0; z-index: 3; }

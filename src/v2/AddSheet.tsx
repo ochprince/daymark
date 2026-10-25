@@ -7,12 +7,14 @@ import { pickSpecies } from '../lib/migrate'
 import { setFocusKey } from '../lib/focus'
 import { itemKey } from '../lib/itemview'
 import { t } from '../lib/i18n'
+import type { CreatureSpecies } from '../components/Creature'
 import type { ItemKind } from '../lib/types'
 import { IconClose } from './icons'
 
 export type AddSheetProps = {
   onClose: () => void
   onCreated: (message: string) => void
+  onHatched?: (info: { species: CreatureSpecies; color: number; name: string }) => void
 }
 
 const NAME_PLACEHOLDER: Record<ItemKind, string> = {
@@ -21,7 +23,7 @@ const NAME_PLACEHOLDER: Record<ItemKind, string> = {
   countdown: '妈妈的生日 / 出发旅行',
 }
 
-export function AddSheet({ onClose, onCreated }: AddSheetProps) {
+export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
   const [kind, setKind] = useState<ItemKind | null>(null)
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(() => {
@@ -34,6 +36,9 @@ export function AddSheet({ onClose, onCreated }: AddSheetProps) {
     if (!name || !kind) return
     const now = Date.now()
 
+    // 孵化要用到新建这件事的物种/配色/名字，先兜住再分派
+    let born: { species: CreatureSpecies; color: number; name: string } | null = null
+
     if (kind === 'since') {
       const startedAt = parseDate(date, now)
       const isToday = startOfDay(startedAt) === todayStart(now)
@@ -45,10 +50,12 @@ export function AddSheet({ onClose, onCreated }: AddSheetProps) {
         color: suggestEventColor(),
         species: 'sprout',
       })
+      born = { species: event.species ?? 'sprout', color: event.color, name: name }
       setFocusKey(itemKey('since', event.id))
     } else if (kind === 'habit') {
       const species = pickSpecies(name)
       const event = addCheckIn({ title: name, color: suggestCheckInColor(), cadence: 'daily', species })
+      born = { species, color: event.color, name }
       setFocusKey(itemKey('habit', event.id))
     } else {
       const startedAt = parseDate(date, now)
@@ -60,10 +67,12 @@ export function AddSheet({ onClose, onCreated }: AddSheetProps) {
         repeat: past ? 'yearly' : 'none',
       })
       if (past) updateCountdown(event.id, { repeat: 'yearly' })
+      born = { species: 'star', color: event.color, name }
       setFocusKey(itemKey('countdown', event.id))
     }
 
     onCreated(name)
+    if (born) onHatched?.(born)
   }
 
   return (
