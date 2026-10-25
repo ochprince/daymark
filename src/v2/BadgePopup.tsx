@@ -5,7 +5,7 @@ import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 
 /** 徽章图形：同一套目录，不同 id 用不同图案（见 prototype badge()） */
-const BADGE_ART: Record<BadgeId, { kind: string; label?: string }> = {
+export const BADGE_ART: Record<BadgeId, { kind: string; label?: string }> = {
   first: { kind: 'foot' },
   d7: { kind: 'num', label: '7' },
   d30: { kind: 'num', label: '30' },

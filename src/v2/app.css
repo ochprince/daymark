@@ -175,6 +175,12 @@ body {
   font-weight: 500;
 }
 
+/* 藏馆：自己是一页，顶部要让出状态栏 */
+.museum {
+  padding-top: calc(54px + env(safe-area-inset-top));
+  padding-bottom: calc(120px + env(safe-area-inset-bottom));
+}
+
 /* 档案页：底部 tab 是浮在上面的，留出它的高度，滚到底不会被挡住 */
 .page {
   padding-top: calc(54px + env(safe-area-inset-top));

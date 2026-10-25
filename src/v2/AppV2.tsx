@@ -12,6 +12,7 @@ import { anchorOf, todayStart } from '../lib/days'
 import { parseDayKey } from '../lib/daykey'
 import { focusAfterRemoval } from '../lib/itemview'
 import { ProfilePage } from './ProfilePage'
+import { MuseumPage } from './MuseumPage'
 import { TodayPage } from './TodayPage'
 import { TabBar, type TabKey } from './TabBar'
 import { Switcher } from './Switcher'
@@ -240,12 +241,7 @@ export function AppV2() {
         />
       ) : null}
 
-      {tab === 'museum' ? (
-        <div className="placeholder">
-          <h2>{t('museum.title')}</h2>
-          <p>{t('museum.chapters.empty')}</p>
-        </div>
-      ) : null}
+      {tab === 'museum' ? <MuseumPage views={views} collection={collection} /> : null}
 
       {tab === 'dress' ? (
         <div className="placeholder">
