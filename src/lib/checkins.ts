@@ -399,6 +399,11 @@ export function addCheckIn(draft: CheckInDraft): CheckInEvent {
   })
 }
 
+/** 直接改一条记录的任意字段（章节、提醒、相片这类不在表单草稿里的字段走这里） */
+export function patchCheckIn(id: string, patch: Partial<Omit<CheckInEvent, 'id' | 'createdAt'>>): void {
+  checkins.update(id, patch)
+}
+
 export function updateCheckIn(id: string, patch: Partial<CheckInDraft>): void {
   const current = checkins.getAll().find((item) => item.id === id)
   checkins.update(id, {

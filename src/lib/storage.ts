@@ -51,6 +51,11 @@ export function addEvent(draft: EventDraft): DayEvent {
   })
 }
 
+/** 直接改一条记录的任意字段（章节、相片这类不在表单草稿里的字段走这里） */
+export function patchEvent(id: string, patch: Partial<Omit<DayEvent, 'id' | 'createdAt'>>): void {
+  events.update(id, patch)
+}
+
 export function updateEvent(id: string, patch: Partial<EventDraft>): void {
   events.update(id, {
     ...(patch.title !== undefined ? { title: patch.title.trim().slice(0, 40) } : {}),

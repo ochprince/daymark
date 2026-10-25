@@ -5,8 +5,13 @@ import { setFocusKey } from '../lib/focus'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import { bubbleLine } from '../lib/lines'
-import { tapCheckIn } from '../lib/checkins'
-import { markSaid } from '../lib/countdowns'
+import { patchCheckIn, removeCheckIn, tapCheckIn } from '../lib/checkins'
+import { markSaid, patchCountdown, removeCountdown } from '../lib/countdowns'
+import { patchEvent, removeEvent } from '../lib/storage'
+import { anchorOf, todayStart } from '../lib/days'
+import { parseDayKey } from '../lib/daykey'
+import { focusAfterRemoval } from '../lib/itemview'
+import { ProfilePage } from './ProfilePage'
 import { TodayPage } from './TodayPage'
 import { TabBar, type TabKey } from './TabBar'
 import { Switcher } from './Switcher'
@@ -20,6 +25,7 @@ import {
   evaluateBadges,
   getCollection,
   noteStage,
+  subscribe as subscribeCollection,
   unlockBadges,
   unlockDex,
 } from '../lib/collection'
@@ -32,6 +38,18 @@ type Sheet = 'switcher' | 'add' | null
 /** 所有事里最大的成长天数（徽章门槛用） */
 function maxGrowthOf(views: readonly ItemView[]): number {
   return views.reduce((max, view) => (view.growth > max ? view.growth : max), 0)
+}
+
+/** 某一章区间里记过几天（章节收尾用） */
+function recordedDaysBetween(days: Record<string, number>, start: number, end: number): number {
+  let total = 0
+  for (const [key, count] of Object.entries(days)) {
+    if (!(count > 0)) continue
+    const ts = parseDayKey(key)
+    if (Number.isNaN(ts) || ts < todayStart(start) || ts > end) continue
+    total += 1
+  }
+  return total
 }
 
 /** 有没有结束过至少一章（「翻篇」徽章） */
@@ -73,9 +91,11 @@ export function AppV2() {
   const [evolve, setEvolve] = useState<EvolveInfo | null>(null)
   // 徽章排队：一次只弹一个，而且要让进化过场先播完（两层同时盖住会挡住按钮）
   const [badges, setBadges] = useState<BadgeId[]>([])
+  const [profileOpen, setProfileOpen] = useState(false)
   const prevStage = useRef<Record<string, number>>({})
 
   const { views, focus } = useV2Data(now)
+  const collection = useSyncExternalStore(subscribeCollection, getCollection)
 
   // 焦点不存在时把第一件写回存储，保证下次打开还是它
   useEffect(() => {
@@ -151,6 +171,54 @@ export function AppV2() {
     window.setTimeout(() => setOverride(null), 3200)
   }, [focus, pokeCount])
 
+  const renameFocus = useCallback((view: ItemView, title: string) => {
+    if (view.kind === 'since') patchEvent(view.id, { title })
+    else if (view.kind === 'habit') patchCheckIn(view.id, { title })
+    else patchCountdown(view.id, { title })
+  }, [])
+
+  const recolorFocus = useCallback((view: ItemView, color: number) => {
+    if (view.kind === 'since') patchEvent(view.id, { color })
+    else if (view.kind === 'habit') patchCheckIn(view.id, { color })
+    else patchCountdown(view.id, { color })
+  }, [])
+
+  const endChapter = useCallback(
+    (view: ItemView) => {
+      const at = Date.now()
+      const endedAt = todayStart(at)
+      if (view.kind === 'since') {
+        const chapter = { days: view.days, endedAt, stage: view.stage, startedAt: anchorOf(view.event) }
+        patchEvent(view.id, {
+          history: [chapter, ...(view.event.history ?? [])],
+          startedAt: at,
+          anchorAt: at,
+        })
+      } else if (view.kind === 'habit') {
+        const start = view.event.chapterStartedAt ?? view.event.createdAt
+        const chapter = { days: recordedDaysBetween(view.event.days, start, at), endedAt, stage: view.stage, startedAt: start }
+        patchCheckIn(view.id, {
+          chapters: [chapter, ...(view.event.chapters ?? [])],
+          chapterStartedAt: at,
+        })
+      }
+      setToast(t('profile.endChapter'))
+    },
+    [],
+  )
+
+  const deleteFocus = useCallback(
+    (view: ItemView) => {
+      const next = focusAfterRemoval(views, view.key)
+      if (view.kind === 'since') removeEvent(view.id)
+      else if (view.kind === 'habit') removeCheckIn(view.id)
+      else removeCountdown(view.id)
+      if (next) setFocusKey(next)
+      setProfileOpen(false)
+    },
+    [views],
+  )
+
   return (
     <div className="dm-screen" data-tab={tab}>
       <div className="dm-texture" aria-hidden="true" />
@@ -166,7 +234,7 @@ export function AppV2() {
           onLog={onLog}
           onSayDone={onSayDone}
           onPoke={onPoke}
-          onProfile={() => setToast(t('pro.title'))}
+          onProfile={() => setProfileOpen(true)}
           overrideLine={override}
           pokeNonce={pokeCount}
         />
@@ -190,6 +258,25 @@ export function AppV2() {
       ) : null}
 
       <TabBar active={tab} onChange={setTab} />
+
+      {profileOpen && focus ? (
+        <ProfilePage
+          view={focus}
+          peakStage={collection.peakStage[focus.key] ?? focus.stage}
+          now={now}
+          onClose={() => setProfileOpen(false)}
+          onRename={(title) => renameFocus(focus, title)}
+          onChangeColor={(color) => recolorFocus(focus, color)}
+          onEndChapter={() => {
+            endChapter(focus)
+            setProfileOpen(false)
+          }}
+          onDelete={() => {
+            deleteFocus(focus)
+            setProfileOpen(false)
+          }}
+        />
+      ) : null}
 
       {sheet === 'switcher' ? (
         <Switcher

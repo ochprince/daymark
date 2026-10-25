@@ -59,6 +59,11 @@ export function markSaid(id: string, occurrence: number): void {
   countdowns.update(id, { ackedFor, history })
 }
 
+/** 直接改一条记录的任意字段（备忘、待办、相片这类不在表单草稿里的字段走这里） */
+export function patchCountdown(id: string, patch: Partial<Omit<CountdownEvent, 'id' | 'createdAt'>>): void {
+  countdowns.update(id, patch)
+}
+
 export function updateCountdown(id: string, patch: Partial<CountdownDraft>): void {
   countdowns.update(id, {
     ...(patch.title !== undefined ? { title: patch.title.trim().slice(0, 40) } : {}),

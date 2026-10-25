@@ -77,6 +77,21 @@ body {
     padding: 0 12px;
     font-size: 13px;
   }
+
+  /* 成长之路 5 个节点在小屏上会顶出边界，收窄一点 */
+  .path {
+    padding-left: 10px;
+    padding-right: 10px;
+  }
+
+  .path-node {
+    width: 56px;
+  }
+
+  .path-node .pn-art {
+    width: 52px;
+    height: 52px;
+  }
 }
 
 .t-greet {
@@ -158,6 +173,12 @@ body {
   font-size: 13px;
   color: var(--ink2);
   font-weight: 500;
+}
+
+/* 档案页：底部 tab 是浮在上面的，留出它的高度，滚到底不会被挡住 */
+.page {
+  padding-top: calc(54px + env(safe-area-inset-top));
+  padding-bottom: calc(110px + env(safe-area-inset-bottom));
 }
 
 /* 徽章弹窗 */
