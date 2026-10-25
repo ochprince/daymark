@@ -461,3 +461,326 @@
   font-weight: 700;
   text-decoration: none;
 }
+
+/* ==========================================================================
+   卡面模板（贴纸 / 票根 / 相片）
+   模板差异一律走 .share-card.tpl-* 变体，组件里不判断皮肤也不判断模板；
+   坐标与 v2/share.tsx 里的常量对齐（票框 40、打孔线 452 / 1408、缺口 r44）。
+   ========================================================================== */
+
+/* 贴纸模板没有任何额外装饰，装饰节点全部藏掉 */
+.share-card .share-card__photo,
+.share-card .share-card__scrim,
+.share-card .share-card__ticket-frame,
+.share-card .share-card__hole,
+.share-card .share-card__admit,
+.share-card .share-card__stamp,
+.share-card .share-card__serial {
+  display: none;
+}
+
+/* ------------------------------------------------------------------ 票根 */
+
+.share-card.tpl-ticket {
+  background: var(--bg);
+  color: var(--ink);
+  justify-content: center;
+  /* 上下留出打孔线以外的空地：内容框 450–1410 的中心正好是 930，
+     与 share.tsx 里票根 band 的中心（打孔线 452 / 1408 的中点）一致 */
+  padding: 450px 96px 510px;
+}
+
+/* 顶条压一层主色，票根不显白纸 */
+.share-card.tpl-ticket::before {
+  display: block;
+  left: 40px;
+  right: 40px;
+  top: 40px;
+  height: 412px;
+  border-radius: 44px 44px 0 0;
+  background: linear-gradient(180deg, color-mix(in oklab, var(--c) 26%, transparent), transparent);
+}
+
+/* 票框 */
+.share-card.tpl-ticket .share-card__ticket-frame {
+  display: block;
+  position: absolute;
+  inset: 40px;
+  border: 4px solid var(--line);
+  border-radius: 48px;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* 打孔线：一条虚线 + 两端半圆缺口（缺口用页面底色挖掉，正好吃掉票框） */
+.share-card.tpl-ticket .share-card__hole {
+  display: block;
+  position: absolute;
+  left: 40px;
+  right: 40px;
+  height: 0;
+  border-top: 4px dashed color-mix(in oklab, var(--ink) 40%, transparent);
+  z-index: 1;
+}
+
+.share-card.tpl-ticket .share-card__hole.is-top {
+  top: 452px;
+}
+
+.share-card.tpl-ticket .share-card__hole.is-bottom {
+  top: 1408px;
+}
+
+.share-card.tpl-ticket .share-card__hole::before,
+.share-card.tpl-ticket .share-card__hole::after {
+  content: '';
+  box-sizing: border-box;
+  position: absolute;
+  top: -48px;
+  width: 88px;
+  height: 88px;
+  border-radius: 50%;
+  background: var(--bg);
+  border: 4px solid var(--line);
+}
+
+.share-card.tpl-ticket .share-card__hole::before {
+  left: -44px;
+}
+
+.share-card.tpl-ticket .share-card__hole::after {
+  right: -44px;
+}
+
+.share-card.tpl-ticket .share-card__top {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 96px;
+  /* 基础样式是 width:100%，绝对定位下会把右边界顶出去（日期被裁），必须交回给 left/right */
+  width: auto;
+}
+
+/* ADMIT ONE / 入场券 + 类型：都钉在顶条里 */
+.share-card.tpl-ticket .share-card__admit {
+  display: block;
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 286px;
+  text-align: center;
+  font-size: 46px;
+  font-weight: 800;
+  letter-spacing: 0.3em;
+  text-indent: 0.3em;
+  color: var(--c2);
+  z-index: 2;
+}
+
+.share-card.tpl-ticket .share-card__tag {
+  position: absolute;
+  left: 50%;
+  top: 360px;
+  transform: translateX(-50%);
+  border: 0;
+  background: transparent;
+  padding: 0;
+  font-size: 32px;
+  letter-spacing: 0.16em;
+  color: var(--ink3);
+  z-index: 2;
+}
+
+.share-card.tpl-ticket .share-card__art,
+.share-card.tpl-ticket .share-card__growth {
+  display: none;
+}
+
+.share-card.tpl-ticket .share-card__num {
+  margin-top: 0;
+  min-height: 0;
+}
+
+.share-card.tpl-ticket .share-card__title {
+  margin-top: 56px;
+}
+
+.share-card.tpl-ticket .share-card__stamp,
+.share-card.tpl-ticket .share-card__serial {
+  display: block;
+  position: absolute;
+  top: 1548px;
+  font-size: 32px;
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  color: var(--ink3);
+  white-space: nowrap;
+  z-index: 2;
+}
+
+.share-card.tpl-ticket .share-card__stamp {
+  left: 96px;
+}
+
+.share-card.tpl-ticket .share-card__stamp::after,
+.share-card.tpl-ticket .share-card__serial::after {
+  content: '';
+  display: block;
+  width: 160px;
+  height: 0;
+  margin-top: 16px;
+  border-top: 3px dashed color-mix(in oklab, var(--ink) 40%, transparent);
+}
+
+.share-card.tpl-ticket .share-card__serial::after {
+  margin-left: auto;
+}
+
+.share-card.tpl-ticket .share-card__serial {
+  right: 96px;
+  color: var(--ink2);
+}
+
+.share-card.tpl-ticket .share-card__foot {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  bottom: 84px;
+  margin: 0;
+  padding: 0;
+  z-index: 2;
+}
+
+/* ------------------------------------------------------------------ 相片 */
+
+.share-card.tpl-photo {
+  background: #0b0912;
+  color: #fff;
+  justify-content: flex-end;
+  padding: 96px;
+}
+
+/* 照片压在最底层，文字全部盖在压暗层上 */
+.share-card.tpl-photo .share-card__photo {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.share-card.tpl-photo .share-card__photo img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  /* 导出时 sharefit.coverCrop 算的就是同一块裁剪 */
+  object-fit: cover;
+  object-position: center;
+}
+
+.share-card.tpl-photo .share-card__scrim {
+  display: block;
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(9, 7, 16, 0.62) 0%,
+    rgba(9, 7, 16, 0.2) 22%,
+    rgba(9, 7, 16, 0.34) 42%,
+    rgba(9, 7, 16, 0.78) 68%,
+    rgba(9, 7, 16, 0.94) 86%,
+    rgba(9, 7, 16, 0.98) 100%
+  );
+}
+
+.share-card.tpl-photo::before {
+  display: none;
+}
+
+.share-card.tpl-photo .share-card__top {
+  position: absolute;
+  left: 96px;
+  right: 96px;
+  top: 104px;
+  width: auto;
+}
+
+.share-card.tpl-photo .share-card__art,
+.share-card.tpl-photo .share-card__growth {
+  display: none;
+}
+
+.share-card.tpl-photo .share-card__brand,
+.share-card.tpl-photo .share-card__title {
+  color: #fff;
+}
+
+.share-card.tpl-photo .share-card__date,
+.share-card.tpl-photo .share-card__line {
+  color: rgba(255, 255, 255, 0.84);
+}
+
+.share-card.tpl-photo .share-card__num {
+  margin-top: 40px;
+  color: #fff;
+  text-shadow: 0 6px 26px rgba(0, 0, 0, 0.5);
+}
+
+.share-card.tpl-photo .share-card__num .lead,
+.share-card.tpl-photo .share-card__num .unit {
+  color: rgba(255, 255, 255, 0.84);
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.55);
+}
+
+.share-card.tpl-photo .share-card__tag {
+  background: rgba(18, 14, 28, 0.4);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #fff;
+}
+
+.share-card.tpl-photo .share-card__foot {
+  margin-top: 44px;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+/* ------------------------------------------------------------ 模板切换 tab */
+
+.share-overlay__tpls {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  padding: 4px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.share-overlay__tpl {
+  height: 34px;
+  padding: 0 16px;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.66);
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  transition: background 0.16s ease, color 0.16s ease;
+}
+
+.share-overlay__tpl[aria-selected='true'] {
+  background: #fff;
+  color: #17132a;
+}
+
+.share-overlay__tpl[disabled] {
+  opacity: 0.34;
+}
+
+.share-overlay__note {
+  margin: 6px 0 0;
+  max-width: 420px;
+  text-align: center;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.42);
+}

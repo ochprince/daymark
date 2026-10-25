@@ -13,8 +13,13 @@
  *   具体颜色，否则 data: URL 里的 SVG 读不到页面变量。
  */
 import { creature as creatureSvg } from '../components/creature-art'
-import type { ShareModel } from '../lib/sharecard'
-import { SHARE_SIZE } from '../lib/sharecard'
+import { getPhotoUrl } from '../lib/photos'
+import type { Locale } from '../lib/i18n'
+import { getLocale } from '../lib/i18n'
+import type { ShareModel, ShareTemplate } from '../lib/sharecard'
+import { SHARE_SIZE, shareCopy } from '../lib/sharecard'
+import { coverCrop, ticketHoles, ticketSerial } from '../lib/sharefit'
+import type { Segment } from '../lib/sharefit'
 import type { SkinPack } from '../lib/skin'
 
 /* ---------------------------------------------------------------- 布局常量 */
@@ -36,6 +41,18 @@ const GROWTH_SIZE = 32
 const FOOT_SIZE = 30
 const ART_MAX = 520
 const FOOT_BOTTOM = H - PAD
+
+/* 票根：票框内缩、两条打孔线、缺口半径 */
+const T_FRAME = 40
+const T_HOLE_TOP = 452
+const T_HOLE_BOTTOM = 1408
+const T_NOTCH = 44
+const T_NUM_SIZE = 300
+const T_ADMIT_SIZE = 46
+const T_SERIAL_SIZE = 32
+
+/* 相片：白字 + 压暗 */
+const P_NUM_SIZE = 300
 
 /** 卡片底色里主色占多少（与 sharecard.css 里各皮肤的 color-mix 比例一致） */
 const CARD_TINT: Record<SkinPack, number> = { jelly: 0.32, paper: 0.16, night: 0.34, pixel: 0.38 }
@@ -274,7 +291,7 @@ function loadImage(src: string): Promise<HTMLImageElement> {
     const image = new Image()
     image.decoding = 'sync'
     image.onload = () => resolve(image)
-    image.onerror = () => reject(new Error('creature svg failed to load'))
+    image.onerror = () => reject(new Error('share card image failed to load'))
     image.src = src
   })
 }
@@ -293,30 +310,15 @@ function font(size: number, family: string, weight = '700', style = 'normal'): s
 }
 
 /**
- * 把分享卡画成 1080×1920 的 PNG。
- * theme 从 themeFromElement() 拿；这里不读 document 上的任何尺寸，跟 DPR 无关。
+ * 贴纸卡（默认模板）：角色 + 标签 + 超大数字 + 标题 + 成长条。
+ * 与 sharecard.css 的 .share-card 一一对应，坐标是设计稿像素。
  */
-export async function renderSharePng(model: ShareModel, theme: ShareTheme): Promise<Blob> {
-  if (typeof document !== 'undefined' && document.fonts?.ready) {
-    try {
-      await document.fonts.ready
-    } catch {
-      /* 字体没加载完也照画，走系统回退 */
-    }
-  }
-
-  const canvas = document.createElement('canvas')
-  canvas.width = W
-  canvas.height = H
-  const ctx = canvas.getContext('2d')
-  if (!ctx) throw new Error('canvas 2d context unavailable')
-
-  const scratchCanvas = document.createElement('canvas')
-  scratchCanvas.width = 1
-  scratchCanvas.height = 1
-  const scratch = scratchCanvas.getContext('2d', { willReadFrequently: true })
-  if (!scratch) throw new Error('canvas 2d context unavailable')
-
+async function drawSticker(
+  ctx: CanvasRenderingContext2D,
+  scratch: CanvasRenderingContext2D,
+  model: ShareModel,
+  theme: ShareTheme,
+): Promise<void> {
   const tint = CARD_TINT[theme.skin] ?? 0.32
   const cardBg = mixCss(scratch, theme.surface, theme.accent, tint)
 
@@ -498,8 +500,476 @@ export async function renderSharePng(model: ShareModel, theme: ShareTheme): Prom
   )
   const image = await loadImage(svgDataUrl(artSvg))
   ctx.drawImage(image, W / 2 - artSize / 2, artTop + (artBox - artSize) / 2, artSize, artSize)
+}
 
-  return toBlob(canvas)
+/* ------------------------------------------------------------ 模板零件 */
+
+/** 卡片底色（各皮肤主色占比跟 sharecard.css 的 color-mix 一致） */
+function cardBackground(scratch: CanvasRenderingContext2D, theme: ShareTheme): string {
+  return mixCss(scratch, theme.surface, theme.accent, CARD_TINT[theme.skin] ?? 0.32)
+}
+
+/** 数字太长就按 8px 一档缩字号，保证不顶出左右留白 */
+function fitFontSize(
+  ctx: CanvasRenderingContext2D,
+  text: string,
+  family: string,
+  weight: string,
+  style: string,
+  start: number,
+  maxWidth: number,
+  min = 120,
+): number {
+  let size = start
+  while (size > min) {
+    ctx.font = font(size, family, weight, style)
+    if (ctx.measureText(text).width <= maxWidth) break
+    size -= 8
+  }
+  return Math.max(min, size)
+}
+
+/** 一段段画虚线（不用 setLineDash：相位一致、也不会画到缺口里） */
+function strokeSegments(
+  ctx: CanvasRenderingContext2D,
+  segments: readonly Segment[],
+  color: string,
+  width: number,
+): void {
+  if (segments.length === 0) return
+  ctx.strokeStyle = color
+  ctx.lineWidth = width
+  ctx.beginPath()
+  for (const segment of segments) {
+    ctx.moveTo(segment.x1, segment.y1)
+    ctx.lineTo(segment.x2, segment.y2)
+  }
+  ctx.stroke()
+}
+
+/**
+ * 数字 + 前后小字，整体居中。返回实际用的字号（调用方按字形高度排版要用）。
+ * 与贴纸卡同一套口径：lead / unit 用 UI 字体，数字用皮肤的 num 令牌与投影。
+ */
+function paintNumber(
+  ctx: CanvasRenderingContext2D,
+  model: ShareModel,
+  theme: ShareTheme,
+  opts: {
+    size: number
+    phraseSize: number
+    unitSize: number
+    baseline: number
+    ink: string
+    sub: string
+    shadow: ShareShadow | null
+    maxWidth: number
+  },
+): number {
+  const size = fitFontSize(
+    ctx,
+    model.number,
+    theme.numFont,
+    theme.numWeight,
+    theme.numStyle,
+    model.isPhrase ? opts.phraseSize : opts.size,
+    opts.maxWidth,
+    120,
+  )
+  const numFont = font(size, theme.numFont, theme.numWeight, theme.numStyle)
+  const unitFont = font(opts.unitSize, theme.uiFont, '700')
+  ctx.font = numFont
+  const numberWidth = ctx.measureText(model.number).width
+  ctx.font = unitFont
+  const leadWidth = model.lead ? ctx.measureText(model.lead).width : 0
+  const unitWidth = model.unit ? ctx.measureText(model.unit).width : 0
+  const gap = 22
+  const total = leadWidth + unitWidth + numberWidth + (model.lead ? gap : 0) + (model.unit ? gap : 0)
+  let x = W / 2 - total / 2
+  ctx.textAlign = 'left'
+  if (model.lead) {
+    ctx.font = unitFont
+    ctx.fillStyle = opts.sub
+    ctx.fillText(model.lead, x, opts.baseline)
+    x += leadWidth + gap
+  }
+
+  ctx.save()
+  if (opts.shadow) {
+    ctx.shadowColor = opts.shadow.color
+    ctx.shadowOffsetX = opts.shadow.x
+    ctx.shadowOffsetY = opts.shadow.y
+    ctx.shadowBlur = opts.shadow.blur
+  }
+  ctx.font = numFont
+  ctx.fillStyle = opts.ink
+  ctx.fillText(model.number, x, opts.baseline)
+  ctx.restore()
+  x += numberWidth
+  if (model.unit) {
+    ctx.font = unitFont
+    ctx.fillStyle = opts.sub
+    ctx.fillText(model.unit, x + gap, opts.baseline)
+  }
+  return size
+}
+
+/* ---------------------------------------------------------------- 票根 */
+
+/**
+ * 票根：整张是「一张撕下来的入场券」。
+ * 页面底色上放一个圆角票框，上下各一道打孔线（缺口之间是虚线，两端挖半圆），
+ * 顶条写 ADMIT ONE / 入场券 + 类型，中间是超大天数，底条写票面日期与序列号。
+ * 序列号来自 sharefit.ticketSerial(标题 slug + 今天)，稳定不随机。
+ */
+function drawTicket(
+  ctx: CanvasRenderingContext2D,
+  scratch: CanvasRenderingContext2D,
+  model: ShareModel,
+  theme: ShareTheme,
+  locale: Locale,
+): void {
+  // 页面底色（缺口露出来的就是它）
+  ctx.fillStyle = theme.bg
+  ctx.fillRect(0, 0, W, H)
+
+  const boxX = T_FRAME
+  const boxY = T_FRAME
+  const boxW = W - T_FRAME * 2
+  const boxH = H - T_FRAME * 2
+  const radius = 48
+
+  // 票面
+  ctx.fillStyle = cardBackground(scratch, theme)
+  roundRect(ctx, boxX, boxY, boxW, boxH, radius)
+  ctx.fill()
+
+  // 顶条压一层主色，票根才不像白纸
+  const [ar, ag, ab] = colorBytes(scratch, theme.accent)
+  const wash = ctx.createLinearGradient(0, boxY, 0, T_HOLE_TOP)
+  wash.addColorStop(0, `rgba(${ar}, ${ag}, ${ab}, 0.26)`)
+  wash.addColorStop(1, `rgba(${ar}, ${ag}, ${ab}, 0)`)
+  ctx.fillStyle = wash
+  roundRect(ctx, boxX, boxY, boxW, boxH, radius)
+  ctx.fill()
+
+  // 票框线
+  ctx.lineWidth = 4
+  ctx.strokeStyle = theme.line
+  roundRect(ctx, boxX, boxY, boxW, boxH, radius)
+  ctx.stroke()
+
+  // 打孔线 + 两侧半圆缺口
+  const holes = ticketHoles(
+    { width: W, height: H },
+    [T_HOLE_TOP, T_HOLE_BOTTOM],
+    { inset: T_FRAME, notchRadius: T_NOTCH, dash: 22, gap: 18 },
+  )
+  const dashColor = mixCss(scratch, 'rgba(0, 0, 0, 0)', theme.ink, 0.4)
+  for (const hole of holes) {
+    strokeSegments(ctx, hole.segments, dashColor, 4)
+    for (const notch of hole.notches) {
+      // 缺口：先用页面底色挖掉，再描一道缺口边
+      ctx.beginPath()
+      ctx.moveTo(notch.points[0].x, notch.points[0].y)
+      for (const point of notch.points.slice(1)) ctx.lineTo(point.x, point.y)
+      ctx.closePath()
+      ctx.fillStyle = theme.bg
+      ctx.fill()
+      ctx.beginPath()
+      ctx.moveTo(notch.points[0].x, notch.points[0].y)
+      for (const point of notch.points.slice(1)) ctx.lineTo(point.x, point.y)
+      ctx.lineWidth = 4
+      ctx.strokeStyle = theme.line
+      ctx.stroke()
+    }
+  }
+
+  ctx.textBaseline = 'alphabetic'
+  ctx.textAlign = 'left'
+
+  // 顶条：品牌 + 今天
+  ctx.fillStyle = theme.ink
+  ctx.font = font(BRAND_SIZE, theme.titleFont, '800')
+  tracked(ctx, 'DAYMARK', PAD, T_FRAME + 112, BRAND_SIZE * 0.26, 'left')
+  ctx.font = font(DATE_SIZE, theme.uiFont, '700')
+  ctx.fillStyle = theme.ink3
+  ctx.textAlign = 'right'
+  ctx.fillText(model.dateText, W - PAD, T_FRAME + 112 - (BRAND_SIZE - DATE_SIZE) * 0.32)
+  ctx.textAlign = 'left'
+
+  // ADMIT ONE / 入场券
+  ctx.font = font(T_ADMIT_SIZE, theme.uiFont, '800')
+  ctx.fillStyle = theme.accent2
+  tracked(ctx, shareCopy('share.tpl.admit', undefined, locale), W / 2, T_HOLE_TOP - 132, T_ADMIT_SIZE * 0.3, 'center')
+  ctx.font = font(TAG_SIZE, theme.uiFont, '700')
+  ctx.fillStyle = theme.ink3
+  tracked(ctx, model.kindLabel, W / 2, T_HOLE_TOP - 60, TAG_SIZE * 0.16, 'center')
+
+  // 中间：超大天数 + 标题 + 小字，整块在两条打孔线之间竖直居中
+  const numSize = model.isPhrase
+    ? fitFontSize(ctx, model.number, theme.numFont, theme.numWeight, theme.numStyle, PHRASE_SIZE, W - PAD * 2 - 40)
+    : fitFontSize(ctx, model.number, theme.numFont, theme.numWeight, theme.numStyle, T_NUM_SIZE, W - PAD * 2 - 40)
+  const numH = numSize * 0.78
+
+  ctx.font = font(TITLE_SIZE, theme.titleFont, '800')
+  const titleLines = wrapLines(ctx, model.title, W - PAD * 2, 2)
+  const titleStep = TITLE_SIZE * TITLE_LINE
+  const titleH = TITLE_SIZE * 0.78 + (titleLines.length - 1) * titleStep
+
+  const subSize = fitFontSize(ctx, model.subtitle, theme.uiFont, '600', 'normal', LINE_SIZE, W - PAD * 2, 24)
+  const subH = subSize * 0.78
+  const gapNumTitle = 56
+  const gapTitleSub = 34
+
+  // 中间那块内容竖直居中：band 中心 = 打孔线中点 930，与 DOM 版 tpl-ticket 一致
+  const bandTop = T_HOLE_TOP + 56
+  const bandBottom = T_HOLE_BOTTOM - 56
+  const stackH = numH + gapNumTitle + titleH + gapTitleSub + subH
+  const stackTop = bandTop + Math.max(0, (bandBottom - bandTop - stackH) / 2)
+
+  const numBaseline = stackTop + numH
+  paintNumber(ctx, model, theme, {
+    size: T_NUM_SIZE,
+    phraseSize: PHRASE_SIZE,
+    unitSize: 56,
+    baseline: numBaseline,
+    ink: theme.ink,
+    sub: theme.ink2,
+    shadow: theme.numShadow,
+    maxWidth: W - PAD * 2 - 40,
+  })
+
+  const firstTitleBaseline = numBaseline + gapNumTitle + TITLE_SIZE * 0.78
+  ctx.font = font(TITLE_SIZE, theme.titleFont, '800')
+  ctx.fillStyle = theme.ink
+  ctx.textAlign = 'center'
+  titleLines.forEach((line, index) => {
+    ctx.fillText(line, W / 2, firstTitleBaseline + index * titleStep)
+  })
+
+  const lastTitleBaseline = firstTitleBaseline + (titleLines.length - 1) * titleStep
+  ctx.font = font(subSize, theme.uiFont, '600')
+  ctx.fillStyle = theme.ink2
+  ctx.fillText(model.subtitle, W / 2, lastTitleBaseline + gapTitleSub + subSize * 0.78)
+
+  // 底条：票面日期（左）+ 序列号（右）+ 品牌（中）
+  const stampBaseline = T_HOLE_BOTTOM + T_NOTCH + 132
+  ctx.font = font(T_SERIAL_SIZE, theme.uiFont, '700')
+  ctx.fillStyle = theme.ink3
+  ctx.textAlign = 'left'
+  tracked(ctx, model.stamp, PAD, stampBaseline, T_SERIAL_SIZE * 0.16, 'left')
+  ctx.textAlign = 'right'
+  ctx.fillStyle = theme.ink2
+  tracked(
+    ctx,
+    `NO. ${ticketSerial(`${model.slug}|${model.key}`, model.stamp)}`,
+    W - PAD,
+    stampBaseline,
+    T_SERIAL_SIZE * 0.16,
+    'right',
+  )
+  // 序列号下面的短虚线，票根的收尾
+  const ruleY = stampBaseline + 52
+  strokeSegments(
+    ctx,
+    [
+      { x1: PAD, y1: ruleY, x2: PAD + 160, y2: ruleY },
+      { x1: W - PAD - 160, y1: ruleY, x2: W - PAD, y2: ruleY },
+    ],
+    dashColor,
+    3,
+  )
+
+  ctx.textAlign = 'center'
+  ctx.font = font(FOOT_SIZE, theme.uiFont, '700')
+  ctx.fillStyle = theme.ink3
+  tracked(ctx, model.footer, W / 2, FOOT_BOTTOM, FOOT_SIZE * 0.1, 'center')
+}
+
+/* ---------------------------------------------------------------- 相片 */
+
+/**
+ * 相片：这件事的相片按 cover 铺满整张画布，叠一层「上淡下浓」的压暗渐变，
+ * 文字一律白色 —— 不管皮肤是纸本还是夜航，压在照片上都读得清。
+ * 没有相片时上游会退回贴纸，这里只处理「确实拿到图」的情况。
+ */
+function drawPhoto(
+  ctx: CanvasRenderingContext2D,
+  model: ShareModel,
+  theme: ShareTheme,
+  image: HTMLImageElement,
+): void {
+  ctx.fillStyle = '#0b0912'
+  ctx.fillRect(0, 0, W, H)
+
+  const crop = coverCrop(
+    { width: image.naturalWidth || image.width, height: image.naturalHeight || image.height },
+    { width: W, height: H },
+  )
+  if (crop) ctx.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, W, H)
+
+  // 压暗：整体一层薄 + 顶部一层（品牌）+ 底部厚一层（数字与标题）
+  ctx.fillStyle = 'rgba(9, 7, 16, 0.26)'
+  ctx.fillRect(0, 0, W, H)
+
+  const topScrim = ctx.createLinearGradient(0, 0, 0, H * 0.3)
+  topScrim.addColorStop(0, 'rgba(9, 7, 16, 0.62)')
+  topScrim.addColorStop(1, 'rgba(9, 7, 16, 0)')
+  ctx.fillStyle = topScrim
+  ctx.fillRect(0, 0, W, H * 0.3)
+
+  const bottomScrim = ctx.createLinearGradient(0, H * 0.3, 0, H)
+  bottomScrim.addColorStop(0, 'rgba(9, 7, 16, 0)')
+  bottomScrim.addColorStop(0.45, 'rgba(9, 7, 16, 0.5)')
+  bottomScrim.addColorStop(0.78, 'rgba(9, 7, 16, 0.84)')
+  bottomScrim.addColorStop(1, 'rgba(9, 7, 16, 0.96)')
+  ctx.fillStyle = bottomScrim
+  ctx.fillRect(0, H * 0.3, W, H * 0.7)
+
+  const white = '#ffffff'
+  const soft = 'rgba(255, 255, 255, 0.84)'
+  const faint = 'rgba(255, 255, 255, 0.6)'
+
+  ctx.textBaseline = 'alphabetic'
+  ctx.textAlign = 'left'
+
+  // 顶栏
+  ctx.fillStyle = white
+  ctx.font = font(BRAND_SIZE, theme.titleFont, '800')
+  tracked(ctx, 'DAYMARK', PAD, TOP + BRAND_SIZE, BRAND_SIZE * 0.26, 'left')
+  ctx.font = font(DATE_SIZE, theme.uiFont, '700')
+  ctx.fillStyle = soft
+  ctx.textAlign = 'right'
+  ctx.fillText(model.dateText, W - PAD, TOP + BRAND_SIZE - (BRAND_SIZE - DATE_SIZE) * 0.32)
+  ctx.textAlign = 'left'
+
+  // 底部：脚注 → 小字 → 标题 → 数字 → 类型（从下往上排）
+  ctx.font = font(FOOT_SIZE, theme.uiFont, '700')
+  ctx.fillStyle = faint
+  ctx.textAlign = 'center'
+  tracked(ctx, model.footer, W / 2, FOOT_BOTTOM, FOOT_SIZE * 0.1, 'center')
+
+  let cursor = FOOT_BOTTOM - FOOT_SIZE - 48
+
+  const subSize = fitFontSize(ctx, model.subtitle, theme.uiFont, '600', 'normal', LINE_SIZE, W - PAD * 2, 24)
+  const subBaseline = cursor
+  ctx.font = font(subSize, theme.uiFont, '600')
+  ctx.fillStyle = soft
+  ctx.fillText(model.subtitle, W / 2, subBaseline)
+  cursor = subBaseline - subSize * 0.78 - 34
+
+  ctx.font = font(TITLE_SIZE, theme.titleFont, '800')
+  ctx.fillStyle = white
+  const titleLines = wrapLines(ctx, model.title, W - PAD * 2, 2)
+  const titleStep = TITLE_SIZE * TITLE_LINE
+  const lastTitleBaseline = cursor
+  const firstTitleBaseline = lastTitleBaseline - (titleLines.length - 1) * titleStep
+  titleLines.forEach((line, index) => {
+    ctx.fillText(line, W / 2, firstTitleBaseline + index * titleStep)
+  })
+  const titleInkTop = firstTitleBaseline - TITLE_SIZE * 0.78
+  cursor = titleInkTop - 56
+
+  // 白字在照片上没有底色托着，给数字一点黑影
+  const numBaseline = cursor - P_NUM_SIZE * 0.08
+  const numSize = paintNumber(ctx, model, theme, {
+    size: P_NUM_SIZE,
+    phraseSize: PHRASE_SIZE,
+    unitSize: 56,
+    baseline: numBaseline,
+    ink: white,
+    sub: soft,
+    shadow: { x: 0, y: 6, blur: 26, color: 'rgba(0, 0, 0, 0.5)' },
+    maxWidth: W - PAD * 2 - 40,
+  })
+  // 数字带 26px 投影，留 72 才不会被看成压在类型标签上
+  cursor = numBaseline - numSize * 0.78 - 72
+
+  // 类型：小小的白字，压在数字上面
+  ctx.font = font(TAG_SIZE, theme.uiFont, '700')
+  ctx.fillStyle = faint
+  tracked(ctx, model.kindLabel, W / 2, cursor, TAG_SIZE * 0.16, 'center')
+}
+
+/* ------------------------------------------------------------ 模板分发 */
+
+/** 导出结果：除了 PNG，还要告诉调用方「你到底拿到的是哪套模板」 */
+export type ShareRender = {
+  blob: Blob
+  /** 实际画出来的模板 */
+  template: ShareTemplate
+  /** 调用方请求的模板 */
+  requested: ShareTemplate
+  /** 请求了相片但没有相片，已退回贴纸 */
+  fellBack: boolean
+}
+
+export type ShareRenderOptions = {
+  /** 「入场券 / ADMIT ONE」这类票面小字用哪种语言，默认当前语言 */
+  locale?: Locale
+}
+
+/** 相片 id → 解码好的图片；库里没有 / 解码失败都返回 null，不抛异常 */
+async function loadPhoto(photoId: string | null | undefined): Promise<HTMLImageElement | null> {
+  if (!photoId) return null
+  try {
+    const url = await getPhotoUrl(photoId)
+    if (!url) return null
+    return await loadImage(url)
+  } catch {
+    return null
+  }
+}
+
+/**
+ * 把分享卡画成 1080×1920 的 PNG。
+ * theme 从 themeFromElement() 拿；这里不读 document 上的任何尺寸，跟 DPR 无关。
+ *
+ * template：
+ * - 'sticker' 贴纸（默认，原来的样子）
+ * - 'ticket'  票根（打孔线 + 缺口 + ADMIT ONE + 序列号）
+ * - 'photo'   相片铺满 + 压暗 + 白字；没有相片时自动退回贴纸，并在返回值里标 fellBack
+ */
+export async function renderSharePng(
+  model: ShareModel,
+  theme: ShareTheme,
+  template: ShareTemplate = 'sticker',
+  options: ShareRenderOptions = {},
+): Promise<ShareRender> {
+  if (typeof document !== 'undefined' && document.fonts?.ready) {
+    try {
+      await document.fonts.ready
+    } catch {
+      /* 字体没加载完也照画，走系统回退 */
+    }
+  }
+
+  const canvas = document.createElement('canvas')
+  canvas.width = W
+  canvas.height = H
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('canvas 2d context unavailable')
+
+  const scratchCanvas = document.createElement('canvas')
+  scratchCanvas.width = 1
+  scratchCanvas.height = 1
+  const scratch = scratchCanvas.getContext('2d', { willReadFrequently: true })
+  if (!scratch) throw new Error('canvas 2d context unavailable')
+
+  const photo = template === 'photo' ? await loadPhoto(model.photoId) : null
+  const used: ShareTemplate = template === 'photo' && !photo ? 'sticker' : template
+
+  if (used === 'ticket') {
+    drawTicket(ctx, scratch, model, theme, options.locale ?? getLocale())
+  } else if (used === 'photo' && photo) {
+    drawPhoto(ctx, model, theme, photo)
+  } else {
+    await drawSticker(ctx, scratch, model, theme)
+  }
+
+  const blob = await toBlob(canvas)
+  return { blob, template: used, requested: template, fellBack: used !== template }
 }
 
 /* ------------------------------------------------------------------ 落地 */
