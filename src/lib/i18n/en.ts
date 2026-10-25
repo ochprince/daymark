@@ -395,4 +395,11 @@ export const en: Record<MessageKey, Msg> = {
   'notes.todo.add': 'Add',
   'notes.todo.done': 'Done {done}/{total}',
   'notes.remove': 'Delete',
+
+  /* Share card templates */
+  'share.tpl.sticker': 'Sticker',
+  'share.tpl.ticket': 'Ticket',
+  'share.tpl.photo': 'Photo',
+  'share.tpl.photoOff': 'No photo on this one yet — sharing the sticker instead',
+  'share.tpl.admit': 'ADMIT ONE',
 }

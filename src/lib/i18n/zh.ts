@@ -395,6 +395,13 @@ export const zh = {
   'notes.todo.add': '添加',
   'notes.todo.done': '已完成 {done}/{total}',
   'notes.remove': '删除',
+
+  /* 分享卡片模板 */
+  'share.tpl.sticker': '贴纸',
+  'share.tpl.ticket': '票根',
+  'share.tpl.photo': '相片',
+  'share.tpl.photoOff': '这件事还没有相片，先用贴纸发吧',
+  'share.tpl.admit': '入场券',
 } as const
 
 export type MessageKey = keyof typeof zh

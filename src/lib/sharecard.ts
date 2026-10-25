@@ -23,6 +23,11 @@ import type { ItemView, Mood } from './itemview'
 /** 卡片逻辑尺寸（9:16）。预览按屏宽等比缩放，导出 PNG 固定这个尺寸。 */
 export const SHARE_SIZE = { width: 1080, height: 1920 } as const
 
+/** 三套卡面：贴纸（默认）/ 票根 / 相片 */
+export type ShareTemplate = 'sticker' | 'ticket' | 'photo'
+
+export const SHARE_TEMPLATES: readonly ShareTemplate[] = ['sticker', 'photo', 'ticket']
+
 /** 卡片上要显示的一切 */
 export type ShareModel = {
   /** `since:id` / `habit:id` / `countdown:id` */
@@ -59,6 +64,12 @@ export type ShareModel = {
   growthLabel: string
   /** 当前形态内的进度 0–100 */
   growthPct: number
+  /** 这件事配的相片 id（IndexedDB 里那张）；没有就是 null，「相片」模板会退回贴纸 */
+  photoId: string | null
+  /** 本地日期 2026-10-25（票根编号、副标题用，跟文件名同一口径） */
+  stamp: string
+  /** 标题的 ASCII slug（票根编号的种子，中文标题回退到 kind） */
+  slug: string
 }
 
 export type ShareOptions = {
@@ -90,6 +101,11 @@ export type ShareTextKey =
   | 'share.caption.countdown'
   | 'share.caption.countdown.today'
   | 'share.caption.countdown.past'
+  | 'share.tpl.sticker'
+  | 'share.tpl.ticket'
+  | 'share.tpl.photo'
+  | 'share.tpl.photoOff'
+  | 'share.tpl.admit'
 
 export const SHARE_TEXT: Record<Locale, Record<ShareTextKey, Msg>> = {
   zh: {
@@ -109,6 +125,11 @@ export const SHARE_TEXT: Record<Locale, Record<ShareTextKey, Msg>> = {
     'share.caption.countdown': '还有 {n} 天就是「{title}」。 #刻度',
     'share.caption.countdown.today': '就是今天：「{title}」。 #刻度',
     'share.caption.countdown.past': '「{title}」已经过去 {n} 天了。 #刻度',
+    'share.tpl.sticker': '贴纸',
+    'share.tpl.ticket': '票根',
+    'share.tpl.photo': '相片',
+    'share.tpl.photoOff': '这件事还没有相片，先用贴纸发吧',
+    'share.tpl.admit': '入场券',
   },
   en: {
     'share.title': 'Share card',
@@ -130,6 +151,11 @@ export const SHARE_TEXT: Record<Locale, Record<ShareTextKey, Msg>> = {
     'share.caption.countdown': '{n} days until "{title}". #Daymark',
     'share.caption.countdown.today': 'It is today: "{title}". #Daymark',
     'share.caption.countdown.past': '{n} days since "{title}". #Daymark',
+    'share.tpl.sticker': 'Sticker',
+    'share.tpl.ticket': 'Ticket',
+    'share.tpl.photo': 'Photo',
+    'share.tpl.photoOff': 'No photo on this one yet — sharing the sticker instead',
+    'share.tpl.admit': 'ADMIT ONE',
   },
 }
 
@@ -271,6 +297,9 @@ export function buildShareModel(view: ItemView, options: ShareOptions = {}): Sha
     growth,
     growthLabel: view.species !== 'post' ? tIn(locale, 'growth.total', { n: growth }) : '',
     growthPct: growthPercent(growth, stage),
+    photoId: view.event.photoId ?? null,
+    stamp: shareStamp(now),
+    slug: slugifyTitle(view.title, view.kind),
   }
 }
 
@@ -309,11 +338,18 @@ export function shareNumSlug(view: ItemView): string {
 
 /**
  * 导出的文件名：daymark-quit-128d-2026-10-25.png
+ * 票根 / 相片会多一段后缀（daymark-quit-128d-2026-10-25-ticket.png），
+ * 三种模板各存一张不会互相覆盖。贴纸不加后缀，跟以前的文件名叫法一致。
  * 只用 [a-z0-9.-]，任何系统 / 分享面板都能存。
  */
-export function shareFileName(view: ItemView, date: number = Date.now()): string {
+export function shareFileName(
+  view: ItemView,
+  date: number = Date.now(),
+  template: ShareTemplate = 'sticker',
+): string {
   const slug = slugifyTitle(view.title, view.kind)
-  return `daymark-${slug}-${shareNumSlug(view)}-${shareStamp(date)}.png`
+  const suffix = template === 'sticker' ? '' : `-${template}`
+  return `daymark-${slug}-${shareNumSlug(view)}-${shareStamp(date)}${suffix}.png`
 }
 
 /* ==========================================================================
