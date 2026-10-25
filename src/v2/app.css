@@ -175,6 +175,21 @@ body {
   font-weight: 500;
 }
 
+/* 免费版看不到的那几本书：压暗但保留形状，让人知道它在那儿 */
+.spine.locked {
+  filter: grayscale(0.75) brightness(0.92);
+  opacity: 0.55;
+}
+
+.spine.locked::after {
+  content: '🔒';
+  position: absolute;
+  top: 6px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 12px;
+}
+
 /* 付费墙 */
 .paywall {
   text-align: left;

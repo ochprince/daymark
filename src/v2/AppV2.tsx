@@ -286,7 +286,14 @@ export function AppV2() {
         />
       ) : null}
 
-      {tab === 'museum' ? <MuseumPage views={views} collection={collection} /> : null}
+      {tab === 'museum' ? (
+        <MuseumPage
+          views={views}
+          collection={collection}
+          pro={pro}
+          onUpgrade={() => setPaywall('upgrade')}
+        />
+      ) : null}
 
       {tab === 'dress' ? (
         <DressPage

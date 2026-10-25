@@ -18,6 +18,7 @@ import {
   hasDex,
 } from '../lib/museum'
 import type { ShelfChapter } from '../lib/museum'
+import { FREE_CHAPTER_LIMIT } from '../lib/entitlement'
 import { BADGE_ART } from './BadgePopup'
 
 type Pane = 'chapters' | 'dex' | 'badges' | 'notes'
@@ -25,9 +26,12 @@ type Pane = 'chapters' | 'dex' | 'badges' | 'notes'
 export type MuseumPageProps = {
   views: readonly ItemView[]
   collection: CollectionState
+  /** 买断版能翻开全部章节；免费版只给最近几本 */
+  pro: boolean
+  onUpgrade: () => void
 }
 
-export function MuseumPage({ views, collection }: MuseumPageProps) {
+export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProps) {
   const [pane, setPane] = useState<Pane>('chapters')
   const [opened, setOpened] = useState<ShelfChapter | null>(null)
   const books = useMemo(() => collectChapters(views), [views])
@@ -73,7 +77,18 @@ export function MuseumPage({ views, collection }: MuseumPageProps) {
           <p className="shelf-cap">{t('museum.chapters.empty')}</p>
         ) : (
           <>
-            <Shelf books={books} onOpen={setOpened} />
+            <Shelf
+              books={books}
+              pro={pro}
+              onOpen={(book) => {
+                const index = books.indexOf(book)
+                if (!pro && index >= FREE_CHAPTER_LIMIT) {
+                  onUpgrade()
+                  return
+                }
+                setOpened(book)
+              }}
+            />
             <p className="shelf-cap">{t('museum.chapters.cap')}</p>
           </>
         )
@@ -153,7 +168,15 @@ function Stat({ value, sub, label }: { value: string; sub?: string; label: strin
 }
 
 /** 书架：每排五本，书脊高度按天数长，薄的那本会歪一点 */
-function Shelf({ books, onOpen }: { books: ShelfChapter[]; onOpen: (book: ShelfChapter) => void }) {
+function Shelf({
+  books,
+  pro,
+  onOpen,
+}: {
+  books: ShelfChapter[]
+  pro: boolean
+  onOpen: (book: ShelfChapter) => void
+}) {
   const rows: ShelfChapter[][] = []
   for (let index = 0; index < books.length; index += 5) rows.push(books.slice(index, index + 5))
 
@@ -164,11 +187,12 @@ function Shelf({ books, onOpen }: { books: ShelfChapter[]; onOpen: (book: ShelfC
           {row.map((book, index) => {
             const height = Math.round(142 + Math.min(36, Math.log2(book.days + 1) * 5.5))
             const lean = index === row.length - 1 && row.length > 1 && row.length < 5 ? ' lean' : ''
+            const locked = !pro && rowIndex * 5 + index >= FREE_CHAPTER_LIMIT
             return (
               <button
                 key={book.key}
                 type="button"
-                className={`spine${lean}`}
+                className={`spine${lean}${locked ? ' locked' : ''}`}
                 style={{ height, '--c': `var(--h-${book.color})` } as CSSProperties}
                 onClick={() => onOpen(book)}
               >
