@@ -10,7 +10,9 @@ import type { MessageKey } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
 import { shareCopy } from '../lib/sharecard'
 import { formatReminder, normalizeReminder } from '../lib/reminder'
-import type { Reminder } from '../lib/types'
+import type { Reminder, TodoItem } from '../lib/types'
+import { PhotoPicker } from './PhotoPicker'
+import { CountdownNotes } from './CountdownNotes'
 import { getLocale } from '../lib/i18n'
 import { IconClose } from './icons'
 
@@ -27,6 +29,10 @@ export type ProfilePageProps = {
   onShare: () => void
   onReminder: (next: Reminder) => void
   onExportIcs: () => void
+  onPhoto: (id: string | null) => void
+  onMemo: (text: string) => void
+  onTodo: (next: TodoItem[]) => void
+  onToast: (message: string) => void
 }
 
 function stageLabel(species: CreatureSpecies, stage: number): string {
@@ -47,6 +53,10 @@ export function ProfilePage({
   onShare,
   onReminder,
   onExportIcs,
+  onPhoto,
+  onMemo,
+  onTodo,
+  onToast,
 }: ProfilePageProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(view.title)
@@ -204,6 +214,9 @@ export function ProfilePage({
             <span className="grow">{t('profile.setting.remind')}</span>
             <small>{formatReminder(view.remind ?? { kind: 'none' }, getLocale())}</small>
           </button>
+          <div className="li" style={{ display: 'block', paddingTop: 10 }}>
+            <PhotoPicker photoId={view.event.photoId ?? undefined} onChange={onPhoto} onToast={onToast} />
+          </div>
           <div className="li">
             <span className="grow">{t('profile.edit')}</span>
             <span className="swatches">
@@ -328,6 +341,15 @@ export function ProfilePage({
           </button>
         </div>
       ) : null}
+
+        {view.kind === 'countdown' ? (
+          <CountdownNotes
+            memo={view.event.memo ?? ''}
+            todo={view.event.todo ?? []}
+            onMemo={onMemo}
+            onTodo={onTodo}
+          />
+        ) : null}
 
         <div className="d-actions">
           <button className="btn ghost" type="button" onClick={onShare}>

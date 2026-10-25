@@ -9,6 +9,8 @@ import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
 import { bubbleLine } from '../lib/lines'
+import { getPhotoUrl } from '../lib/photos'
+import { PhotoBackdrop } from './PhotoBackdrop'
 
 /** 蓄力时长：与 CheckInCard 同一个口径（500ms），改这里要连带改 CSS 的 transition */
 const HOLD_MS = 500
@@ -119,6 +121,23 @@ export function StageCard({
     return () => window.clearTimeout(timer)
   }, [pokeNonce])
 
+  // 相片背景：id 在记录里，图在 IndexedDB 里，这里只负责换成 objectURL
+  const photoId = view.event.photoId
+  const [photoUrl, setPhotoUrl] = useState<string | null>(null)
+  useEffect(() => {
+    let alive = true
+    if (!photoId) {
+      setPhotoUrl(null)
+      return undefined
+    }
+    void getPhotoUrl(photoId).then((url) => {
+      if (alive) setPhotoUrl(url)
+    })
+    return () => {
+      alive = false
+    }
+  }, [photoId])
+
   const canHold = view.kind === 'habit'
   const sleeping = view.mood === 'sleep'
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target
@@ -153,7 +172,11 @@ export function StageCard({
   const nextName = nextStage === null ? '' : stageName(view.species, stageOf(nextStage))
 
   return (
-    <section className={charging ? 'stage-card charging' : 'stage-card'} style={style}>
+    <section
+      className={`stage-card${charging ? ' charging' : ''}${photoUrl ? ' has-photo' : ''}`}
+      style={style}
+    >
+      <PhotoBackdrop url={photoUrl}>
       <div className="deco" />
       <div className="sc-top">
         <span className="tag">{typeTag(view)}</span>
@@ -247,6 +270,7 @@ export function StageCard({
           </button>
         ) : null}
       </div>
+      </PhotoBackdrop>
     </section>
   )
 }

@@ -386,6 +386,15 @@ export const zh = {
   'photo.failed': '这张照片没能存下，先继续记吧',
   'photo.hint': '会压到 1600px，只存在这台设备上',
   'photo.loading': '正在处理…',
+  /* 倒数日：一句备忘 + 待办清单 */
+  'notes.memo': '备忘',
+  'notes.memo.ph': '写一句就好…',
+  'notes.todo': '待办',
+  'notes.todo.ph': '加一条，回车确认',
+  'notes.todo.empty': '还没有待办。',
+  'notes.todo.add': '添加',
+  'notes.todo.done': '已完成 {done}/{total}',
+  'notes.remove': '删除',
 } as const
 
 export type MessageKey = keyof typeof zh

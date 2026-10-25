@@ -490,6 +490,18 @@ export function AppV2() {
           onRename={(title) => renameFocus(focus, title)}
           onReminder={(next) => setReminderFocus(focus, next)}
           onExportIcs={exportIcs}
+          onPhoto={(id) => {
+            if (focus.kind === 'since') patchEvent(focus.id, { photoId: id ?? undefined })
+            else if (focus.kind === 'habit') patchCheckIn(focus.id, { photoId: id ?? undefined })
+            else patchCountdown(focus.id, { photoId: id ?? undefined })
+          }}
+          onMemo={(text) => {
+            if (focus.kind === 'countdown') patchCountdown(focus.id, { memo: text })
+          }}
+          onTodo={(next) => {
+            if (focus.kind === 'countdown') patchCountdown(focus.id, { todo: next })
+          }}
+          onToast={setToast}
           onShare={() => {
             if (!canShareCard()) {
               setPaywall('upgrade')

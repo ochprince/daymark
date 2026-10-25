@@ -386,4 +386,13 @@ export const en: Record<MessageKey, Msg> = {
   'photo.failed': "That photo didn't save, carry on",
   'photo.hint': 'Shrunk to 1600px, stays on this device',
   'photo.loading': 'Processing…',
+  /* Countdown: one-line note + to-do list */
+  'notes.memo': 'Note',
+  'notes.memo.ph': 'One line is enough…',
+  'notes.todo': 'To-do',
+  'notes.todo.ph': 'Add one, press Enter',
+  'notes.todo.empty': 'Nothing to do yet.',
+  'notes.todo.add': 'Add',
+  'notes.todo.done': 'Done {done}/{total}',
+  'notes.remove': 'Delete',
 }

@@ -1,0 +1,213 @@
+/* ==========================================================================
+   Daymark · 倒数日「一句备忘 + 待办清单」（v2/CountdownNotes.tsx）
+   只给这个组件用，类名一律 cnote- 前缀，别和 components.css 里的 .notes 撞车。
+   颜色只读令牌（src/skins/tokens.css），没令牌时退回 v2 的中性色。
+   ========================================================================== */
+
+.cnote {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 4px 2px;
+}
+
+.cnote-block {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cnote-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.cnote-label {
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+  color: var(--ink3, #9a91a8);
+  text-transform: uppercase;
+}
+
+.cnote-progress {
+  font-size: 11.5px;
+  color: var(--ink3, #9a91a8);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 备忘：一行，没有保存按钮，失焦即写 */
+.cnote-memo,
+.cnote-input {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid var(--hair, rgba(43, 38, 56, 0.14));
+  background: transparent;
+  color: var(--ink, #2b2638);
+  font: inherit;
+  padding: 6px 2px;
+  outline: none;
+  border-radius: 0;
+  transition: border-color 0.15s ease;
+}
+
+.cnote-memo::placeholder,
+.cnote-input::placeholder {
+  color: var(--ink3, #9a91a8);
+}
+
+.cnote-memo:focus,
+.cnote-input:focus {
+  border-bottom-color: var(--ink, #2b2638);
+}
+
+/* 加待办：输入框 + 按钮，回车等价于点按钮 */
+.cnote-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.cnote-add-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 11px;
+  border: 1px solid var(--hair, rgba(43, 38, 56, 0.14));
+  border-radius: 999px;
+  background: var(--surface, #fff);
+  color: var(--ink2, #5e566e);
+  font-size: 12.5px;
+  line-height: 1.4;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.cnote-add-btn:disabled {
+  opacity: 0.42;
+  cursor: default;
+}
+
+/* 空态：一句话，不哄人 */
+.cnote-empty {
+  margin: 2px 0 0;
+  font-size: 12.5px;
+  color: var(--ink3, #9a91a8);
+}
+
+.cnote-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.cnote-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 7px 0;
+  border-bottom: 1px dashed var(--hair, rgba(43, 38, 56, 0.1));
+}
+
+.cnote-item:last-child {
+  border-bottom: 0;
+}
+
+.cnote-check {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: 9px;
+  cursor: pointer;
+}
+
+/* 原生复选框留在原地管键盘和读屏，视觉换成手绘小方块 */
+.cnote-check input[type='checkbox'] {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  border: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+.cnote-box {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  margin-top: 1px;
+  border: 1px solid var(--hair, rgba(43, 38, 56, 0.3));
+  border-radius: 6px;
+  display: grid;
+  place-items: center;
+  color: transparent;
+  background: var(--surface, #fff);
+  transition: background 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+}
+
+.cnote-check input[type='checkbox']:checked + .cnote-box {
+  color: var(--surface, #fff);
+  background: var(--ink2, #5e566e);
+  border-color: var(--ink2, #5e566e);
+}
+
+.cnote-check input[type='checkbox']:focus-visible + .cnote-box {
+  outline: 2px solid var(--accent, #ffb4a2);
+  outline-offset: 2px;
+}
+
+.cnote-text {
+  flex: 1;
+  min-width: 0;
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--ink, #2b2638);
+  overflow-wrap: anywhere;
+  transition: color 0.15s ease;
+}
+
+/* 勾完变灰划线，但留在原地 —— 完成感，不是消失 */
+.cnote-item.is-done .cnote-text {
+  color: var(--ink3, #9a91a8);
+  text-decoration: line-through;
+  text-decoration-thickness: 1px;
+  text-decoration-color: var(--ink3, #9a91a8);
+}
+
+.cnote-del {
+  flex: none;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border: 0;
+  border-radius: 8px;
+  background: transparent;
+  color: var(--ink3, #9a91a8);
+  opacity: 0.55;
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+
+.cnote-del:hover,
+.cnote-del:focus-visible {
+  opacity: 1;
+  background: var(--hair, rgba(43, 38, 56, 0.08));
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .cnote-memo,
+  .cnote-input,
+  .cnote-add-btn,
+  .cnote-box,
+  .cnote-text,
+  .cnote-del {
+    transition: none;
+  }
+}
