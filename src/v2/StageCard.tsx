@@ -3,6 +3,7 @@ import type { CSSProperties } from 'react'
 import { Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
 import { formatDate, formatSpan } from '../lib/days'
+import { dayKey } from '../lib/daykey'
 import { STAGE_THRESHOLDS, nextStageAt, stageOf } from '../lib/growth'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
@@ -24,6 +25,40 @@ export type StageCardProps = {
   /** 每摸一次 +1：用来触发跳一下的动画 */
   pokeNonce?: number
 }
+
+/** 「就是今天」的庆祝一天只放一次，别每次切回来都炸一遍彩纸 */
+const PARTY_KEY = 'daymark.party.v1'
+
+function partyFiredToday(key: string): boolean {
+  try {
+    const raw = window.localStorage.getItem(PARTY_KEY)
+    const seen: Record<string, string> = raw ? (JSON.parse(raw) as Record<string, string>) : {}
+    return seen[key] === dayKey(Date.now())
+  } catch {
+    return true
+  }
+}
+
+function markParty(key: string): void {
+  try {
+    const raw = window.localStorage.getItem(PARTY_KEY)
+    const seen: Record<string, string> = raw ? (JSON.parse(raw) as Record<string, string>) : {}
+    seen[key] = dayKey(Date.now())
+    window.localStorage.setItem(PARTY_KEY, JSON.stringify(seen))
+  } catch {
+    /* 记不住就下次再放一遍，不影响使用 */
+  }
+}
+
+const CONFETTI = [
+  { left: '8%', delay: 0, color: 'var(--h-0)', rotate: 12 },
+  { left: '21%', delay: 0.4, color: 'var(--h-2)', rotate: -8 },
+  { left: '34%', delay: 0.9, color: 'var(--h-4)', rotate: 20 },
+  { left: '47%', delay: 0.2, color: 'var(--h-1)', rotate: -16 },
+  { left: '61%', delay: 1.1, color: 'var(--h-5)', rotate: 6 },
+  { left: '74%', delay: 0.6, color: 'var(--h-3)', rotate: -22 },
+  { left: '87%', delay: 1.3, color: 'var(--h-6)', rotate: 14 },
+]
 
 function stageName(species: CreatureSpecies, stage: number): string {
   if (species === 'post') return ''
@@ -52,6 +87,7 @@ export function StageCard({
 }: StageCardProps) {
   const [charging, setCharging] = useState(false)
   const [jumping, setJumping] = useState(false)
+  const [party, setParty] = useState(false)
   const timer = useRef<number | null>(null)
 
   useEffect(
@@ -60,6 +96,20 @@ export function StageCard({
     },
     [],
   )
+
+  // 「就是今天」：当天第一次打开这一件时放一次彩纸，戴一次派对帽
+  useEffect(() => {
+    if (view.kind !== 'countdown') return undefined
+    if (view.days !== 0) {
+      setParty(false)
+      return undefined
+    }
+    if (partyFiredToday(view.key)) return undefined
+    markParty(view.key)
+    setParty(true)
+    const stop = window.setTimeout(() => setParty(false), 6200)
+    return () => window.clearTimeout(stop)
+  }, [view])
 
   // 摸摸它：跳一下就好，不加粒子（日常交互的动效节点要省着用）
   useEffect(() => {
@@ -131,9 +181,25 @@ export function StageCard({
           <Creature
             species={view.species}
             stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
-            mood={view.mood}
+            mood={party ? 'wow' : view.mood}
             size={158}
+            extra={party ? { hold: 'party' } : undefined}
           />
+          {party ? (
+            <div className="confetti" aria-hidden="true">
+              {CONFETTI.map((piece, index) => (
+                <i
+                  key={index}
+                  style={{
+                    left: piece.left,
+                    background: piece.color,
+                    animationDelay: `${piece.delay}s`,
+                    transform: `rotate(${piece.rotate}deg)`,
+                  }}
+                />
+              ))}
+            </div>
+          ) : null}
           <div className="ground" />
           {sleeping ? (
             <div className="zzz" aria-hidden="true">
