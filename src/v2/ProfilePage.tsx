@@ -9,6 +9,9 @@ import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
 import { shareCopy } from '../lib/sharecard'
+import { formatReminder, normalizeReminder } from '../lib/reminder'
+import type { Reminder } from '../lib/types'
+import { getLocale } from '../lib/i18n'
 import { IconClose } from './icons'
 
 export type ProfilePageProps = {
@@ -22,6 +25,8 @@ export type ProfilePageProps = {
   onChangeColor: (color: number) => void
   onRename: (title: string) => void
   onShare: () => void
+  onReminder: (next: Reminder) => void
+  onExportIcs: () => void
 }
 
 function stageLabel(species: CreatureSpecies, stage: number): string {
@@ -40,10 +45,37 @@ export function ProfilePage({
   onChangeColor,
   onRename,
   onShare,
+  onReminder,
+  onExportIcs,
 }: ProfilePageProps) {
   const [editing, setEditing] = useState(false)
   const [title, setTitle] = useState(view.title)
   const [confirm, setConfirm] = useState<'end' | 'delete' | null>(null)
+  const [reminderOpen, setReminderOpen] = useState(false)
+
+  const current: Reminder = view.remind && view.remind.kind !== 'none' ? view.remind : { kind: 'none' }
+
+  function switchKind(kind: string) {
+    const time = current.kind === 'none' ? '21:00' : current.time
+    if (kind === 'none') return onReminder({ kind: 'none' })
+    if (kind === 'daily') return onReminder({ kind: 'daily', time })
+    if (kind === 'before') {
+      return onReminder({ kind: 'before', daysBefore: current.kind === 'before' ? current.daysBefore : 3, time })
+    }
+    const weekdays = current.kind === 'weekly' ? current.weekdays : [1, 2, 3, 4, 5]
+    return onReminder({ kind: 'weekly', weekdays, time })
+  }
+
+  function toggleWeekday(weekday: number) {
+    const weekdays =
+      current.kind === 'weekly'
+        ? current.weekdays.includes(weekday)
+          ? current.weekdays.filter((n) => n !== weekday)
+          : [...current.weekdays, weekday]
+        : [weekday]
+    if (weekdays.length === 0) return onReminder({ kind: 'none' })
+    return onReminder({ kind: 'weekly', weekdays: weekdays.sort((a, b) => a - b), time: current.kind === 'none' ? '21:00' : current.time })
+  }
 
   const style = {
     '--c': `var(--h-${view.color})`,
@@ -167,12 +199,10 @@ export function ProfilePage({
             <span className="grow">{view.kind === 'countdown' ? t('profile.setting.type') : t('profile.setting.cadence')}</span>
             <small>{cadenceText(view)}</small>
           </div>
-          {view.kind !== 'countdown' ? (
-            <div className="li">
-              <span className="grow">{t('profile.setting.remind')}</span>
-              <small>{t('profile.setting.remind.none')}</small>
-            </div>
-          ) : null}
+          <button className="li" type="button" onClick={() => setReminderOpen((value) => !value)}>
+            <span className="grow">{t('profile.setting.remind')}</span>
+            <small>{formatReminder(view.remind ?? { kind: 'none' }, getLocale())}</small>
+          </button>
           <div className="li">
             <span className="grow">{t('profile.edit')}</span>
             <span className="swatches">
@@ -214,6 +244,89 @@ export function ProfilePage({
             </div>
           </div>
         ) : null}
+
+      {reminderOpen ? (
+        <div className="card opt">
+          <div className="opt-h">
+            <span>{t('reminder.title')}</span>
+            <small>{formatReminder(current, getLocale())}</small>
+          </div>
+
+          <div className="chips" style={{ marginBottom: 12 }}>
+            {([
+              ['none', 'reminder.off'],
+              ['daily', 'reminder.daily'],
+              ['weekly', 'reminder.weekly'],
+              ...(view.kind === 'countdown' ? [['before', 'reminder.before'] as [string, MessageKey]] : []),
+            ] as Array<[string, MessageKey]>).map(([kind, label]) => (
+              <button
+                key={kind}
+                type="button"
+                className={`chip ${current.kind === kind ? 'is-on' : ''}`}
+                onClick={() => switchKind(kind)}
+              >
+                {t(label)}
+              </button>
+            ))}
+          </div>
+
+          {current.kind === 'weekly' ? (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 6, marginBottom: 12 }}>
+              {[1, 2, 3, 4, 5, 6, 0].map((weekday) => (
+                <button
+                  key={weekday}
+                  type="button"
+                  className={`chip ${current.weekdays.includes(weekday) ? 'is-on' : ''}`}
+                  style={{ padding: '8px 0', justifyContent: 'center' }}
+                  onClick={() => toggleWeekday(weekday)}
+                >
+                  {t(`weekday.${['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'][(weekday + 6) % 7]}` as MessageKey)}
+                </button>
+              ))}
+            </div>
+          ) : null}
+
+          {current.kind === 'before' ? (
+            <label className="li" style={{ paddingLeft: 0 }}>
+              <span className="grow">{t('reminder.before')}</span>
+              <input
+                className="input"
+                style={{ width: 80, textAlign: 'right' }}
+                type="number"
+                min={0}
+                max={365}
+                value={current.daysBefore}
+                onChange={(event) => onReminder(normalizeReminder({ ...current, daysBefore: Number(event.target.value) }))}
+              />
+            </label>
+          ) : null}
+
+          {current.kind !== 'none' ? (
+            <label className="li" style={{ paddingLeft: 0 }}>
+              <span className="grow">{t('reminder.time')}</span>
+              <input
+                className="input"
+                style={{ width: 132, textAlign: 'right' }}
+                type="time"
+                value={current.time}
+                onChange={(event) => onReminder(normalizeReminder({ ...current, time: event.target.value }))}
+              />
+            </label>
+          ) : null}
+
+          <p className="li-sub" style={{ margin: '8px 0 0' }}>
+            {t('reminder.hint')}
+          </p>
+
+          <button className="li" type="button" style={{ paddingLeft: 0 }} onClick={onExportIcs}>
+            <span className="grow">
+              {t('reminder.calendar')}
+              <small className="li-sub">{t('reminder.calendarHint')}</small>
+            </span>
+            <small>›</small>
+          </button>
+        </div>
+      ) : null}
 
         <div className="d-actions">
           <button className="btn ghost" type="button" onClick={onShare}>

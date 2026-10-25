@@ -27,6 +27,8 @@ export type DayEvent = {
   species?: Species
   /** 相片背景（IndexedDB 里的图片 id） */
   photoId?: string
+  /** 提醒规则 */
+  remind?: Reminder
 }
 
 /** 一段坚持记录：坚持了 days 天，在 endedAt 那天（本地 00:00）被重置 */

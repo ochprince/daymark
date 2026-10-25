@@ -22,6 +22,7 @@ import type {
   CountdownEvent,
   DayEvent,
   ItemKind,
+  Reminder,
   Species,
   Stage,
 } from './types'
@@ -40,6 +41,8 @@ type ViewBase = {
   /** 成长天数 */
   growth: number
   mood: Mood
+  /** 提醒规则；空 = 不提醒 */
+  remind?: Reminder
 }
 
 export type SinceView = ViewBase & {
@@ -110,6 +113,7 @@ export function buildItemViews(
       growth,
       days: daysSince(anchorOf(event), now),
       mood: 'idle',
+      ...(event.remind ? { remind: event.remind } : {}),
       event,
     })
   }
@@ -135,6 +139,7 @@ export function buildItemViews(
       target,
       cadence: event.cadence,
       mood: sleeping ? 'sleep' : recorded || (target !== null && count >= target) ? 'happy' : 'idle',
+      ...(event.remind ? { remind: event.remind } : {}),
       event,
     })
   }
@@ -162,6 +167,7 @@ export function buildItemViews(
       days,
       next,
       mood: days === 0 ? 'happy' : 'idle',
+      ...(event.remind ? { remind: event.remind } : {}),
       event,
     })
   }

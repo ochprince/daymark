@@ -20,6 +20,8 @@ import { PaywallSheet } from './PaywallSheet'
 import { ShareSheet } from './ShareSheet'
 import { canShareCard } from '../lib/entitlement'
 import { shareCopy } from '../lib/sharecard'
+import { buildIcs, icsFileName, isDue, nextTrigger } from '../lib/reminder'
+import type { Reminder } from '../lib/types'
 import { hapticTap, setHapticsEnabled, setStatusBarTheme } from '../lib/native'
 import { canAddItem, grantPro, isPro, subscribe as subscribeEntitlement } from '../lib/entitlement'
 import { syncEntitlement } from '../lib/purchase'
@@ -49,6 +51,16 @@ type Sheet = 'switcher' | 'add' | null
 /** 所有事里最大的成长天数（徽章门槛用） */
 function maxGrowthOf(views: readonly ItemView[]): number {
   return views.reduce((max, view) => (view.growth > max ? view.growth : max), 0)
+}
+
+/** 每件事最近一次弹过的提醒日期，避免同一天重复弹 */
+const REMINDER_FIRED_KEY = 'daymark.reminderFired.v1'
+
+/** 某一天 00:00（提醒换算目标日时用） */
+function dayStartTs(ts: number): number {
+  const d = new Date(ts)
+  d.setHours(0, 0, 0, 0)
+  return d.getTime()
 }
 
 /** 某一章区间里记过几天（章节收尾用） */
@@ -191,6 +203,43 @@ export function AppV2() {
     window.setTimeout(() => setOverride(null), 3200)
   }, [focus, pokeCount])
 
+  const setReminderFocus = useCallback((view: ItemView, next: Reminder) => {
+    if (view.kind === 'since') patchEvent(view.id, { remind: next })
+    else if (view.kind === 'habit') patchCheckIn(view.id, { remind: next })
+    else patchCountdown(view.id, { remind: next })
+  }, [])
+
+  /** 提醒导出成 .ics：真正靠系统日历响的只有这一条路（不做服务器推送） */
+  const exportIcs = useCallback(() => {
+    if (!focus) return
+    const reminder = focus.remind
+    if (!reminder || reminder.kind === 'none') {
+      setToast(t('reminder.off'))
+      return
+    }
+    const targetAt = focus.kind === 'countdown' ? dayStartTs(focus.next) : undefined
+    const from = nextTrigger(reminder, now, targetAt) ?? now
+    const ics = buildIcs({
+      uid: focus.key,
+      title: focus.title,
+      reminder,
+      from,
+      targetAt,
+      now,
+    })
+    try {
+      const url = URL.createObjectURL(new Blob([ics], { type: 'text/calendar;charset=utf-8' }))
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = icsFileName(focus.title)
+      anchor.click()
+      URL.revokeObjectURL(url)
+      setToast(t('reminder.calendarDone'))
+    } catch {
+      setToast(t('dress.exportFailed'))
+    }
+  }, [focus, now])
+
   const renameFocus = useCallback((view: ItemView, title: string) => {
     if (view.kind === 'since') patchEvent(view.id, { title })
     else if (view.kind === 'habit') patchCheckIn(view.id, { title })
@@ -248,6 +297,19 @@ export function AppV2() {
     }
     setSheet('add')
   }, [views.length])
+
+  // 到点提醒：只在 App 开着时弹（不做服务器推送，见 docs/plan-v2.md D12）
+  useEffect(() => {
+    if (!focus || !focus.remind || focus.remind.kind === 'none') return
+    const stored = window.localStorage.getItem(REMINDER_FIRED_KEY)
+    const fired: Record<string, string> = stored ? (JSON.parse(stored) as Record<string, string>) : {}
+    const targetAt = focus.kind === 'countdown' ? dayStartTs(focus.next) : undefined
+    if (!isDue(focus.remind, now, fired[focus.key] ?? null, { windowMinutes: 5, targetAt })) return
+    fired[focus.key] = dayKey(now)
+    window.localStorage.setItem(REMINDER_FIRED_KEY, JSON.stringify(fired))
+    setToast(`${t('reminder.title')} · ${focus.title}`)
+    hapticTap('medium')
+  }, [focus, now])
 
   // 偏好推给原生桥：轻震开关跟着走
   useEffect(() => {
@@ -358,6 +420,8 @@ export function AppV2() {
           now={now}
           onClose={() => setProfileOpen(false)}
           onRename={(title) => renameFocus(focus, title)}
+          onReminder={(next) => setReminderFocus(focus, next)}
+          onExportIcs={exportIcs}
           onShare={() => {
             if (!canShareCard()) {
               setPaywall('upgrade')
