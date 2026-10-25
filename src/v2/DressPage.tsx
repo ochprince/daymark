@@ -16,6 +16,7 @@ export type DressPageProps = {
   locale: Locale
   onLocale: (locale: Locale) => void
   onExport: () => void
+  onImport: (file: File) => void
   pro: boolean
   onUpgrade: () => void
 }
@@ -24,7 +25,7 @@ const NUM_STYLES: readonly NumStyle[] = ['auto', 'round', 'serif', 'pixel', 'han
 const TEXTURES: readonly TextureStyle[] = ['auto', 'plain', 'dots', 'grid', 'lines']
 
 /** 装扮：风格包、主色、数字字体、纹理，和其他偏好 */
-export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onExport, pro, onUpgrade }: DressPageProps) {
+export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onExport, onImport, pro, onUpgrade }: DressPageProps) {
   return (
     <div className="dress">
       <header className="dress-h">
@@ -229,6 +230,21 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           <span className="grow">{t('dress.export')}</span>
           <small>›</small>
         </button>
+        <label className="li" style={{ cursor: 'pointer' }}>
+          <span className="grow">{t('dress.import')}</span>
+          <small>›</small>
+          <input
+            type="file"
+            accept="application/json,.json"
+            style={{ display: 'none' }}
+            onChange={(event) => {
+              const file = event.target.files?.[0]
+              // 先清空 value，同一个文件再选一次也能触发
+              event.target.value = ''
+              if (file) onImport(file)
+            }}
+          />
+        </label>
         <button className="li" type="button" onClick={() => openDoc('privacy.html')}>
           <span className="grow">{t('dress.privacy')}</span>
           <small>›</small>

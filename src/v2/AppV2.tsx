@@ -18,9 +18,11 @@ import { MuseumPage } from './MuseumPage'
 import { DressPage } from './DressPage'
 import { PaywallSheet } from './PaywallSheet'
 import { ShareSheet } from './ShareSheet'
+import { BackupSheet } from './BackupSheet'
 import { canShareCard } from '../lib/entitlement'
 import { shareCopy } from '../lib/sharecard'
 import { buildIcs, icsFileName, isDue, nextTrigger } from '../lib/reminder'
+import { applyBackup, backupFileName, buildBackup, parseBackup, type BackupSummary, type BackupFile } from '../lib/backup'
 import type { Reminder } from '../lib/types'
 import { hapticTap, setHapticsEnabled, setStatusBarTheme } from '../lib/native'
 import { canAddItem, grantPro, isPro, subscribe as subscribeEntitlement } from '../lib/entitlement'
@@ -126,6 +128,7 @@ export function AppV2() {
   const pro = useSyncExternalStore(subscribeEntitlement, () => isPro())
   const [paywall, setPaywall] = useState<'limit' | 'upgrade' | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
+  const [backupPending, setBackupPending] = useState<{ file: BackupFile; summary: BackupSummary } | null>(null)
 
   // 焦点不存在时把第一件写回存储，保证下次打开还是它
   useEffect(() => {
@@ -321,18 +324,49 @@ export function AppV2() {
     void syncEntitlement()
   }, [])
 
+  /** 选完文件先只做校验，让用户看清要恢复多少再动手 */
+  const pickBackup = useCallback(async (file: File) => {
+    let text = ''
+    try {
+      text = await file.text()
+    } catch {
+      setToast(t('backup.badFile'))
+      return
+    }
+    const result = parseBackup(text)
+    if (!result.ok) {
+      const message =
+        result.reason === 'not-json'
+          ? t('backup.badFile')
+          : result.reason === 'too-new'
+            ? t('backup.tooNew')
+            : result.reason === 'empty'
+              ? t('backup.empty')
+              : t('backup.notBackup')
+      setToast(message)
+      return
+    }
+    setBackupPending({ file: result.file, summary: result.summary })
+  }, [])
+
+  const confirmRestore = useCallback(() => {
+    if (!backupPending) return
+    applyBackup(window.localStorage, backupPending.file)
+    setBackupPending(null)
+    setToast(t('backup.done'))
+    // 覆盖式恢复：store 都是模块加载时读的快照，重新加载最干净
+    window.setTimeout(() => window.location.reload(), 700)
+  }, [backupPending])
+
   const exportBackup = useCallback(() => {
     try {
-      const dump: Record<string, string | null> = {}
-      for (let index = 0; index < window.localStorage.length; index += 1) {
-        const key = window.localStorage.key(index)
-        if (key && key.startsWith('daymark.')) dump[key] = window.localStorage.getItem(key)
-      }
-      const payload = JSON.stringify({ v: 2, exportedAt: Date.now(), data: dump }, null, 2)
+      // 走 backup.ts 的白名单：运行时标记（如 migrated.v2）不该跟着搬去新设备
+      const file = buildBackup(window.localStorage)
+      const payload = JSON.stringify(file, null, 2)
       const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }))
       const anchor = document.createElement('a')
       anchor.href = url
-      anchor.download = `daymark-${dayKey(Date.now())}.json`
+      anchor.download = backupFileName(file.exportedAt)
       anchor.click()
       URL.revokeObjectURL(url)
       setToast(t('dress.exported'))
@@ -380,6 +414,7 @@ export function AppV2() {
           locale={locale}
           onLocale={(next) => setLocale(next)}
           onExport={exportBackup}
+          onImport={(file) => void pickBackup(file)}
           pro={pro}
           onUpgrade={() => setPaywall('upgrade')}
         />
@@ -396,6 +431,14 @@ export function AppV2() {
             unlockBadges(['share'])
             setToast(shareCopy('share.saved'))
           }}
+        />
+      ) : null}
+
+      {backupPending ? (
+        <BackupSheet
+          summary={backupPending.summary}
+          onCancel={() => setBackupPending(null)}
+          onConfirm={confirmRestore}
         />
       ) : null}
 
