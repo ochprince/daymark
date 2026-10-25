@@ -329,8 +329,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
 
 /* ---------- 底部导航 ---------- */
 
+/* fixed 而不是 absolute：absolute 会挂在整个文档上，小屏（320×568）内容比视口高时
+   导航会被推到首屏之外，必须滚动才看得见。 */
 .tabbar {
-  position: absolute; z-index: 30; left: 50%; bottom: 26px; transform: translateX(-50%); display: flex; gap: 4px; padding: 6px; border-radius: 99px; background: var(--surface); border: var(--bw) solid var(--line); box-shadow: var(--pop);
+  position: fixed; z-index: 30; left: 50%; bottom: calc(26px + env(safe-area-inset-bottom)); transform: translateX(-50%); display: flex; gap: 4px; padding: 6px; border-radius: 99px; background: var(--surface); border: var(--bw) solid var(--line); box-shadow: var(--pop);
 }
 [data-skin='paper'] .tabbar { border-color: var(--hair); box-shadow: 0 6px 20px -10px rgba(0, 0, 0, 0.2); }
 [data-skin='night'] .tabbar { background: rgba(28, 32, 80, 0.86); backdrop-filter: blur(16px); }
