@@ -162,12 +162,18 @@ test('本地时间戳不受时区影响', () => {
   assert.equal(icsLocalStamp(at(2026, 1, 2, 3, 4)), '20260102T030400')
 })
 
-test('DTSTAMP 用 UTC（带 Z），不能拿本地时间冒充', () => {
+test('DTSTAMP 用 UTC（带 Z），且与本地时间戳各算各的', () => {
   const ts = at(2026, 1, 2, 3, 4)
   const utc = icsUtcStamp(ts)
   assert.match(utc, /^\d{8}T\d{6}Z$/)
-  // 本地时间与 UTC 相差一个时区偏移，两者不该相同（东八区）
-  assert.notEqual(utc, `${icsLocalStamp(ts)}Z`)
+
+  // 用 UTC 分量反查，任何时区都成立（这里不能断言「和本地不同」——CI 跑在 UTC 上）
+  const d = new Date(ts)
+  const expected =
+    `${d.getUTCFullYear()}${String(d.getUTCMonth() + 1).padStart(2, '0')}${String(d.getUTCDate()).padStart(2, '0')}` +
+    `T${String(d.getUTCHours()).padStart(2, '0')}${String(d.getUTCMinutes()).padStart(2, '0')}${String(d.getUTCSeconds()).padStart(2, '0')}Z`
+  assert.equal(utc, expected)
+
   const ics = buildIcs({ uid: 'x', title: 't', reminder: { kind: 'daily', time: '09:00' }, from: ts, now: ts })
-  assert.match(ics, /DTSTAMP:\d{8}T\d{6}Z/)
+  assert.match(ics, new RegExp(`DTSTAMP:${expected}`))
 })
