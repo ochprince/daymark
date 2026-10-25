@@ -72,3 +72,8 @@ export const skinStore = createJsonStore<SkinState>({ key: STORAGE_KEY, normaliz
 export const subscribe = skinStore.subscribe
 export const getSkin = skinStore.get
 export const setSkin = skinStore.set
+
+/** 只改几项（换包、换主色），其余保持不变 */
+export function patchSkin(patch: Partial<SkinState>): void {
+  skinStore.patch(patch)
+}

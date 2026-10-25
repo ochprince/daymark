@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useNow } from '../lib/useNow'
-import { getSkin, subscribe as subscribeSkin } from '../lib/skin'
+import { getSkin, patchSkin, subscribe as subscribeSkin } from '../lib/skin'
+import { getPrefs, setPrefs, subscribe as subscribePrefs } from '../lib/prefs'
+import { getLocale, setLocale, subscribeLocale } from '../lib/i18n'
 import { setFocusKey } from '../lib/focus'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
@@ -9,10 +11,11 @@ import { patchCheckIn, removeCheckIn, tapCheckIn } from '../lib/checkins'
 import { markSaid, patchCountdown, removeCountdown } from '../lib/countdowns'
 import { patchEvent, removeEvent } from '../lib/storage'
 import { anchorOf, todayStart } from '../lib/days'
-import { parseDayKey } from '../lib/daykey'
+import { dayKey, parseDayKey } from '../lib/daykey'
 import { focusAfterRemoval } from '../lib/itemview'
 import { ProfilePage } from './ProfilePage'
 import { MuseumPage } from './MuseumPage'
+import { DressPage } from './DressPage'
 import { TodayPage } from './TodayPage'
 import { TabBar, type TabKey } from './TabBar'
 import { Switcher } from './Switcher'
@@ -97,6 +100,8 @@ export function AppV2() {
 
   const { views, focus } = useV2Data(now)
   const collection = useSyncExternalStore(subscribeCollection, getCollection)
+  const prefs = useSyncExternalStore(subscribePrefs, getPrefs)
+  const locale = useSyncExternalStore(subscribeLocale, getLocale)
 
   // 焦点不存在时把第一件写回存储，保证下次打开还是它
   useEffect(() => {
@@ -220,6 +225,26 @@ export function AppV2() {
     [views],
   )
 
+  const exportBackup = useCallback(() => {
+    try {
+      const dump: Record<string, string | null> = {}
+      for (let index = 0; index < window.localStorage.length; index += 1) {
+        const key = window.localStorage.key(index)
+        if (key && key.startsWith('daymark.')) dump[key] = window.localStorage.getItem(key)
+      }
+      const payload = JSON.stringify({ v: 2, exportedAt: Date.now(), data: dump }, null, 2)
+      const url = URL.createObjectURL(new Blob([payload], { type: 'application/json' }))
+      const anchor = document.createElement('a')
+      anchor.href = url
+      anchor.download = `daymark-${dayKey(Date.now())}.json`
+      anchor.click()
+      URL.revokeObjectURL(url)
+      setToast(t('dress.exported'))
+    } catch {
+      setToast(t('dress.exportFailed'))
+    }
+  }, [])
+
   return (
     <div className="dm-screen" data-tab={tab}>
       <div className="dm-texture" aria-hidden="true" />
@@ -244,13 +269,15 @@ export function AppV2() {
       {tab === 'museum' ? <MuseumPage views={views} collection={collection} /> : null}
 
       {tab === 'dress' ? (
-        <div className="placeholder">
-          <h2>{t('dress.title')}</h2>
-          <p>
-            {t('dress.skin')} · {skin.pack}
-          </p>
-          <p>{t('dress.dataNote')}</p>
-        </div>
+        <DressPage
+          skin={skin}
+          onSkin={patchSkin}
+          prefs={prefs}
+          onPrefs={setPrefs}
+          locale={locale}
+          onLocale={(next) => setLocale(next)}
+          onExport={exportBackup}
+        />
       ) : null}
 
       <TabBar active={tab} onChange={setTab} />
