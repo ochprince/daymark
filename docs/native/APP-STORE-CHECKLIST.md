@@ -5,12 +5,12 @@
 
 ## 一、账号与主体
 
+> 机器能验的部分已经脚本化：`python3 scripts/check-native.py`（21 项全绿才算过）。
+
 - [ ] **[人工]** Apple Developer Program 付费账号（个人 $99/年，公司需 D-U-N-S）
 - [ ] **[人工]** 决定开发者主体：个人「XXX」还是量译（成都）科技有限公司
       —— 公司账号审核更慢，但 App 底下显示公司名，卖 $0.99 更可信
 - [ ] **[人工]** App Store Connect 建 App，Bundle ID 填 `com.liangyi.daymark`
-
-> 机器能验的部分已经脚本化：`python3 scripts/check-native.py`（21 项通过才是绿的）。
 - [ ] **[人工]** 税务与银行信息（收款必需，中国区需填 W-8BEN）
 
 ## 二、元数据
