@@ -1,3 +1,4 @@
+import { resolve } from 'node:path'
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
@@ -19,5 +20,13 @@ export default defineConfig({
   build: {
     target: 'es2020',
     assetsInlineLimit: 2048,
+    rollupOptions: {
+      // 分享卡片的独立预览页一起构建，这样能用 dist + 静态服务器验证渲染。
+      // 只想发 App 本体时，把 sharePreview 这一行删掉就行。
+      input: {
+        main: resolve(__dirname, 'index.html'),
+        sharePreview: resolve(__dirname, 'share-preview.html'),
+      },
+    },
   },
 })
