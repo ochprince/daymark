@@ -116,6 +116,8 @@ export const zh = {
   /* 藏馆 */
   'dress.sub': '换一套风格，信息一点都不会变',
   'dress.more': '更多风格包',
+  'dress.privacy': '隐私政策',
+  'dress.support': '帮助与反馈',
   'dress.previewName': '戒烟',
   'dress.pack.jelly': '软糖',
   'dress.pack.paper': '纸本',

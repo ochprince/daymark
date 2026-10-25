@@ -116,6 +116,8 @@ export const en: Record<MessageKey, Msg> = {
   /* Museum */
   'dress.sub': 'A different look, the same everything else',
   'dress.more': 'More packs',
+  'dress.privacy': 'Privacy policy',
+  'dress.support': 'Help & feedback',
   'dress.previewName': 'Quit',
   'dress.pack.jelly': 'Jelly',
   'dress.pack.paper': 'Paper',

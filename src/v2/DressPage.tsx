@@ -229,9 +229,23 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           <span className="grow">{t('dress.export')}</span>
           <small>›</small>
         </button>
+        <button className="li" type="button" onClick={() => openDoc('privacy.html')}>
+          <span className="grow">{t('dress.privacy')}</span>
+          <small>›</small>
+        </button>
+        <button className="li" type="button" onClick={() => openDoc('support.html')}>
+          <span className="grow">{t('dress.support')}</span>
+          <small>›</small>
+        </button>
       </div>
     </div>
   )
+}
+
+/** 打开随包发布的静态页（隐私政策 / 帮助）；在原生壳里是同源页面，不出应用 */
+function openDoc(file: string): void {
+  const base = import.meta.env.BASE_URL || '/'
+  window.location.assign(`${base}${file}`)
 }
 
 function numPreview(style: NumStyle): CSSProperties {
