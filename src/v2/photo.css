@@ -1,0 +1,178 @@
+/* ==========================================================================
+   相片背景（PhotoBackdrop）+ 换图控件（PhotoPicker）
+   只读令牌，不按皮肤分支：换皮肤只换 tokens.css，这里一行不改。
+   ========================================================================== */
+
+/* ------------------------------------------------------------------ 底图容器 */
+
+.pb {
+  /* 出血量：默认对齐 .stage-card 的 padding（18px 20px 20px），整张卡铺满 */
+  --pb-bleed-x: 20px;
+  --pb-bleed-top: 18px;
+  --pb-bleed-bottom: 20px;
+  /* 照片上一律用白字（令牌覆盖，不动皮肤） */
+  --ink: #ffffff;
+  --ink2: rgba(255, 255, 255, 0.86);
+  --ink3: rgba(255, 255, 255, 0.66);
+  --num-color: #ffffff;
+  --num-shadow: 0 4px 22px rgba(0, 0, 0, 0.45);
+
+  position: relative;
+  isolation: isolate;
+  margin: calc(-1 * var(--pb-bleed-top)) calc(-1 * var(--pb-bleed-x)) calc(-1 * var(--pb-bleed-bottom));
+  color: var(--ink);
+  /* 底子是照片，卡片的 tint 背景不会露出来 */
+  background: #1a1622;
+}
+
+/* 照片那一层：绝对定位，不占布局高度 */
+.pb__layer {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.pb__img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* 全图压暗：顶部保一点亮度，底部给文字垫底 */
+.pb__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    180deg,
+    rgba(8, 7, 14, 0.34) 0%,
+    rgba(8, 7, 14, 0.12) 24%,
+    rgba(8, 7, 14, 0.26) 46%,
+    rgba(8, 7, 14, 0.72) 100%
+  );
+}
+
+/* 文字区：模糊 + 再压一层，任何照片上都读得清 */
+.pb__veil {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  background: linear-gradient(180deg, rgba(8, 7, 14, 0) 0%, rgba(8, 7, 14, 0.5) 58%, rgba(8, 7, 14, 0.72) 100%);
+  backdrop-filter: blur(16px) saturate(1.05);
+  -webkit-backdrop-filter: blur(16px) saturate(1.05);
+  mask-image: linear-gradient(180deg, transparent 0%, #000 46%);
+  -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 46%);
+}
+
+/* 不支持 backdrop-filter 时，加大压暗量顶上（模糊只是锦上添花，对比度才是硬要求） */
+@supports not ((backdrop-filter: blur(4px)) or (-webkit-backdrop-filter: blur(4px))) {
+  .pb__veil {
+    background: linear-gradient(180deg, rgba(8, 7, 14, 0.2) 0%, rgba(8, 7, 14, 0.66) 52%, rgba(8, 7, 14, 0.8) 100%);
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  .pb__veil {
+    backdrop-filter: none;
+    -webkit-backdrop-filter: none;
+    background: linear-gradient(180deg, rgba(8, 7, 14, 0.32) 0%, rgba(8, 7, 14, 0.74) 52%, rgba(8, 7, 14, 0.86) 100%);
+  }
+}
+
+/* 卡片内容回到原来的位置（把出血吃掉的 padding 补回来） */
+.pb__body {
+  position: relative;
+  z-index: 1;
+  padding: var(--pb-bleed-top) var(--pb-bleed-x) var(--pb-bleed-bottom);
+}
+
+/* ------------------------------------------------------------------ 换图控件 */
+
+.photo-pick {
+  display: block;
+}
+
+.photo-pick__row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.photo-pick__thumb {
+  width: 44px;
+  height: 44px;
+  flex: none;
+  overflow: hidden;
+  border-radius: var(--r3, 16px);
+  border: var(--bw, 2px) solid var(--line);
+  background: var(--surface2, var(--surface));
+}
+
+.photo-pick__thumb img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.photo-pick__btn,
+.photo-pick__remove {
+  min-height: 40px;
+  padding: 0 16px;
+  border-radius: 99px;
+  border: var(--bw, 2px) solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  transition: transform 0.18s var(--ease-pop, ease), opacity 0.18s ease;
+}
+
+.photo-pick__btn:active,
+.photo-pick__remove:active {
+  transform: translateY(1px);
+}
+
+.photo-pick__btn:disabled,
+.photo-pick__remove:disabled {
+  opacity: 0.55;
+  cursor: default;
+}
+
+.photo-pick__remove {
+  background: transparent;
+  color: var(--ink2);
+  border-color: var(--hair, var(--line));
+  font-weight: 600;
+}
+
+.photo-pick__hint {
+  margin: 8px 0 0;
+  font-size: 12px;
+  line-height: 1.5;
+  color: var(--ink3);
+}
+
+/* 选图框藏起来但仍可点（display:none 在某些 iOS 版本上不弹窗） */
+.photo-pick__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+  opacity: 0;
+  pointer-events: none;
+}

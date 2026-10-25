@@ -378,6 +378,14 @@ export const zh = {
   'pro.restore': '恢复购买',
   'pro.freeLimit': '免费版可以记 {n} 件事',
   'pro.locked': '这是完整版的功能',
+
+  /* 相片背景 */
+  'photo.pick': '加一张照片',
+  'photo.change': '换一张',
+  'photo.remove': '去掉',
+  'photo.failed': '这张照片没能存下，先继续记吧',
+  'photo.hint': '会压到 1600px，只存在这台设备上',
+  'photo.loading': '正在处理…',
 } as const
 
 export type MessageKey = keyof typeof zh

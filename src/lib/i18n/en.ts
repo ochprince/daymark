@@ -378,4 +378,12 @@ export const en: Record<MessageKey, Msg> = {
   'pro.restore': 'Restore purchase',
   'pro.freeLimit': 'Free version: up to {n} items',
   'pro.locked': 'This is a full-version feature',
+
+  /* Photo backdrop */
+  'photo.pick': 'Add a photo',
+  'photo.change': 'Change photo',
+  'photo.remove': 'Remove',
+  'photo.failed': "That photo didn't save, carry on",
+  'photo.hint': 'Shrunk to 1600px, stays on this device',
+  'photo.loading': 'Processing…',
 }
