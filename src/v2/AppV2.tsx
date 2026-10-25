@@ -262,11 +262,11 @@ export function AppV2() {
   }, [])
 
   const endChapter = useCallback(
-    (view: ItemView) => {
+    (view: ItemView, line = '') => {
       const at = Date.now()
       const endedAt = todayStart(at)
       if (view.kind === 'since') {
-        const chapter = { days: view.days, endedAt, stage: view.stage, startedAt: anchorOf(view.event) }
+        const chapter = { days: view.days, endedAt, stage: view.stage, startedAt: anchorOf(view.event), ...(line ? { line } : {}) }
         patchEvent(view.id, {
           history: [chapter, ...(view.event.history ?? [])],
           startedAt: at,
@@ -274,7 +274,7 @@ export function AppV2() {
         })
       } else if (view.kind === 'habit') {
         const start = view.event.chapterStartedAt ?? view.event.createdAt
-        const chapter = { days: recordedDaysBetween(view.event.days, start, at), endedAt, stage: view.stage, startedAt: start }
+        const chapter = { days: recordedDaysBetween(view.event.days, start, at), endedAt, stage: view.stage, startedAt: start, ...(line ? { line } : {}) }
         patchCheckIn(view.id, {
           chapters: [chapter, ...(view.event.chapters ?? [])],
           chapterStartedAt: at,
@@ -484,8 +484,8 @@ export function AppV2() {
             setShareOpen(true)
           }}
           onChangeColor={(color) => recolorFocus(focus, color)}
-          onEndChapter={() => {
-            endChapter(focus)
+          onEndChapter={(line) => {
+            endChapter(focus, line)
             setProfileOpen(false)
           }}
           onDelete={() => {

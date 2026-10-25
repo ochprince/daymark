@@ -350,6 +350,7 @@ export const zh = {
   'profile.delete': '让它去旅行（删除）',
   'profile.edit': '编辑',
   'profile.confirmEnd.title': '结束这一章？',
+  'profile.confirmEnd.line': '留一句话（可空）',
   'profile.confirmEnd.body': '这一章会被收进藏馆，新的一章从今天开始。',
   'profile.confirmDelete.title': '让它去旅行？',
   'profile.confirmDelete.body': '它会从今天页消失，但这一章会留在藏馆里。',

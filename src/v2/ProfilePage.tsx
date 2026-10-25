@@ -20,7 +20,7 @@ export type ProfilePageProps = {
   peakStage: number
   now: number
   onClose: () => void
-  onEndChapter: () => void
+  onEndChapter: (line: string) => void
   onDelete: () => void
   onChangeColor: (color: number) => void
   onRename: (title: string) => void
@@ -52,6 +52,7 @@ export function ProfilePage({
   const [title, setTitle] = useState(view.title)
   const [confirm, setConfirm] = useState<'end' | 'delete' | null>(null)
   const [reminderOpen, setReminderOpen] = useState(false)
+  const [line, setLine] = useState('')
 
   const current: Reminder = view.remind && view.remind.kind !== 'none' ? view.remind : { kind: 'none' }
 
@@ -349,6 +350,16 @@ export function ProfilePage({
           <div className="modal" onClick={(event) => event.stopPropagation()}>
             <h3>{t(confirm === 'end' ? 'profile.confirmEnd.title' : 'profile.confirmDelete.title')}</h3>
             <p className="sheet-sub">{t(confirm === 'end' ? 'profile.confirmEnd.body' : 'profile.confirmDelete.body')}</p>
+            {confirm === 'end' ? (
+              <input
+                className="input"
+                style={{ marginTop: 10 }}
+                maxLength={40}
+                placeholder={t('profile.confirmEnd.line')}
+                value={line}
+                onChange={(event) => setLine(event.target.value)}
+              />
+            ) : null}
             <div className="d-actions">
               <button className="btn ghost" type="button" onClick={() => setConfirm(null)}>
                 {t('common.cancel')}
@@ -359,7 +370,7 @@ export function ProfilePage({
                 onClick={() => {
                   const action = confirm
                   setConfirm(null)
-                  if (action === 'end') onEndChapter()
+                  if (action === 'end') onEndChapter(line.trim())
                   else onDelete()
                 }}
               >

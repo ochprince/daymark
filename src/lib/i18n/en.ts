@@ -350,6 +350,7 @@ export const en: Record<MessageKey, Msg> = {
   'profile.delete': 'Send it traveling (delete)',
   'profile.edit': 'Edit',
   'profile.confirmEnd.title': 'End this chapter?',
+  'profile.confirmEnd.line': 'Leave a line (optional)',
   'profile.confirmEnd.body': 'It goes into the museum, and a new chapter starts today.',
   'profile.confirmDelete.title': 'Send it traveling?',
   'profile.confirmDelete.body': 'It leaves Today, but the chapter stays in the museum.',
