@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- Daymark · 刻度。基于 Capacitor 6 官方 iOS 模板（@capacitor/cli 的 ios-pods-template）落地，
+	     与模板的差异全部在本文件与 docs/native/INTEGRATION.md 里注明。 -->
+
+	<!-- 开发语言与本地化：UI 只有中文/英文两套文案 -->
+	<key>CFBundleDevelopmentRegion</key>
+	<string>zh_CN</string>
+	<key>CFBundleLocalizations</key>
+	<array>
+		<string>zh_CN</string>
+		<string>en</string>
+	</array>
+
+	<key>CFBundleDisplayName</key>
+	<string>Daymark</string>
+	<key>CFBundleName</key>
+	<string>$(PRODUCT_NAME)</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(MARKETING_VERSION)</string>
+	<key>CFBundleVersion</key>
+	<string>$(CURRENT_PROJECT_VERSION)</string>
+
+	<!-- 出口合规：只用 HTTPS 与系统自带的 CommonCrypto（Capacitor 不引入自有加密算法），
+	     属于豁免范围。声明 false 可以在每次上传时免掉那份问卷；若以后自己写加密逻辑，
+	     必须改回 true 并在 App Store Connect 里如实申报。 -->
+	<key>ITSAppUsesNonExemptEncryption</key>
+	<false/>
+
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+
+	<!-- 竖屏锁定：倒数日与打卡都是单列滚动布局，横屏没有额外信息量，也省掉一套截图 -->
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+	</array>
+	<!-- iPad 上允许倒竖屏（舞台卡跟着转），但仍然不给横屏 -->
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+
+	<!-- 状态栏由 Web 层的 StatusBar 插件按皮肤着色，所以交给视图控制器决定 -->
+	<key>UIViewControllerBasedStatusBarAppearance</key>
+	<true/>
+	<key>UIStatusBarStyle</key>
+	<string>UIStatusBarStyleLightContent</string>
+
+	<key>UIRequiredDeviceCapabilities</key>
+	<array>
+		<string>armv7</string>
+	</array>
+
+	<!-- 本 App 不做后台执行，因此**不声明 UIBackgroundModes**：
+	     local-notifications 走 UNUserNotificationCenter 的本地通知，不需要后台模式。
+	     加进来只会让审核额外追问用途。 -->
+
+	<!-- 深浅两色都要能读：WebView 自己处理安全区，这里只声明支持两种外观 -->
+	<key>UIUserInterfaceStyle</key>
+	<string>Unspecified</string>
+</dict>
+</plist>
