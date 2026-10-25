@@ -40,7 +40,6 @@
 
 ### 还没做
 
-- 分享卡的相片 / 票根两套模板（在 `feat/share-templates` 分支上做）
 - WidgetKit 小组件（需要 Xcode）
 - App Store 账号、名称查重、真实 IAP 商品
 
