@@ -21,8 +21,11 @@ from playwright.sync_api import sync_playwright
 ROOT = Path(__file__).resolve().parent.parent
 OUT = ROOT / "docs" / "store"
 URL = "http://127.0.0.1:5191/"
-# 6.7"（iPhone 16 Pro Max）：430 × 932 @3x = 1290 × 2796
-VIEWPORT = {"width": 430, "height": 932}
+# App Store Connect 要的两档尺寸（@3x）
+SIZES = {
+    "6.7": {"width": 430, "height": 932, "px": "1290x2796"},  # iPhone 16 Pro Max
+    "6.5": {"width": 414, "height": 896, "px": "1242x2688"},  # iPhone 11 Pro Max
+}
 DPR = 3
 CHROME = "/root/.cache/ms-playwright/chromium-1217/chrome-linux64/chrome"
 
@@ -85,16 +88,18 @@ LABELS = {
 }
 
 
-def shoot(locale: str) -> list[Path]:
+def shoot(locale: str, size: str = "6.7") -> list[Path]:
     seed = SEED[locale]
     labels = LABELS[locale]
-    outdir = OUT / locale
+    viewport = {"width": SIZES[size]["width"], "height": SIZES[size]["height"]}
+    # 6.7" 放 docs/store/{locale}/（主用），6.5" 放 docs/store/6.5/{locale}/
+    outdir = OUT / locale if size == "6.7" else OUT / size / locale
     outdir.mkdir(parents=True, exist_ok=True)
     shots: list[Path] = []
 
     with sync_playwright() as p:
         browser = p.chromium.launch(executable_path=CHROME)
-        ctx = browser.new_context(viewport=VIEWPORT, device_scale_factor=DPR, locale="zh-CN" if locale == "zh" else "en-US")
+        ctx = browser.new_context(viewport=viewport, device_scale_factor=DPR, locale="zh-CN" if locale == "zh" else "en-US")
         ctx.add_init_script(seed)
         page = ctx.new_page()
         page.goto(URL)
@@ -145,14 +150,14 @@ def shoot(locale: str) -> list[Path]:
 
 
 def main() -> int:
-    wanted = sys.argv[1:] or ["zh", "en"]
+    args = sys.argv[1:]
+    sizes = [a for a in args if a in SIZES] or ["6.7"]
+    wanted = [a for a in args if a in SEED] or ["zh", "en"]
     total = 0
-    for locale in wanted:
-        if locale not in SEED:
-            print(f"跳过未知语言：{locale}")
-            continue
-        print(f"{locale}:")
-        total += len(shoot(locale))
+    for size in sizes:
+        for locale in wanted:
+            print(f"{size}\" / {locale}:")
+            total += len(shoot(locale, size))
     print(f"\n共 {total} 张 → {OUT}")
     return 0
 

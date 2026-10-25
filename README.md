@@ -133,10 +133,12 @@ daymark/
 
 ```bash
 npm run build:native
+python3 scripts/check-native.py     # 上架前自检：配置 / 隐私清单 / 图标 / 截图尺寸
 npx cap sync ios
 cd ios/App && pod install && open App.xcworkspace
 ```
 
+- 商店文案与截图：`docs/store/LISTING.md`、`docs/store/{zh,en}/`（6.7")、`docs/store/6.5/`
 - 清单：[`docs/native/APP-STORE-CHECKLIST.md`](docs/native/APP-STORE-CHECKLIST.md)
 - 前端接入点：[`docs/native/INTEGRATION.md`](docs/native/INTEGRATION.md)
 - 隐私政策与帮助页：`public/privacy.html` · `public/support.html`（随包发布）
