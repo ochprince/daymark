@@ -37,6 +37,7 @@ import { EvolveOverlay } from './EvolveOverlay'
 import type { EvolveInfo } from './EvolveOverlay'
 import { BadgePopup } from './BadgePopup'
 import { HatchOverlay } from './HatchOverlay'
+import { BookFlight } from './BookFlight'
 import type { HatchInfo } from './HatchOverlay'
 import {
   dexKey,
@@ -143,6 +144,7 @@ export function AppV2() {
   const [paywall, setPaywall] = useState<'limit' | 'upgrade' | null>(null)
   const [shareOpen, setShareOpen] = useState(false)
   const [hatch, setHatch] = useState<HatchInfo | null>(null)
+  const [flight, setFlight] = useState<{ from: DOMRect; to: DOMRect; color: number } | null>(null)
   const [backupPending, setBackupPending] = useState<{ file: BackupFile; summary: BackupSummary } | null>(null)
 
   // 焦点不存在时把第一件写回存储，保证下次打开还是它
@@ -294,6 +296,10 @@ export function AppV2() {
           chapterStartedAt: at,
         })
       }
+      // 合上书 → 飞进藏馆：量一次起点终点，420ms 沿弧线落进 tab
+      const card = document.querySelector('.stage-card')?.getBoundingClientRect()
+      const tab = document.querySelectorAll('.tabbar button')[1]?.getBoundingClientRect()
+      if (card && tab) setFlight({ from: card, to: tab, color: view.color })
       setToast(t('profile.endChapter'))
     },
     [],
@@ -544,6 +550,15 @@ export function AppV2() {
             // 打招呼的是小伙伴自己，不是这件事的标题（「我是芽芽」而不是「我是戒烟」）
             setHatch({ ...info, name: t(`creature.${info.species}` as MessageKey) })
           }}
+        />
+      ) : null}
+
+      {flight ? (
+        <BookFlight
+          from={flight.from}
+          to={flight.to}
+          color={flight.color}
+          onDone={() => setFlight(null)}
         />
       ) : null}
 
