@@ -19,6 +19,11 @@ export type SfxId =
   | 'jingle' // 圣诞节 · 铃铛
   | 'gulp' // 喝水 · 吨吨吨
   | 'steps' // 跑步 · 脚步
+  // 下面是 v2 的交互音：都不长，最长的进化音也就 1 秒
+  | 'tap' // 按住蓄力起手的一声轻响
+  | 'settle' // 记一次落定：两声上行小铃
+  | 'evolve' // 形态升级：一小段上行琶音
+  | 'stamp' // 徽章盖章：闷响 + 纸声
 
 const SOUND_KEY = 'daymark.sound.v1'
 
@@ -550,6 +555,99 @@ function steps(ac: AudioContext, bus: Bus, t0: number): void {
  * 播放
  * ------------------------------------------------------------------ */
 
+/* ------------------------------------------------------------------ *
+ * v2 交互音：全部用正弦/三角波 + 短包络合成，不加任何素材文件
+ * ------------------------------------------------------------------ */
+
+/** 很短的一下，用于蓄力起手：轻到不打扰，但能听见 */
+function tap(ac: AudioContext, bus: Bus, t0: number): void {
+  const osc = ac.createOscillator()
+  osc.type = 'sine'
+  osc.frequency.setValueAtTime(880, t0)
+  osc.frequency.exponentialRampToValueAtTime(620, t0 + 0.06)
+  const gain = ac.createGain()
+  gain.gain.setValueAtTime(0.0001, t0)
+  gain.gain.exponentialRampToValueAtTime(0.18, t0 + 0.006)
+  gain.gain.exponentialRampToValueAtTime(0.0005, t0 + 0.07)
+  osc.connect(gain)
+  both(gain, bus)
+  osc.start(t0)
+  stopAt(osc, t0 + 0.09)
+}
+
+/** 记一次落定：上行两声，第二声更亮一点 */
+function settle(ac: AudioContext, bus: Bus, t0: number): void {
+  const notes = [
+    { f: 660, at: 0 },
+    { f: 990, at: 0.075 },
+  ]
+  for (const note of notes) {
+    const at = t0 + note.at
+    const osc = ac.createOscillator()
+    osc.type = 'triangle'
+    osc.frequency.setValueAtTime(note.f, at)
+    const gain = ac.createGain()
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.exponentialRampToValueAtTime(0.24, at + 0.01)
+    gain.gain.exponentialRampToValueAtTime(0.0005, at + 0.26)
+    osc.connect(gain)
+    both(gain, bus)
+    osc.start(at)
+    stopAt(osc, at + 0.3)
+  }
+}
+
+/** 形态升级：四个上行音，稀疏、留白，别做成游戏音效 */
+function evolve(ac: AudioContext, bus: Bus, t0: number): void {
+  const scale = [523.25, 659.25, 783.99, 1046.5]
+  scale.forEach((freq, index) => {
+    const at = t0 + index * 0.12
+    const osc = ac.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(freq, at)
+    const gain = ac.createGain()
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.exponentialRampToValueAtTime(0.2 - index * 0.02, at + 0.015)
+    gain.gain.exponentialRampToValueAtTime(0.0005, at + 0.7)
+    osc.connect(gain)
+    both(gain, bus)
+    osc.start(at)
+    stopAt(osc, at + 0.75)
+  })
+}
+
+/** 徽章盖章：一声闷响，加一点纸的沙沙 */
+function stamp(ac: AudioContext, bus: Bus, t0: number): void {
+  const thud = ac.createOscillator()
+  thud.type = 'sine'
+  thud.frequency.setValueAtTime(180, t0)
+  thud.frequency.exponentialRampToValueAtTime(70, t0 + 0.18)
+  const thudGain = ac.createGain()
+  thudGain.gain.setValueAtTime(0.0001, t0)
+  thudGain.gain.exponentialRampToValueAtTime(0.38, t0 + 0.008)
+  thudGain.gain.exponentialRampToValueAtTime(0.0005, t0 + 0.22)
+  thud.connect(thudGain)
+  both(thudGain, bus)
+  thud.start(t0)
+  stopAt(thud, t0 + 0.25)
+
+  const paper = ac.createBufferSource()
+  paper.buffer = noise(ac, 0.12)
+  const bp = ac.createBiquadFilter()
+  bp.type = 'bandpass'
+  bp.frequency.value = 2600
+  bp.Q.value = 0.9
+  const paperGain = ac.createGain()
+  paperGain.gain.setValueAtTime(0.0001, t0)
+  paperGain.gain.exponentialRampToValueAtTime(0.1, t0 + 0.01)
+  paperGain.gain.exponentialRampToValueAtTime(0.0005, t0 + 0.12)
+  paper.connect(bp)
+  bp.connect(paperGain)
+  both(paperGain, bus)
+  paper.start(t0)
+  stopAt(paper, t0 + 0.14)
+}
+
 const RENDERERS: Record<SfxId, (ac: AudioContext, bus: Bus, t0: number) => void> = {
   firecracker,
   drum,
@@ -558,6 +656,10 @@ const RENDERERS: Record<SfxId, (ac: AudioContext, bus: Bus, t0: number) => void>
   jingle,
   gulp,
   steps,
+  tap,
+  settle,
+  evolve,
+  stamp,
 }
 
 /** 每个音效的干湿度：室内小声音少送一点，室外大响动多送一点 */
@@ -569,6 +671,10 @@ const WET: Record<SfxId, number> = {
   jingle: 0.42,
   gulp: 0.28,
   steps: 0.22,
+  tap: 0.08,
+  settle: 0.24,
+  evolve: 0.4,
+  stamp: 0.2,
 }
 
 export function hasSfx(id: string | undefined): id is SfxId {

@@ -25,6 +25,7 @@ import { buildIcs, icsFileName, isDue, nextTrigger } from '../lib/reminder'
 import { applyBackup, backupFileName, buildBackup, parseBackup, type BackupSummary, type BackupFile } from '../lib/backup'
 import type { Reminder } from '../lib/types'
 import { hapticTap, setHapticsEnabled, setStatusBarTheme } from '../lib/native'
+import { playSfx, setSoundOn } from '../lib/sfx'
 import { canAddItem, grantPro, isPro, subscribe as subscribeEntitlement } from '../lib/entitlement'
 import { syncEntitlement } from '../lib/purchase'
 import { TodayPage } from './TodayPage'
@@ -161,6 +162,7 @@ export function AppV2() {
         getCollection(),
       )
       const unlocked = unlockBadges(fresh)
+      playSfx('evolve')
       setEvolve({
         key: view.key,
         species: view.species,
@@ -171,7 +173,10 @@ export function AppV2() {
         badgeName:
           unlocked.length > 0 ? t(`badge.${unlocked[0]}.name` as MessageKey) : undefined,
       })
-      if (unlocked.length > 0) setBadges((queue) => [...queue, ...unlocked])
+      if (unlocked.length > 0) {
+        playSfx('stamp')
+        setBadges((queue) => [...queue, ...unlocked])
+      }
     }
   }, [views])
 
@@ -186,8 +191,9 @@ export function AppV2() {
     if (!focus || focus.kind !== 'habit') return
     const next = focus.count + 1
     tapCheckIn(focus.id, Date.now())
-    // 记一次落定：一下中等触感；动效已经够多，这里只加触感
+    // 记一次落定：一下中等触感 + 一声上行小铃；动效已经够多，声音点到为止
     hapticTap('medium')
+    playSfx('settle')
     setOverride(next > 1 ? t('line.habit.count', { n: next }) : t('line.habit.done'))
     window.setTimeout(() => setOverride(null), 4000)
   }, [focus])
@@ -318,6 +324,11 @@ export function AppV2() {
   useEffect(() => {
     setHapticsEnabled(prefs.haptic)
   }, [prefs.haptic])
+
+  // 音效开关：sfx 模块自己有静音状态，装扮页一改就同步过去
+  useEffect(() => {
+    setSoundOn(prefs.sound)
+  }, [prefs.sound])
 
   // 启动时对一次账（离线优先，失败就保持本地状态）
   useEffect(() => {
