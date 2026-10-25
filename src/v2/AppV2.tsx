@@ -16,6 +16,9 @@ import { focusAfterRemoval } from '../lib/itemview'
 import { ProfilePage } from './ProfilePage'
 import { MuseumPage } from './MuseumPage'
 import { DressPage } from './DressPage'
+import { PaywallSheet } from './PaywallSheet'
+import { canAddItem, grantPro, isPro, subscribe as subscribeEntitlement } from '../lib/entitlement'
+import { syncEntitlement } from '../lib/purchase'
 import { TodayPage } from './TodayPage'
 import { TabBar, type TabKey } from './TabBar'
 import { Switcher } from './Switcher'
@@ -102,6 +105,8 @@ export function AppV2() {
   const collection = useSyncExternalStore(subscribeCollection, getCollection)
   const prefs = useSyncExternalStore(subscribePrefs, getPrefs)
   const locale = useSyncExternalStore(subscribeLocale, getLocale)
+  const pro = useSyncExternalStore(subscribeEntitlement, () => isPro())
+  const [paywall, setPaywall] = useState<'limit' | 'upgrade' | null>(null)
 
   // 焦点不存在时把第一件写回存储，保证下次打开还是它
   useEffect(() => {
@@ -225,6 +230,21 @@ export function AppV2() {
     [views],
   )
 
+  // 免费版名额用完时，新建入口直接变成付费墙
+  const openAdd = useCallback(() => {
+    if (!canAddItem(views.length)) {
+      setPaywall('limit')
+      setSheet(null)
+      return
+    }
+    setSheet('add')
+  }, [views.length])
+
+  // 启动时对一次账（离线优先，失败就保持本地状态）
+  useEffect(() => {
+    void syncEntitlement()
+  }, [])
+
   const exportBackup = useCallback(() => {
     try {
       const dump: Record<string, string | null> = {}
@@ -256,7 +276,7 @@ export function AppV2() {
           now={now}
           onChangeFocus={changeFocus}
           onOpenSwitcher={() => setSheet('switcher')}
-          onAdd={() => setSheet('add')}
+          onAdd={openAdd}
           onLog={onLog}
           onSayDone={onSayDone}
           onPoke={onPoke}
@@ -277,10 +297,26 @@ export function AppV2() {
           locale={locale}
           onLocale={(next) => setLocale(next)}
           onExport={exportBackup}
+          pro={pro}
+          onUpgrade={() => setPaywall('upgrade')}
         />
       ) : null}
 
       <TabBar active={tab} onChange={setTab} />
+
+      {paywall ? (
+        <PaywallSheet
+          mode={paywall}
+          onClose={() => setPaywall(null)}
+          onToast={(message) => setToast(message)}
+          onUnlocked={(message) => {
+            grantPro()
+            setPaywall(null)
+            setSheet(null)
+            setToast(message)
+          }}
+        />
+      ) : null}
 
       {profileOpen && focus ? (
         <ProfilePage
@@ -306,7 +342,7 @@ export function AppV2() {
           views={views}
           activeKey={focus?.key ?? ''}
           onPick={changeFocus}
-          onAdd={() => setSheet('add')}
+          onAdd={openAdd}
           onClose={() => setSheet(null)}
         />
       ) : null}

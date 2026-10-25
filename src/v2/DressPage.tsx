@@ -4,6 +4,7 @@ import { t } from '../lib/i18n'
 import type { Locale, MessageKey } from '../lib/i18n'
 import { LOCALES, LOCALE_LABELS } from '../lib/i18n'
 import type { PrefsState } from '../lib/prefs'
+import { FREE_SKIN_PACKS } from '../lib/entitlement'
 import { SKIN_PACKS } from '../lib/skin'
 import type { NumStyle, SkinPack, SkinState, TextureStyle } from '../lib/skin'
 
@@ -15,13 +16,15 @@ export type DressPageProps = {
   locale: Locale
   onLocale: (locale: Locale) => void
   onExport: () => void
+  pro: boolean
+  onUpgrade: () => void
 }
 
 const NUM_STYLES: readonly NumStyle[] = ['auto', 'round', 'serif', 'pixel', 'hand']
 const TEXTURES: readonly TextureStyle[] = ['auto', 'plain', 'dots', 'grid', 'lines']
 
 /** 装扮：风格包、主色、数字字体、纹理，和其他偏好 */
-export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onExport }: DressPageProps) {
+export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onExport, pro, onUpgrade }: DressPageProps) {
   return (
     <div className="dress">
       <header className="dress-h">
@@ -35,7 +38,14 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
             key={pack}
             type="button"
             className={`g-item ${skin.pack === pack ? 'is-on' : ''}`}
-            onClick={() => onSkin({ pack })}
+            onClick={() => {
+              // 免费版只给软糖，点别的包就弹付费墙
+              if (!pro && !(FREE_SKIN_PACKS as readonly string[]).includes(pack)) {
+                onUpgrade()
+                return
+              }
+              onSkin({ pack })
+            }}
           >
             <MiniPhone pack={pack} />
             <b>{t(`dress.pack.${pack}` as MessageKey)}</b>
@@ -131,6 +141,15 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           ))}
         </div>
       </div>
+
+      {pro ? null : (
+        <button className="card opt" type="button" onClick={onUpgrade} style={{ display: 'block', width: 'calc(100% - 32px)', textAlign: 'left' }}>
+          <div className="opt-h" style={{ marginBottom: 0 }}>
+            <span>{t('pro.title')}</span>
+            <small>{t('pro.sub')}</small>
+          </div>
+        </button>
+      )}
 
       <div className="sec-title">{t('dress.other')}</div>
       <div className="card list">
