@@ -405,6 +405,8 @@ export const zh = {
   'hold.tooShort': '再按久一点点，蓄满才算一次',
   'hold.already': '今天已经记过啦，明天见',
   'toast.logged': '{title} · 记下了',
+  'museum.chapter.prev': '‹ 上一本',
+  'museum.chapter.next': '下一本 ›',
 } as const
 
 export type MessageKey = keyof typeof zh

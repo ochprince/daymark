@@ -34,7 +34,24 @@ export type MuseumPageProps = {
 export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProps) {
   const [pane, setPane] = useState<Pane>('chapters')
   const [opened, setOpened] = useState<ShelfChapter | null>(null)
+  // 翻书方向：翻的时候给 currentTarget 挂 flip-l / flip-r，0.5s 后自动落位
+  const [flip, setFlip] = useState<'l' | 'r' | null>(null)
   const books = useMemo(() => collectChapters(views), [views])
+
+  /** 翻书：上一本 / 下一本，到头回绕。免费版翻到门外就弹付费墙，不放行 */
+  function navChapter(dir: 1 | -1) {
+    if (!opened) return
+    const index = books.findIndex((book) => book.key === opened.key)
+    if (index < 0) return
+    const nextIndex = (index + dir + books.length) % books.length
+    if (!pro && nextIndex >= FREE_CHAPTER_LIMIT) {
+      onUpgrade()
+      return
+    }
+    setFlip(dir > 0 ? 'r' : 'l')
+    setOpened(books[nextIndex])
+    window.setTimeout(() => setFlip(null), 520)
+  }
 
   const panes: Array<[Pane, MessageKey]> = [
     ['chapters', 'museum.tab.chapters'],
@@ -137,7 +154,11 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
       {opened ? (
         <div className="ov" style={{ zIndex: 60 }}>
           <div className="dim" onClick={() => setOpened(null)} />
-          <div className="modal bookpage" style={{ '--c': `var(--h-${opened.color})` } as CSSProperties}>
+          <div
+            key={`${opened.key}:${flip ?? ''}`}
+            className={`modal bookpage${flip ? ` flip-${flip}` : ''}`}
+            style={{ '--c': `var(--h-${opened.color})` } as CSSProperties}
+          >
             <div className="bp-t">{opened.title}</div>
             <div className="bp-num">{opened.days > 0 ? opened.days : '★'}</div>
             <div className="bp-line">{t('museum.chapter.closed', { date: formatDate(opened.endedAt) })}</div>
@@ -145,6 +166,19 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
             <div className="bp-dates">
               <Creature species={opened.species as CreatureSpecies} stage={Math.min(4, opened.stage) as 0 | 1 | 2 | 3 | 4} size={72} />
             </div>
+            {books.length > 1 ? (
+              <div className="bp-nav">
+                <button type="button" onClick={() => navChapter(-1)}>
+                  {t('museum.chapter.prev')}
+                </button>
+                <span>
+                  {books.indexOf(opened) + 1} / {books.length}
+                </span>
+                <button type="button" onClick={() => navChapter(1)}>
+                  {t('museum.chapter.next')}
+                </button>
+              </div>
+            ) : null}
             <button className="btn block" type="button" onClick={() => setOpened(null)}>
               {t('common.ok')}
             </button>

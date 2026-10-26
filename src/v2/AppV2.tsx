@@ -102,22 +102,35 @@ function hasAnyChapter(views: readonly ItemView[]): boolean {
 }
 
 /** 皮肤令牌挂到根节点：换风格只换这一层属性，组件一行不改 */
+/** 系统是不是深色：跟随系统这个开关要真的读它，否则就是个假开关 */
+function useSystemDark(): boolean {
+  const [dark, setDark] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia?.('(prefers-color-scheme: dark)').matches,
+  )
+  useEffect(() => {
+    const query = window.matchMedia?.('(prefers-color-scheme: dark)')
+    if (!query) return undefined
+    const onChange = () => setDark(query.matches)
+    query.addEventListener('change', onChange)
+    return () => query.removeEventListener('change', onChange)
+  }, [])
+  return dark
+}
+
 function useApplySkin() {
   const skin = useSyncExternalStore(subscribeSkin, getSkin)
+  const systemDark = useSystemDark()
+  // 跟随系统 = 深色时切夜航，浅色时回到用户自己选的包
+  const pack = skin.followSystem && systemDark ? 'night' : skin.pack
   useEffect(() => {
     const root = document.documentElement
-    root.dataset.skin = skin.pack
+    root.dataset.skin = pack
     root.dataset.accent = typeof skin.accent === 'number' ? String(skin.accent) : 'auto'
     root.dataset.num = skin.num
     root.dataset.texture = skin.texture
-    // 原生状态栏跟着皮肤走（夜航配浅色字，其余配深色字）
-    setStatusBarTheme(skin.pack === 'night' || skin.followSystem ? 'dark' : 'light')
-    if (skin.followSystem) {
-      root.dataset.followSystem = 'true'
-    } else {
-      delete root.dataset.followSystem
-    }
-  }, [skin])
+    // 原生状态栏跟着皮肤走：'dark' 是深底浅字，'light' 是浅底深字
+    setStatusBarTheme(pack === 'night' ? 'dark' : 'light')
+  }, [skin, pack])
   return skin
 }
 

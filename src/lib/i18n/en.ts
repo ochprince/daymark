@@ -405,4 +405,6 @@ export const en: Record<MessageKey, Msg> = {
   'hold.tooShort': 'Hold a little longer — fill the ring to count it',
   'hold.already': 'Already logged today — see you tomorrow',
   'toast.logged': '{title} · logged',
+  'museum.chapter.prev': '‹ Previous',
+  'museum.chapter.next': 'Next ›',
 }
