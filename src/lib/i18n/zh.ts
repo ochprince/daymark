@@ -402,6 +402,9 @@ export const zh = {
   'share.tpl.photo': '相片',
   'share.tpl.photoOff': '这件事还没有相片，先用贴纸发吧',
   'share.tpl.admit': '入场券',
+  'hold.tooShort': '再按久一点点，蓄满才算一次',
+  'hold.already': '今天已经记过啦，明天见',
+  'toast.logged': '{title} · 记下了',
 } as const
 
 export type MessageKey = keyof typeof zh

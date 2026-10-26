@@ -4,6 +4,7 @@ import type { ItemView } from '../lib/itemview'
 import { Creature } from '../components/Creature'
 import { IconDown, IconPlus } from './icons'
 import { StageCard } from './StageCard'
+import { useState } from 'react'
 
 export type TodayPageProps = {
   views: ItemView[]
@@ -16,6 +17,13 @@ export type TodayPageProps = {
   onSayDone: () => void
   onPoke: () => void
   onProfile: () => void
+  /** 横滑换焦点 */
+  onShift: (dir: 1 | -1) => void
+  /** 卡片内的轻提示 */
+  onToast: (message: string) => void
+  /** 记一次 +1 的粒子 */
+  fxNonce?: number
+  fxPlus?: string
   overrideLine?: string | null
   pokeNonce?: number
 }
@@ -42,7 +50,13 @@ export function TodayPage({
   onProfile,
   overrideLine,
   pokeNonce,
+  onShift,
+  onToast,
+  fxNonce = 0,
+  fxPlus = '+1',
 }: TodayPageProps) {
+  // 换焦点时新卡片从哪边滑进来：+1 从右边，-1 从左边
+  const [shiftDir, setShiftDir] = useState<1 | -1>(1)
   if (!focus) {
     return (
       <div className="today">
@@ -109,6 +123,8 @@ export function TodayPage({
       </header>
 
       <StageCard
+        key={`${focus.key}:${shiftDir}`}
+        enterDir={shiftDir}
         view={focus}
         onLog={onLog}
         onSayDone={onSayDone}
@@ -116,6 +132,13 @@ export function TodayPage({
         onProfile={onProfile}
         overrideLine={overrideLine}
         pokeNonce={pokeNonce}
+        fxNonce={fxNonce}
+        fxPlus={fxPlus}
+        onShift={(dir) => {
+          setShiftDir(dir)
+          onShift(dir)
+        }}
+        onToast={onToast}
       />
 
       <div className="focus-dots">

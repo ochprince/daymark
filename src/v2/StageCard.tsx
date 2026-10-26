@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import type { CSSProperties } from 'react'
+import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react'
 import { Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
 import { formatDate, formatSpan } from '../lib/days'
@@ -10,6 +10,7 @@ import type { MessageKey } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
 import { bubbleLine } from '../lib/lines'
 import { getPhotoUrl } from '../lib/photos'
+import { playSfx } from '../lib/sfx'
 import { PhotoBackdrop } from './PhotoBackdrop'
 
 /** 蓄力时长：与 CheckInCard 同一个口径（500ms），改这里要连带改 CSS 的 transition */
@@ -26,7 +27,27 @@ export type StageCardProps = {
   overrideLine?: string | null
   /** 每摸一次 +1：用来触发跳一下的动画 */
   pokeNonce?: number
+  /** 横滑换焦点：-1 上一件，1 下一件。不给就关掉滑动 */
+  onShift?: (dir: 1 | -1) => void
+  /** 卡片内部的轻提示（蓄力没满、今天已记过） */
+  onToast?: (message: string) => void
+  /** 换个焦点滑进来的方向：1 从右边，-1 从左边 */
+  enterDir?: 1 | -1
+  /** 每记一次 +1：用来炸一次粒子与「+1」 */
+  fxNonce?: number
+  /** 「+1」上的字，多单位习惯是「+1 杯」 */
+  fxPlus?: string
 }
+
+/** 落定那一下的粒子：角度固定，避免每次看起来都不一样 */
+const PARTICLES = Array.from({ length: 8 }, (_, index) => {
+  const angle = (Math.PI * 2 * index) / 8
+  return {
+    dx: `${Math.cos(angle) * 46}px`,
+    dy: `${Math.sin(angle) * 46}px`,
+    rotate: `${index * 45}deg`,
+  }
+})
 
 /** 「就是今天」的庆祝一天只放一次，别每次切回来都炸一遍彩纸 */
 const PARTY_KEY = 'daymark.party.v1'
@@ -86,10 +107,19 @@ export function StageCard({
   onProfile,
   overrideLine,
   pokeNonce = 0,
+  onShift,
+  onToast,
+  enterDir,
+  fxNonce = 0,
+  fxPlus = '+1',
 }: StageCardProps) {
   const [charging, setCharging] = useState(false)
   const [jumping, setJumping] = useState(false)
   const [party, setParty] = useState(false)
+  // 横滑换焦点：跟手位移 + 松手后吸附回弹
+  const [drag, setDrag] = useState<{ dx: number; active: boolean } | null>(null)
+  const dragRef = useRef<{ x: number; y: number; dx: number; active: boolean } | null>(null)
+  const pressAt = useRef(0)
   const timer = useRef<number | null>(null)
 
   useEffect(
@@ -98,6 +128,15 @@ export function StageCard({
     },
     [],
   )
+
+  // 记一次落定：粒子 + 「+1」+ 闪一下，900ms 后自己收
+  const [fxOn, setFxOn] = useState(false)
+  useEffect(() => {
+    if (fxNonce === 0) return undefined
+    setFxOn(true)
+    const stop = window.setTimeout(() => setFxOn(false), 900)
+    return () => window.clearTimeout(stop)
+  }, [fxNonce])
 
   // 「就是今天」：当天第一次打开这一件时放一次彩纸，戴一次派对帽
   useEffect(() => {
@@ -143,7 +182,13 @@ export function StageCard({
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target
 
   function startHold() {
-    if (!canHold || habitDone) return
+    pressAt.current = performance.now()
+    if (!canHold) return
+    if (habitDone) {
+      onToast?.(t('hold.already'))
+      return
+    }
+    playSfx('tap')
     setCharging(true)
     timer.current = window.setTimeout(() => {
       timer.current = null
@@ -153,11 +198,64 @@ export function StageCard({
   }
 
   function cancelHold() {
+    const wasCharging = timer.current !== null
     if (timer.current !== null) {
       window.clearTimeout(timer.current)
       timer.current = null
     }
     setCharging(false)
+    // 按了一会儿但没蓄满：告诉用户差在哪。
+    // 短按（<250ms）是「摸摸」，不该弹这句，否则每次摸它都被骂一次
+    if (wasCharging && performance.now() - pressAt.current > 250) onToast?.(t('hold.tooShort'))
+  }
+
+  // 轻点摸摸：和原型一致——短按（<250ms）且没拖动，就是在摸它
+  function tapPoke() {
+    if (performance.now() - pressAt.current > 250) return
+    if (dragRef.current?.active) return
+    onPoke()
+  }
+
+  /**
+   * 横滑换焦点：和原型一样用 window 级的 pointermove/pointerup。
+   * 只挂在卡片上会在「卡片被重新挂载」的那一帧丢事件，手指就白滑了。
+   */
+  function startDrag(event: ReactPointerEvent<HTMLElement>) {
+    if (!onShift) return
+    const target = event.target as HTMLElement
+    if (target.closest('button:not(.cr-wrap)')) return
+
+    const startX = event.clientX
+    const startY = event.clientY
+    let active = false
+    let dx = 0
+
+    const move = (moveEvent: PointerEvent) => {
+      const stepX = moveEvent.clientX - startX
+      const stepY = moveEvent.clientY - startY
+      if (!active) {
+        // 先判方向：竖着划是别的手势，不抢
+        if (Math.abs(stepX) < 10 || Math.abs(stepX) <= Math.abs(stepY)) return
+        active = true
+        cancelHold() // 一开始横滑，就不再算蓄力
+      }
+      dx = stepX
+      setDrag({ dx, active: true })
+    }
+
+    const end = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', end)
+      window.removeEventListener('pointercancel', end)
+      dragRef.current = null
+      setDrag(null)
+      if (active && Math.abs(dx) > 70) onShift(dx < 0 ? 1 : -1)
+    }
+
+    dragRef.current = { x: startX, y: startY, dx: 0, active: false }
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', end)
+    window.addEventListener('pointercancel', end)
   }
 
   const style = {
@@ -173,10 +271,30 @@ export function StageCard({
 
   return (
     <section
-      className={`stage-card${charging ? ' charging' : ''}${photoUrl ? ' has-photo' : ''}`}
-      style={style}
+      className={`stage-card${charging ? ' charging' : ''}${photoUrl ? ' has-photo' : ''}${
+        drag?.active ? ' dragging' : ''
+      }${enterDir ? (enterDir === 1 ? ' enter-r' : ' enter-l') : ''}`}
+      style={
+        drag
+          ? { ...style, transform: `translateX(${drag.dx}px) rotate(${(drag.dx * 0.02).toFixed(2)}deg)` }
+          : style
+      }
+      onPointerDown={startDrag}
     >
       <PhotoBackdrop url={photoUrl}>
+      {fxOn ? (
+        <div className="fx" aria-hidden="true">
+          {PARTICLES.map((piece, index) => (
+            <span
+              key={index}
+              className="p"
+              style={{ '--dx': piece.dx, '--dy': piece.dy, '--r': piece.rotate } as CSSProperties}
+            />
+          ))}
+          <span className="plus1">{fxPlus}</span>
+        </div>
+      ) : null}
+      {fxOn ? <div className="flash" aria-hidden="true" /> : null}
       <div className="deco" />
       <div className="sc-top">
         <span className="tag">{typeTag(view)}</span>
@@ -191,7 +309,10 @@ export function StageCard({
         <div
           className={`cr-wrap ${sleeping ? 'sleep' : ''} ${jumping ? 'jump' : ''}`}
           onPointerDown={startHold}
-          onPointerUp={cancelHold}
+          onPointerUp={() => {
+            cancelHold()
+            tapPoke()
+          }}
           onPointerLeave={cancelHold}
           onPointerCancel={cancelHold}
           role={canHold ? 'button' : undefined}

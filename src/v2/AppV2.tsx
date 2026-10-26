@@ -7,7 +7,7 @@ import { setFocusKey } from '../lib/focus'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import { bubbleLine } from '../lib/lines'
-import { patchCheckIn, removeCheckIn, tapCheckIn } from '../lib/checkins'
+import { patchCheckIn, removeCheckIn, tapCheckIn, untapCheckIn } from '../lib/checkins'
 import { markSaid, patchCountdown, removeCountdown } from '../lib/countdowns'
 import { patchEvent, removeEvent } from '../lib/storage'
 import { anchorOf, todayStart } from '../lib/days'
@@ -127,8 +127,10 @@ export function AppV2() {
   const skin = useApplySkin()
   const [tab, setTab] = useState<TabKey>('today')
   const [sheet, setSheet] = useState<Sheet>(null)
-  const [toast, setToast] = useState<string | null>(null)
+  const [toast, setToast] = useState<{ text: string; action?: { label: string; run: () => void } } | null>(null)
   const [override, setOverride] = useState<string | null>(null)
+  // 每记一次 +1：卡片上炸一次粒子与「+1」
+  const [fxCount, setFxCount] = useState(0)
   const [pokeCount, setPokeCount] = useState(0)
   const [evolve, setEvolve] = useState<EvolveInfo | null>(null)
   // 徽章排队：一次只弹一个，而且要让进化过场先播完（两层同时盖住会挡住按钮）
@@ -147,6 +149,10 @@ export function AppV2() {
   const [flight, setFlight] = useState<{ from: DOMRect; to: DOMRect; color: number } | null>(null)
   const [backupPending, setBackupPending] = useState<{ file: BackupFile; summary: BackupSummary } | null>(null)
 
+  const notify = useCallback((text: string, action?: { label: string; run: () => void }) => {
+    setToast({ text, action })
+  }, [])
+
   // 焦点不存在时把第一件写回存储，保证下次打开还是它
   useEffect(() => {
     if (focus) setFocusKey(focus.key)
@@ -154,7 +160,8 @@ export function AppV2() {
 
   useEffect(() => {
     if (!toast) return undefined
-    const timer = window.setTimeout(() => setToast(null), 2600)
+    // 带「撤销」的要多留一会儿，否则手还没移到就没了
+    const timer = window.setTimeout(() => setToast(null), toast.action ? 5000 : 2600)
     return () => window.clearTimeout(timer)
   }, [toast])
 
@@ -203,21 +210,33 @@ export function AppV2() {
     setSheet(null)
   }, [])
 
+  // 落定那一下浮起来的字。多单位习惯以后要显示「+1 杯」时从这里改
+  const fxPlus = '+1'
+
   const onLog = useCallback(() => {
     if (!focus || focus.kind !== 'habit') return
     const next = focus.count + 1
-    tapCheckIn(focus.id, Date.now())
+    const result = tapCheckIn(focus.id, Date.now())
     // 记一次落定：一下中等触感 + 一声上行小铃；动效已经够多，声音点到为止
     hapticTap('medium')
     playSfx('settle')
+    setFxCount((count) => count + 1)
     setOverride(next > 1 ? t('line.habit.count', { n: next }) : t('line.habit.done'))
     window.setTimeout(() => setOverride(null), 4000)
+    // 记错了能立刻收回：原型里这一步是 toast 上的「撤销」
+    notify(t('toast.logged', { title: focus.title }), {
+      label: t('common.undo'),
+      run: () => {
+        if (result) untapCheckIn(focus.id, result.key)
+        setOverride(null)
+      },
+    })
   }, [focus])
 
   const onSayDone = useCallback(() => {
     if (!focus || focus.kind !== 'countdown') return
     markSaid(focus.id, focus.next)
-    setToast(t('action.said'))
+    notify(t('action.said'))
   }, [focus])
 
   const onPoke = useCallback(() => {
@@ -239,7 +258,7 @@ export function AppV2() {
     if (!focus) return
     const reminder = focus.remind
     if (!reminder || reminder.kind === 'none') {
-      setToast(t('reminder.off'))
+      notify(t('reminder.off'))
       return
     }
     const targetAt = focus.kind === 'countdown' ? dayStartTs(focus.next) : undefined
@@ -259,9 +278,9 @@ export function AppV2() {
       anchor.download = icsFileName(focus.title)
       anchor.click()
       URL.revokeObjectURL(url)
-      setToast(t('reminder.calendarDone'))
+      notify(t('reminder.calendarDone'))
     } catch {
-      setToast(t('dress.exportFailed'))
+      notify(t('dress.exportFailed'))
     }
   }, [focus, now])
 
@@ -300,7 +319,7 @@ export function AppV2() {
       const card = document.querySelector('.stage-card')?.getBoundingClientRect()
       const tab = document.querySelectorAll('.tabbar button')[1]?.getBoundingClientRect()
       if (card && tab) setFlight({ from: card, to: tab, color: view.color })
-      setToast(t('profile.endChapter'))
+      notify(t('profile.endChapter'))
     },
     [],
   )
@@ -336,7 +355,7 @@ export function AppV2() {
     if (!isDue(focus.remind, now, fired[focus.key] ?? null, { windowMinutes: 5, targetAt })) return
     fired[focus.key] = dayKey(now)
     window.localStorage.setItem(REMINDER_FIRED_KEY, JSON.stringify(fired))
-    setToast(`${t('reminder.title')} · ${focus.title}`)
+    notify(`${t('reminder.title')} · ${focus.title}`)
     hapticTap('medium')
   }, [focus, now])
 
@@ -361,7 +380,7 @@ export function AppV2() {
     try {
       text = await file.text()
     } catch {
-      setToast(t('backup.badFile'))
+      notify(t('backup.badFile'))
       return
     }
     const result = parseBackup(text)
@@ -374,7 +393,7 @@ export function AppV2() {
             : result.reason === 'empty'
               ? t('backup.empty')
               : t('backup.notBackup')
-      setToast(message)
+      notify(message)
       return
     }
     setBackupPending({ file: result.file, summary: result.summary })
@@ -384,7 +403,7 @@ export function AppV2() {
     if (!backupPending) return
     applyBackup(window.localStorage, backupPending.file)
     setBackupPending(null)
-    setToast(t('backup.done'))
+    notify(t('backup.done'))
     // 覆盖式恢复：store 都是模块加载时读的快照，重新加载最干净
     window.setTimeout(() => window.location.reload(), 700)
   }, [backupPending])
@@ -400,9 +419,9 @@ export function AppV2() {
       anchor.download = backupFileName(file.exportedAt)
       anchor.click()
       URL.revokeObjectURL(url)
-      setToast(t('dress.exported'))
+      notify(t('dress.exported'))
     } catch {
-      setToast(t('dress.exportFailed'))
+      notify(t('dress.exportFailed'))
     }
   }, [])
 
@@ -424,6 +443,17 @@ export function AppV2() {
           onProfile={() => setProfileOpen(true)}
           overrideLine={override}
           pokeNonce={pokeCount}
+          fxNonce={fxCount}
+          fxPlus={fxPlus}
+          onShift={(dir) => {
+            // 横滑换焦点：到头就回绕，只有一件时什么也不做
+            if (views.length < 2) return
+            const index = views.findIndex((view) => view.key === focus?.key)
+            if (index < 0) return
+            const next = views[(index + dir + views.length) % views.length]
+            changeFocus(next.key)
+          }}
+          onToast={notify}
         />
       ) : null}
 
@@ -460,7 +490,7 @@ export function AppV2() {
           onClose={() => setShareOpen(false)}
           onShared={() => {
             unlockBadges(['share'])
-            setToast(shareCopy('share.saved'))
+            notify(shareCopy('share.saved'))
           }}
         />
       ) : null}
@@ -477,12 +507,12 @@ export function AppV2() {
         <PaywallSheet
           mode={paywall}
           onClose={() => setPaywall(null)}
-          onToast={(message) => setToast(message)}
+          onToast={(message) => notify(message)}
           onUnlocked={(message) => {
             grantPro()
             setPaywall(null)
             setSheet(null)
-            setToast(message)
+            notify(message)
           }}
         />
       ) : null}
@@ -507,7 +537,7 @@ export function AppV2() {
           onTodo={(next) => {
             if (focus.kind === 'countdown') patchCountdown(focus.id, { todo: next })
           }}
-          onToast={setToast}
+          onToast={notify}
           onShare={() => {
             if (!canShareCard()) {
               setPaywall('upgrade')
@@ -542,7 +572,7 @@ export function AppV2() {
           onClose={() => setSheet(null)}
           onCreated={(message) => {
             setSheet(null)
-            setToast(message)
+            notify(message)
           }}
           onHatched={(info) => {
             // 第一次建东西才播孵化，后续都直接落回今天页
@@ -593,7 +623,22 @@ export function AppV2() {
         />
       ) : null}
 
-      {toast ? <div className="toast">{toast}</div> : null}
+      {toast ? (
+        <div className={toast.action ? 'toast' : 'toast only'}>
+          <span>{toast.text}</span>
+          {toast.action ? (
+            <button
+              type="button"
+              onClick={() => {
+                toast.action?.run()
+                setToast(null)
+              }}
+            >
+              {toast.action.label}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </div>
   )
 }

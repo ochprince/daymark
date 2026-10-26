@@ -712,10 +712,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .badge-pop .k { font-size: 12px; font-weight: 800; letter-spacing: 0.14em; color: var(--ink3); }
 
 /* 吐司 */
-.toast {
-  position: absolute; z-index: 70; top: 64px; left: 50%; transform: translateX(-50%); display: flex; align-items: center; gap: 12px; padding: 10px 10px 10px 18px; border-radius: 99px; background: var(--ink); color: var(--bg); font-size: 14px; font-weight: 600; white-space: nowrap; animation: toastIn 0.4s var(--ease-pop); box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.4);
-}
-.toast.only { padding-right: 18px; }
 .toast button { border: 0; background: color-mix(in oklab, var(--bg) 18%, transparent); color: var(--bg); height: 30px; padding: 0 12px; border-radius: 99px; font-weight: 800; font-size: 13px; }
 .toast.out { animation: toastOut 0.25s ease-in forwards; }
 

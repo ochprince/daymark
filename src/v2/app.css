@@ -299,15 +299,19 @@ body {
   }
 }
 
-/* 提示条 */
+/* 提示条：只在这里定义一次。components.css 里若再写一套 position/top，
+   两边的 top 与 bottom 会一起生效，toast 被拉成一整条竖直胶囊。 */
 .toast {
   position: fixed;
   left: 50%;
   bottom: calc(100px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  z-index: 60;
-  max-width: 82vw;
-  padding: 11px 18px;
+  z-index: 70;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  max-width: 86vw;
+  padding: 10px 10px 10px 16px;
   border-radius: 99px;
   background: var(--ink);
   color: var(--bg);

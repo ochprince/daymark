@@ -402,4 +402,7 @@ export const en: Record<MessageKey, Msg> = {
   'share.tpl.photo': 'Photo',
   'share.tpl.photoOff': 'No photo on this one yet — sharing the sticker instead',
   'share.tpl.admit': 'ADMIT ONE',
+  'hold.tooShort': 'Hold a little longer — fill the ring to count it',
+  'hold.already': 'Already logged today — see you tomorrow',
+  'toast.logged': '{title} · logged',
 }
