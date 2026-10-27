@@ -85,6 +85,16 @@ export function resolveTexture(pack: SkinPack, texture: TextureStyle): ResolvedT
   return texture === 'auto' ? TEXTURE_AUTO[pack] : texture
 }
 
+/**
+ * 用户亲手挑了一套包。
+ *
+ * 明确的选择要压过「跟随系统」：否则深色手机上点纸本，pack 变了、文案说「已换上」，
+ * 但渲染时又被 followSystem 顶回夜航——看起来就是「说生效了，其实没生效」。
+ */
+export function choosePack(skin: SkinState, pack: SkinPack): SkinState {
+  return { ...skin, pack, followSystem: false }
+}
+
 /** 旧的主题开关（daymark.theme.v2）：system / light / dark */
 export type LegacyThemeMode = 'system' | 'light' | 'dark' | null
 

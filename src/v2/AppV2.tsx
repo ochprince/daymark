@@ -139,14 +139,15 @@ function useApplySkin() {
     // 原生状态栏跟着皮肤走：'dark' 是深底浅字，'light' 是浅底深字
     setStatusBarTheme(pack === 'night' ? 'dark' : 'light')
   }, [skin, pack])
-  return skin
+  // skin 是用户存的偏好；applied 是真正挂在根节点上、画在屏幕上的那套
+  return { skin, applied: pack }
 }
 
 export function AppV2() {
   // 一分钟一跳：跨天时天数、睡着状态跟着变
   const now = useNow(60_000)
   useApplyReduceMotion()
-  const skin = useApplySkin()
+  const { skin, applied: appliedPack } = useApplySkin()
   const [tab, setTab] = useState<TabKey>('today')
   const [sheet, setSheet] = useState<Sheet>(null)
   const [toast, setToast] = useState<{ text: string; action?: { label: string; run: () => void } } | null>(null)
@@ -491,6 +492,7 @@ export function AppV2() {
       {tab === 'dress' ? (
         <DressPage
           skin={skin}
+          appliedPack={appliedPack}
           onSkin={patchSkin}
           prefs={prefs}
           onPrefs={setPrefs}

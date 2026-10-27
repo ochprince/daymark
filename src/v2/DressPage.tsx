@@ -6,7 +6,7 @@ import { INTL_LOCALE, LOCALES, LOCALE_LABELS } from '../lib/i18n'
 import type { PrefsState } from '../lib/prefs'
 import { FREE_SKIN_PACKS, previewUnlocked } from '../lib/entitlement'
 import { playSfx } from '../lib/sfx'
-import { SKIN_PACKS } from '../lib/skin'
+import { choosePack, SKIN_PACKS } from '../lib/skin'
 import type { NumStyle, SkinPack, SkinState, TextureStyle } from '../lib/skin'
 import type { SinceView } from '../lib/itemview'
 import type { DayEvent } from '../lib/types'
@@ -15,6 +15,8 @@ import './dress.css'
 
 export type DressPageProps = {
   skin: SkinState
+  /** 真正生效的那套：跟随系统时和 skin.pack 可能不同 */
+  appliedPack: SkinPack
   onSkin: (patch: Partial<SkinState>) => void
   prefs: PrefsState
   onPrefs: (patch: Partial<PrefsState>) => void
@@ -30,11 +32,11 @@ const NUM_STYLES: readonly NumStyle[] = ['auto', 'round', 'serif', 'pixel', 'han
 const TEXTURES: readonly TextureStyle[] = ['auto', 'plain', 'dots', 'grid', 'lines']
 
 /** 装扮：风格包、主色、数字字体、纹理，和其他偏好 */
-export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onExport, onImport, pro, onUpgrade }: DressPageProps) {
+export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, onLocale, onExport, onImport, pro, onUpgrade }: DressPageProps) {
   // 画廊与预览对齐原型：横滑到哪一张，松手就换上（点击也算一次落定）
   const galleryRef = useRef<HTMLDivElement | null>(null)
   const settleTimer = useRef(0)
-  const [center, setCenter] = useState(() => Math.max(0, SKIN_PACKS.indexOf(skin.pack)))
+  const [center, setCenter] = useState(() => Math.max(0, SKIN_PACKS.indexOf(appliedPack)))
   const [toast, setToast] = useState<string | null>(null)
   const toastTimer = useRef(0)
 
@@ -56,7 +58,7 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
   useEffect(() => {
     const gal = galleryRef.current
     if (!gal) return
-    const item = gal.querySelectorAll<HTMLElement>('.g-item')[Math.max(0, SKIN_PACKS.indexOf(skin.pack))]
+    const item = gal.querySelectorAll<HTMLElement>('.g-item')[Math.max(0, SKIN_PACKS.indexOf(appliedPack))]
     if (!item) return
     // 先关掉吸附再定位，否则首次定位会被 snap 动画带偏
     gal.style.scrollSnapType = 'none'
@@ -74,7 +76,7 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
       onUpgrade()
       return false
     }
-    onSkin({ pack })
+    onSkin(choosePack(skin, pack))
     playSfx('tap')
     return true
   }
@@ -93,10 +95,10 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
       const index = centeredIndex(gal)
       setCenter(index)
       const pack = SKIN_PACKS[index]
-      if (!pack || pack === skin.pack) return
+      if (!pack || (pack === appliedPack && !skin.followSystem)) return
       // 锁着的包只让看，不换上；点它才弹付费墙
       if (!pro && !(FREE_SKIN_PACKS as readonly string[]).includes(pack)) return
-      onSkin({ pack })
+      onSkin(choosePack(skin, pack))
       playSfx('tap')
       showToast(t('dress.switched', { name: t(`dress.pack.${pack}` as MessageKey) }))
     }, 140)
@@ -114,7 +116,7 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           <button
             key={pack}
             type="button"
-            className={`g-item ${skin.pack === pack ? 'is-on' : ''}`}
+            className={`g-item ${appliedPack === pack ? 'is-on' : ''}`}
             onClick={() => pickPack(pack)}
           >
             <MiniPhone pack={pack} locale={locale} />

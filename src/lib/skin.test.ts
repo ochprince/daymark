@@ -5,6 +5,7 @@ import {
   NUM_AUTO,
   SKIN_PACKS,
   TEXTURE_AUTO,
+  choosePack,
   normalizeSkin,
   resolveNum,
   resolveTexture,
@@ -88,4 +89,30 @@ test('normalizeSkin 保留 auto 原值，不做提前解析（解析只发生在
   // 但渲染前解析出来的就是像素皮肤该有的样子
   assert.equal(resolveNum(skin.pack, skin.num), 'pixel')
   assert.equal(resolveTexture(skin.pack, skin.texture), 'grid')
+})
+
+
+test('亲手挑包会关掉跟随系统（否则深色手机上说换了其实没换）', () => {
+  const following = { ...DEFAULT_SKIN, followSystem: true }
+  const next = choosePack(following, 'paper')
+  assert.equal(next.pack, 'paper')
+  assert.equal(next.followSystem, false)
+})
+
+test('亲手挑包不动主色 / 数字 / 纹理这些自己的选择', () => {
+  const before = normalizeSkin({ pack: 'jelly', accent: 3, num: 'hand', texture: 'lines', followSystem: true })
+  const next = choosePack(before, 'pixel')
+  assert.equal(next.pack, 'pixel')
+  assert.equal(next.accent, 3)
+  assert.equal(next.num, 'hand')
+  assert.equal(next.texture, 'lines')
+})
+
+test('已经在跟随系统的夜航上再点夜航，也会退出跟随', () => {
+  const following = { ...DEFAULT_SKIN, pack: 'paper' as const, followSystem: true }
+  const next = choosePack(following, 'night')
+  assert.equal(next.pack, 'night')
+  assert.equal(next.followSystem, false)
+  // 换完之后浅色系统下也不会被弹回纸本
+  assert.equal(next.pack, 'night')
 })
