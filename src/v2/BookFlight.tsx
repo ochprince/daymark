@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react'
+import { prefersReducedMotion } from '../lib/motion'
 
 export type BookFlightProps = {
   /** 起点：舞台卡的位置 */
@@ -23,7 +24,7 @@ export function BookFlight({ from, to, color, onDone }: BookFlightProps) {
     const node = ref.current
     if (!node) return undefined
 
-    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false
+    const reduce = prefersReducedMotion()
     if (reduce || typeof node.animate !== 'function') {
       onDone()
       return undefined

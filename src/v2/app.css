@@ -320,3 +320,24 @@ body {
   text-align: center;
   animation: up 0.28s var(--ease-pop);
 }
+
+/* 减弱动效：根节点 .dm-screen 由 AppV2 加 reduce-motion 类（用户开关或系统设置）。
+   之前挂在早已不存在的 .phone 上，等于从来没生效过。 */
+.reduce-motion .cr,
+.reduce-motion .ground,
+.reduce-motion .orbit,
+.reduce-motion .confetti,
+.reduce-motion .ev-rays,
+.reduce-motion .zzz span,
+.reduce-motion .fx .p,
+.reduce-motion .plus1,
+.reduce-motion .flash { animation: none !important; }
+
+/* 过渡也一起收掉：否则换焦点、翻书、蓄力环还是会有动 */
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}

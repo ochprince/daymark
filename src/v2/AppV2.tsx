@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useNow } from '../lib/useNow'
 import { getSkin, patchSkin, subscribe as subscribeSkin } from '../lib/skin'
-import { getPrefs, setPrefs, subscribe as subscribePrefs } from '../lib/prefs'
+import { getPrefs, reduceMotionOn, setPrefs, subscribe as subscribePrefs } from '../lib/prefs'
 import { getLocale, setLocale, subscribeLocale } from '../lib/i18n'
 import { setFocusKey } from '../lib/focus'
 import { t } from '../lib/i18n'
@@ -117,6 +117,14 @@ function useSystemDark(): boolean {
   return dark
 }
 
+function useApplyReduceMotion() {
+  const prefs = useSyncExternalStore(subscribePrefs, getPrefs)
+  useEffect(() => {
+    // 用户开关与系统设置任一为真都算（reduceMotionOn 里已经 OR 过）
+    document.documentElement.classList.toggle('reduce-motion', reduceMotionOn(prefs))
+  }, [prefs])
+}
+
 function useApplySkin() {
   const skin = useSyncExternalStore(subscribeSkin, getSkin)
   const systemDark = useSystemDark()
@@ -137,6 +145,7 @@ function useApplySkin() {
 export function AppV2() {
   // 一分钟一跳：跨天时天数、睡着状态跟着变
   const now = useNow(60_000)
+  useApplyReduceMotion()
   const skin = useApplySkin()
   const [tab, setTab] = useState<TabKey>('today')
   const [sheet, setSheet] = useState<Sheet>(null)

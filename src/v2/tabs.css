@@ -51,8 +51,7 @@
 .list .li { color: var(--ink); }
 .sw.auto.is-on::after, .sw.is-on::after { border-color: var(--ink); }
 
-/* 减弱动效：演示用，所有循环动画停下 */
-.phone.reduce-motion .cr, .phone.reduce-motion .ground, .phone.reduce-motion .orbit, .phone.reduce-motion .confetti, .phone.reduce-motion .ev-rays { animation: none !important; }
+/* 减弱动效规则已移到 app.css —— 本文件没有被任何入口 import，写在这里等于没写 */
 
 /* ---- 修正 ---- */
 .dex { grid-template-columns: repeat(5, minmax(0, 1fr)); }

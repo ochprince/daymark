@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Creature } from '../components/Creature'
+import { prefersReducedMotion } from '../lib/motion'
 import type { CreatureSpecies } from '../components/Creature'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
@@ -37,7 +38,7 @@ export function EvolveOverlay({ info, onDone }: EvolveOverlayProps) {
   // 减弱动效：直接到终帧，不播过场
   useEffect(() => {
     if (typeof window === 'undefined' || !window.matchMedia) return
-    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) setSkipped(true)
+    if (prefersReducedMotion()) setSkipped(true)
   }, [])
 
   const style = {
