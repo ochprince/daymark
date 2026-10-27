@@ -40,8 +40,11 @@
 
 ### 还没做
 
-- WidgetKit 小组件（需要 Xcode）
-- App Store 账号、名称查重、真实 IAP 商品
+完整清单见 [`docs/plan-v5-audit.md`](./docs/plan-v5-audit.md)（按「死链 / 交互 / 上架 / 工程 / 延伸」分档，每项带证据与落点）。最要紧的三件：
+
+- reduce-motion 整条链路是死的：`reduceMotionOn()` 无调用点，CSS 又挂在早已改名的 `.phone` 上
+- 装扮页换皮肤没有整屏预览
+- 首次引导三步（welcome → 选蛋 → 命名）没有，只有一句空态
 
 ---
 
