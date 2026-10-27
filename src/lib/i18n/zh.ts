@@ -119,6 +119,8 @@ export const zh = {
   'dress.privacy': '隐私政策',
   'dress.support': '帮助与反馈',
   'dress.previewName': '戒烟',
+  'dress.previewTitle': '整屏预览',
+  'dress.previewHint': '按你现在的选择实时渲染',
   'dress.pack.jelly': '软糖',
   'dress.pack.paper': '纸本',
   'dress.pack.night': '夜航',

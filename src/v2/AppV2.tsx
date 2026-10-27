@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useNow } from '../lib/useNow'
-import { getSkin, patchSkin, subscribe as subscribeSkin } from '../lib/skin'
+import { getSkin, patchSkin, resolveNum, resolveTexture, subscribe as subscribeSkin } from '../lib/skin'
 import { getPrefs, reduceMotionOn, setPrefs, subscribe as subscribePrefs } from '../lib/prefs'
 import { getLocale, setLocale, subscribeLocale } from '../lib/i18n'
 import { setFocusKey } from '../lib/focus'
@@ -134,8 +134,8 @@ function useApplySkin() {
     const root = document.documentElement
     root.dataset.skin = pack
     root.dataset.accent = typeof skin.accent === 'number' ? String(skin.accent) : 'auto'
-    root.dataset.num = skin.num
-    root.dataset.texture = skin.texture
+    root.dataset.num = resolveNum(pack, skin.num)
+    root.dataset.texture = resolveTexture(pack, skin.texture)
     // 原生状态栏跟着皮肤走：'dark' 是深底浅字，'light' 是浅底深字
     setStatusBarTheme(pack === 'night' ? 'dark' : 'light')
   }, [skin, pack])

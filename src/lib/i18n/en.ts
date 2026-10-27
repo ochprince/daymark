@@ -119,6 +119,8 @@ export const en: Record<MessageKey, Msg> = {
   'dress.privacy': 'Privacy policy',
   'dress.support': 'Help & feedback',
   'dress.previewName': 'Quit',
+  'dress.previewTitle': 'Full preview',
+  'dress.previewHint': 'Live, with your current picks',
   'dress.pack.jelly': 'Jelly',
   'dress.pack.paper': 'Paper',
   'dress.pack.night': 'Night',

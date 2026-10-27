@@ -36,6 +36,55 @@ export const DEFAULT_SKIN: SkinState = {
 const NUM_STYLES: readonly NumStyle[] = ['auto', 'round', 'serif', 'pixel', 'hand']
 const TEXTURES: readonly TextureStyle[] = ['auto', 'plain', 'dots', 'grid', 'lines']
 
+/** 解析后的值：auto 已经落到某一种具体字形 / 纹理上 */
+export type ResolvedNum = Exclude<NumStyle, 'auto'>
+export type ResolvedTexture = Exclude<TextureStyle, 'auto'>
+
+/**
+ * num:'auto' 的显式映射——「跟包走」到底走成哪一种。
+ *
+ * 取值依据 docs/prototype-v2/proto.css 里四套皮肤自己的 --font-num：
+ *   软糖 / 夜航  'Baloo 2', ui-rounded  → round
+ *   纸本        'Instrument Serif'       → serif
+ *   像素        'Silkscreen'             → pixel
+ * hand 是玩家自己挑的手写体，没有哪套皮肤默认用它。
+ */
+export const NUM_AUTO: Record<SkinPack, ResolvedNum> = {
+  jelly: 'round',
+  paper: 'serif',
+  night: 'round',
+  pixel: 'pixel',
+}
+
+/**
+ * texture:'auto' 的显式映射，同样对着 proto.css 的 --texture：
+ *   软糖  16px 圆点网格（radial-gradient 点）  → dots
+ *   纸本  27/28px 横线（repeating-linear）    → lines
+ *   夜航  星点（radial-gradient 点，240×220）  → dots
+ *   像素  12px 双向线性渐变                    → grid
+ */
+export const TEXTURE_AUTO: Record<SkinPack, ResolvedTexture> = {
+  jelly: 'dots',
+  paper: 'lines',
+  night: 'dots',
+  pixel: 'grid',
+}
+
+/**
+ * auto → 这一套皮肤的具体字形。显式选过的一律原样返回，不被包覆盖。
+ *
+ * 以前 auto 全靠 CSS 兜底（根节点写 data-num="auto"，没有规则命中，落回皮肤自带的
+ * --font-num），预览、导出这些要「读到具体值」的地方就只能猜。现在有一张表。
+ */
+export function resolveNum(pack: SkinPack, num: NumStyle): ResolvedNum {
+  return num === 'auto' ? NUM_AUTO[pack] : num
+}
+
+/** auto → 这一套皮肤的具体纹理；显式值不被覆盖 */
+export function resolveTexture(pack: SkinPack, texture: TextureStyle): ResolvedTexture {
+  return texture === 'auto' ? TEXTURE_AUTO[pack] : texture
+}
+
 /** 旧的主题开关（daymark.theme.v2）：system / light / dark */
 export type LegacyThemeMode = 'system' | 'light' | 'dark' | null
 

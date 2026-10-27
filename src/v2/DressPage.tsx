@@ -2,11 +2,14 @@ import type { CSSProperties } from 'react'
 import { Creature } from '../components/Creature'
 import { t } from '../lib/i18n'
 import type { Locale, MessageKey } from '../lib/i18n'
-import { LOCALES, LOCALE_LABELS } from '../lib/i18n'
+import { INTL_LOCALE, LOCALES, LOCALE_LABELS } from '../lib/i18n'
+import { reduceMotionOn } from '../lib/prefs'
 import type { PrefsState } from '../lib/prefs'
 import { FREE_SKIN_PACKS } from '../lib/entitlement'
-import { SKIN_PACKS } from '../lib/skin'
+import { SKIN_PACKS, resolveNum, resolveTexture } from '../lib/skin'
 import type { NumStyle, SkinPack, SkinState, TextureStyle } from '../lib/skin'
+import { IconDress, IconMuseum, IconToday } from './icons'
+import './dress.css'
 
 export type DressPageProps = {
   skin: SkinState
@@ -32,6 +35,11 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
         <h2>{t('dress.title')}</h2>
         <p>{t('dress.sub')}</p>
       </header>
+
+      <div className="sec-title">
+        {t('dress.previewTitle')} <small>{t('dress.previewHint')}</small>
+      </div>
+      <PreviewScreen skin={skin} prefs={prefs} locale={locale} />
 
       <div className="gallery">
         {SKIN_PACKS.map((pack) => (
@@ -256,6 +264,118 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
       </div>
     </div>
   )
+}
+
+/**
+ * 整屏预览：一块真 DOM 的缩小界面（顶栏 + stage-card 骨架 + tabbar）。
+ *
+ * 不是截图、也不是第二套样式：容器上带 data-skin / data-accent / data-num /
+ * data-texture，里面全读令牌，所以换包、换主色、换字体、换纹理都是当场生效
+ * （不用点保存），组件里也没有一处 if (skin === …)。
+ */
+function PreviewScreen({ skin, prefs, locale }: { skin: SkinState; prefs: PrefsState; locale: Locale }) {
+  // 减弱动效：用户开关或系统设置任一为真，预览里的循环动画都停
+  const reduce = reduceMotionOn(prefs)
+  const days = 128
+  const grown = 96
+  return (
+    <div className="dress-pv-box">
+      <div
+        className={reduce ? 'dress-preview reduce-motion' : 'dress-preview'}
+        data-skin={skin.pack}
+        data-accent={typeof skin.accent === 'number' ? String(skin.accent) : 'auto'}
+        data-num={resolveNum(skin.pack, skin.num)}
+        data-texture={resolveTexture(skin.pack, skin.texture)}
+        role="img"
+        aria-label={`${t('dress.previewTitle')} · ${t(`dress.pack.${skin.pack}` as MessageKey)}`}
+        // 卡片里的配色跟主色走：真界面里 --c/--c2 由每件事自己的颜色给
+        style={{ '--c': 'var(--accent)', '--c2': 'var(--accent-2)' } as CSSProperties}
+      >
+        <div className="pv-tex" aria-hidden="true" />
+
+        <div className="pv-top">
+          <div className="pv-top-l">
+            <span className="pv-date">{dayLabel(locale)}</span>
+            <span className="pv-greet">{t('greet.morning')}</span>
+          </div>
+          <span className="pv-avatar">
+            <Creature species="sprout" stage={2} size={26} />
+          </span>
+        </div>
+
+        <div className="pv-card">
+          <div className="pv-card-top">
+            <span className="pv-tag">{t('kind.since')}</span>
+            <b className="pv-title">{t('dress.previewName')}</b>
+          </div>
+
+          <div className="pv-hero">
+            <span className="pv-bubble">{t('line.since.long', { n: days })}</span>
+            <span className="pv-cr">
+              <Creature species="sprout" stage={3} size={64} />
+            </span>
+            <span className="pv-ground" aria-hidden="true" />
+          </div>
+
+          <div className="pv-num">
+            <span className="pv-digits">{days}</span>
+            <span className="pv-unit">{t('unit.daySuffix')}</span>
+          </div>
+          <div className="pv-sub">{t('stage.since.sub', { date: sinceLabel(locale, days) })}</div>
+
+          <div className="pv-growth">
+            <div className="pv-grow-h">
+              <span>{t('growth.total', { n: grown })}</span>
+              <b>62%</b>
+            </div>
+            <div className="pv-track">
+              <i />
+            </div>
+          </div>
+
+          <div className="pv-actions">
+            <span className="pv-btn">{t('action.poke')}</span>
+            <span className="pv-btn solid">{t('action.hold')}</span>
+          </div>
+        </div>
+
+        <nav className="pv-tabs" aria-hidden="true">
+          <i className="on">
+            <IconToday size={14} />
+            {t('tab.today')}
+          </i>
+          <i>
+            <IconMuseum size={14} />
+            {t('tab.museum')}
+          </i>
+          <i>
+            <IconDress size={14} />
+            {t('tab.dress')}
+          </i>
+        </nav>
+      </div>
+    </div>
+  )
+}
+
+/** 顶栏日期：跟着当前语言走 */
+function dayLabel(locale: Locale): string {
+  try {
+    return new Intl.DateTimeFormat(INTL_LOCALE[locale], { month: 'short', day: 'numeric', weekday: 'short' }).format(new Date())
+  } catch {
+    return ''
+  }
+}
+
+/** 「从 X 起」里的 X：把预览里那个天数倒推出来，看起来才像真的 */
+function sinceLabel(locale: Locale, days: number): string {
+  try {
+    return new Intl.DateTimeFormat(INTL_LOCALE[locale], { month: 'short', day: 'numeric' }).format(
+      new Date(Date.now() - days * 24 * 60 * 60 * 1000),
+    )
+  } catch {
+    return ''
+  }
 }
 
 /** 打开随包发布的静态页（隐私政策 / 帮助）；在原生壳里是同源页面，不出应用 */

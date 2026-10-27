@@ -1,0 +1,478 @@
+/* 装扮页 · 整屏预览
+   一块真的 9:16 界面骨架：顶栏 + stage-card + tabbar。里面全用令牌（--r1/--bw/--line/
+   --surface/--font-num/--num-w/--texture/--accent…），所以 data-skin / data-accent /
+   data-num / data-texture 一换，这里立刻跟着变，不需要任何 if (skin === …)。
+   尺寸用容器查询单位 cqw：预览多宽，里面的字与间距就按比例缩。 */
+
+.dress-pv-box {
+  container-type: inline-size;
+  width: 100%;
+  margin: 12px auto 2px;
+}
+
+.dress-preview {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 2.6cqw;
+  width: 100%;
+  aspect-ratio: 9 / 16;
+  padding: 4.6cqw 4.4cqw 3.6cqw;
+  border-radius: 13.5cqw;
+  /* 真机边框：--bw 是皮肤自己的描边粗细，硬边皮肤自然就是直角 */
+  border: var(--bw) solid var(--line);
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  box-shadow: var(--soft), 0 20px 44px -28px rgba(20, 12, 30, 0.55);
+  overflow: hidden;
+  isolation: isolate;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* 纹理层：和 .dm-texture 同一个口径 */
+.pv-tex {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: var(--texture);
+  background-size: var(--texture-size, auto);
+  pointer-events: none;
+}
+
+.dress-preview > *:not(.pv-tex) {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---------- 顶栏 ---------- */
+
+.pv-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2cqw;
+  padding: 0 0.6cqw;
+  flex: none;
+}
+
+.pv-top-l {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.pv-date {
+  font-size: 3.1cqw;
+  line-height: 1.2;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--ink3);
+}
+
+.pv-greet {
+  font-family: var(--font-title);
+  font-size: 5.4cqw;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+[data-skin='pixel'] .pv-greet {
+  font-family: var(--font-ui);
+}
+
+.pv-avatar {
+  display: grid;
+  place-items: center;
+  width: 10.4cqw;
+  height: 10.4cqw;
+  border-radius: 50%;
+  border: var(--bw) solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--pop-sm);
+  flex: none;
+  overflow: hidden;
+}
+
+[data-skin='paper'] .pv-avatar {
+  border-color: var(--hair);
+}
+
+[data-skin='pixel'] .pv-avatar {
+  border-radius: 0;
+}
+
+/* ---------- stage-card 骨架 ---------- */
+
+.pv-card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  padding: 3.8cqw 3.6cqw 3.4cqw;
+  border-radius: var(--r1);
+  border: var(--bw) solid var(--line);
+  background: color-mix(in oklab, var(--c) var(--tint), var(--surface));
+  box-shadow: var(--pop);
+  overflow: hidden;
+}
+
+[data-skin='paper'] .pv-card {
+  border-color: var(--hair);
+}
+
+[data-skin='night'] .pv-card {
+  background: linear-gradient(
+    180deg,
+    color-mix(in oklab, var(--c) 26%, var(--surface)),
+    var(--surface) 70%
+  );
+}
+
+.pv-card-top {
+  display: flex;
+  align-items: center;
+  gap: 2.4cqw;
+}
+
+.pv-tag {
+  font-size: 3cqw;
+  font-weight: 700;
+  line-height: 1.35;
+  padding: 0.8cqw 2.6cqw;
+  border-radius: 99px;
+  border: var(--bw) solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  flex: none;
+}
+
+[data-skin='paper'] .pv-tag {
+  border-color: var(--hair);
+}
+
+[data-skin='pixel'] .pv-tag {
+  border-radius: 0;
+}
+
+.pv-title {
+  font-family: var(--font-title);
+  font-size: 5.6cqw;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+
+[data-skin='pixel'] .pv-title {
+  font-family: var(--font-ui);
+}
+
+/* 气泡 + 小伙伴：和真卡片一样，气泡贴在右上角 */
+.pv-hero {
+  position: relative;
+  display: grid;
+  place-items: end center;
+  flex: 1;
+  min-height: 0;
+  margin-top: 1.4cqw;
+}
+
+.pv-bubble {
+  position: absolute;
+  top: 0;
+  right: 0;
+  z-index: 2;
+  max-width: 64%;
+  padding: 2.2cqw 3.2cqw;
+  border-radius: 4.4cqw 4.4cqw 4.4cqw 1.4cqw;
+  border: var(--bw) solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--pop-sm);
+  font-size: 3.5cqw;
+  line-height: 1.45;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+[data-skin='paper'] .pv-bubble {
+  border-color: var(--hair);
+  font-family: var(--font-title);
+  font-weight: 400;
+  box-shadow: none;
+}
+
+[data-skin='pixel'] .pv-bubble {
+  border-radius: 0;
+}
+
+[data-skin='night'] .pv-bubble {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.pv-cr {
+  display: grid;
+  place-items: center;
+  position: relative;
+  z-index: 1;
+  margin-bottom: 3.2cqw;
+}
+
+.pv-cr .cr {
+  animation: pv-bob 3.2s ease-in-out infinite;
+  transform-origin: 50% 92%;
+}
+
+.pv-ground {
+  position: absolute;
+  bottom: 1.6cqw;
+  left: 50%;
+  width: 26cqw;
+  height: 3.6cqw;
+  margin-left: -13cqw;
+  border-radius: 50%;
+  background: var(--c2);
+  opacity: 0.18;
+  animation: pv-shadow 3.2s ease-in-out infinite;
+}
+
+[data-skin='pixel'] .pv-ground {
+  border-radius: 0;
+  height: 1.8cqw;
+}
+
+.pv-num {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 1.6cqw;
+  margin-top: 1.6cqw;
+}
+
+.pv-digits {
+  font-family: var(--font-num);
+  font-weight: var(--num-w);
+  font-style: var(--num-style);
+  font-size: 21cqw;
+  line-height: 0.9;
+  letter-spacing: -0.02em;
+  color: var(--num-color);
+  text-shadow: var(--num-shadow);
+  font-variant-numeric: tabular-nums;
+}
+
+[data-skin='pixel'] .pv-digits {
+  font-size: 17cqw;
+  letter-spacing: 0;
+}
+
+[data-skin='paper'] .pv-digits {
+  font-size: 26cqw;
+  letter-spacing: -0.03em;
+}
+
+.pv-unit {
+  font-size: 4cqw;
+  font-weight: 700;
+  color: var(--ink2);
+}
+
+.pv-sub {
+  margin-top: 1.2cqw;
+  text-align: center;
+  font-size: 3.3cqw;
+  font-weight: 500;
+  color: var(--ink2);
+}
+
+.pv-growth {
+  margin-top: 3cqw;
+  padding: 2.6cqw 3cqw 3cqw;
+  border-radius: var(--r3);
+  border: var(--bw) solid var(--line);
+  background: color-mix(in oklab, var(--surface) 72%, transparent);
+}
+
+[data-skin='paper'] .pv-growth,
+[data-skin='night'] .pv-growth {
+  border-color: var(--hair);
+}
+
+.pv-grow-h {
+  display: flex;
+  justify-content: space-between;
+  font-size: 3.2cqw;
+  font-weight: 600;
+  color: var(--ink2);
+}
+
+.pv-grow-h b {
+  font-family: var(--font-num);
+  font-weight: var(--num-w);
+  font-size: 3.6cqw;
+  color: var(--ink);
+}
+
+.pv-track {
+  position: relative;
+  height: 3cqw;
+  margin-top: 2.2cqw;
+  border-radius: 99px;
+  background: var(--hair);
+  overflow: hidden;
+}
+
+[data-skin='pixel'] .pv-track,
+[data-skin='pixel'] .pv-track i {
+  border-radius: 0;
+}
+
+.pv-track i {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 62%;
+  border-radius: 99px;
+  background: var(--c2);
+}
+
+[data-skin='jelly'] .pv-track i {
+  background: repeating-linear-gradient(-45deg, var(--c2) 0 3px, color-mix(in oklab, var(--c2) 80%, #fff) 3px 6px);
+}
+
+.pv-actions {
+  display: flex;
+  gap: 2.4cqw;
+  margin-top: 3cqw;
+}
+
+.pv-btn {
+  flex: 1;
+  display: grid;
+  place-items: center;
+  height: 10.4cqw;
+  border-radius: 99px;
+  border: var(--bw) solid var(--line);
+  background: var(--surface);
+  font-size: 3.5cqw;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.pv-btn.solid {
+  background: var(--accent);
+  border-color: var(--line);
+  color: var(--accent-ink);
+  box-shadow: var(--pop-sm);
+}
+
+[data-skin='paper'] .pv-btn.ghost,
+[data-skin='paper'] .pv-btn {
+  border-color: var(--hair);
+}
+
+[data-skin='night'] .pv-btn.solid {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+}
+
+[data-skin='pixel'] .pv-btn {
+  border-radius: 0;
+}
+
+/* ---------- tabbar ---------- */
+
+.pv-tabs {
+  display: flex;
+  align-items: center;
+  gap: 1cqw;
+  align-self: center;
+  flex: none;
+  padding: 1.4cqw;
+  border-radius: 99px;
+  border: var(--bw) solid var(--line);
+  background: var(--surface);
+  box-shadow: var(--pop);
+}
+
+[data-skin='paper'] .pv-tabs {
+  border-color: var(--hair);
+  box-shadow: 0 6px 18px -10px rgba(0, 0, 0, 0.2);
+}
+
+[data-skin='night'] .pv-tabs {
+  background: rgba(28, 32, 80, 0.86);
+}
+
+[data-skin='pixel'] .pv-tabs,
+[data-skin='pixel'] .pv-tabs i {
+  border-radius: 0;
+}
+
+.pv-tabs i {
+  display: flex;
+  align-items: center;
+  gap: 1.2cqw;
+  height: 9.6cqw;
+  padding: 0 3.4cqw;
+  border-radius: 99px;
+  font-style: normal;
+  font-size: 3.4cqw;
+  font-weight: 700;
+  color: var(--ink3);
+}
+
+.pv-tabs i.on {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+[data-skin='night'] .pv-tabs i.on {
+  background: linear-gradient(135deg, var(--accent), var(--accent-2));
+  color: #fff;
+}
+
+.pv-tabs svg {
+  flex: none;
+}
+
+/* 减弱动效：预览里的循环动画一起停（根节点上的 .reduce-motion 由 AppV2 挂，
+   这里再在预览容器自己身上收一道，删掉根节点也不会漏） */
+.dress-preview.reduce-motion .cr,
+.dress-preview.reduce-motion .pv-ground {
+  animation: none !important;
+}
+
+.dress-preview.reduce-motion,
+.dress-preview.reduce-motion * {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+}
+
+@keyframes pv-bob {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+@keyframes pv-shadow {
+  0%, 100% { transform: scaleX(1); opacity: 0.18; }
+  50% { transform: scaleX(0.92); opacity: 0.13; }
+}
+
+/* 横屏 / 宽屏下别把预览拉得比手机还大 */
+@media (min-width: 720px) {
+  .dress-pv-box {
+    max-width: 430px;
+  }
+}
