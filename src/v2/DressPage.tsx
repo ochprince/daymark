@@ -5,7 +5,7 @@ import type { Locale, MessageKey } from '../lib/i18n'
 import { INTL_LOCALE, LOCALES, LOCALE_LABELS } from '../lib/i18n'
 import { reduceMotionOn } from '../lib/prefs'
 import type { PrefsState } from '../lib/prefs'
-import { FREE_SKIN_PACKS } from '../lib/entitlement'
+import { FREE_SKIN_PACKS, previewUnlocked } from '../lib/entitlement'
 import { SKIN_PACKS, resolveNum, resolveTexture } from '../lib/skin'
 import type { NumStyle, SkinPack, SkinState, TextureStyle } from '../lib/skin'
 import { IconDress, IconMuseum, IconToday } from './icons'
@@ -151,7 +151,16 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
         </div>
       </div>
 
-      {pro ? null : (
+      {pro ? (
+        previewUnlocked ? (
+          <div className="card opt" style={{ padding: '13px 18px' }}>
+            <div className="opt-h" style={{ marginBottom: 0 }}>
+              <span>{t('dress.previewUnlock')}</span>
+              <small>{t('dress.previewUnlockHint')}</small>
+            </div>
+          </div>
+        ) : null
+      ) : (
         <button className="card opt" type="button" onClick={onUpgrade} style={{ display: 'block', width: 'calc(100% - 32px)', textAlign: 'left' }}>
           <div className="opt-h" style={{ marginBottom: 0 }}>
             <span>{t('pro.title')}</span>

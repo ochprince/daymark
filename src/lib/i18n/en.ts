@@ -121,6 +121,8 @@ export const en: Record<MessageKey, Msg> = {
   'dress.previewName': 'Quit',
   'dress.previewTitle': 'Full preview',
   'dress.previewHint': 'Live, with your current picks',
+  'dress.previewUnlock': 'Preview · everything unlocked',
+  'dress.previewUnlockHint': 'Retail build still requires purchase',
   'dress.pack.jelly': 'Jelly',
   'dress.pack.paper': 'Paper',
   'dress.pack.night': 'Night',
