@@ -27,7 +27,8 @@
 
 这类问题不查不知道，因为它看着像做完了。
 
-- [ ] **降级动效（reduce-motion）整条链路是死的**
+- [x] **降级动效（reduce-motion）整条链路是死的** —— 已修 `16813f6`：类挂到 `<html>`、规则搬到被引入的 app.css、JS 侧统一读 `prefersReducedMotion()`。实测三种状态 animationName / transitionDuration 分别为 `bob`/`0.35s`、`none`/`1e-05s`、`none`/`1e-05s`。
+  - 连带查出的新问题见下面「孤儿样式文件」。
   - `prefs.reduceMotion` 存在、`reduceMotionOn()` 也导出了，但**没有任何调用点**（全项目 grep 为 0）；
   - CSS 里唯一的规则是 `.phone.reduce-motion …`，而 v2 根节点早就改成 `.dm-screen`，**这条选择器匹配不到任何元素**；
   - 结果：用户开「减少动效」、或系统开了 reduce motion，动画一样全跑。
@@ -39,6 +40,10 @@
 
 - [ ] **纹理 / 数字字体的 `auto` 没有对照表**：`num: auto`、`texture: auto` 各皮肤该落到哪个值，代码里没有 explicit 映射，靠 CSS 兜底，出一套新皮肤就没准了。
   - `[data-texture]` 规则只有 4 条、`[data-num]` 5 条，覆盖明显偏薄（`plain/dots/grid/lines` 四档 + `round/serif/pixel/hand` 四种）。
+
+- [ ] **`src/v2/tabs.css` 是孤儿文件**：没有任何入口 `import` 它，里面的规则（含 `.dex` 五列网格修正、`.w-hero`/`.w-egg` 等）**从来没进过构建**。
+  - 这次 reduce-motion 原本就写在里面，所以就算选择器对也不会生效。
+  - 要么整体 import 进来跑一遍视觉回归，要么把有用的规则逐条迁到 app.css。
 
 ---
 
