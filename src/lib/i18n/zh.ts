@@ -119,8 +119,6 @@ export const zh = {
   'dress.privacy': '隐私政策',
   'dress.support': '帮助与反馈',
   'dress.previewName': '戒烟',
-  'dress.previewTitle': '整屏预览',
-  'dress.previewHint': '按你现在的选择实时渲染',
   'dress.previewUnlock': '预览版 · 全部功能已解锁',
   'dress.previewUnlockHint': '正式版仍按买断解锁',
   'dress.swipeHint': '左右滑动预览 · 松手就换上',

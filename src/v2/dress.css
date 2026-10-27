@@ -1,70 +1,7 @@
-/* 装扮页 · 整屏预览
-   照原型（docs/prototype-v2/tabs.js 的 miniPhone）的方式做：一块虚拟屏幕 + 整体缩放，
-   里面就是真的 .t-head / StageCard / TabBar，不再另画一套骨架。
-   容器上带 data-skin / data-accent / data-num / data-texture，令牌全部生效。 */
+/* 装扮页 · 换皮肤后的提示条
+   整屏预览已经去掉：预览交给画廊本身（四张 .mini 就是真实界面的缩放版，
+   横滑松手即换，见原型 tabs.js 的 miniPhone / settle）。这里只剩 toast 的一点动效。 */
 
-.dress-pv-box {
-  width: 100%;
-  margin: 12px auto 2px;
-}
-
-.dress-preview {
-  position: relative;
-  width: 100%;
-  aspect-ratio: 9 / 16;
-  overflow: hidden;
-  /* 圆角按缩放走：虚拟屏 390 宽，真机量级 54pt */
-  border-radius: calc(var(--pv-scale, 1) * 54px);
-  border: calc(var(--pv-scale, 1) * 3px) solid var(--line);
-  background: var(--bg);
-  box-shadow: var(--soft), 0 20px 44px -28px rgba(20, 12, 30, 0.55);
-  isolation: isolate;
-  /* 预览是只读的：里面的按住、横滑、点击都不该被触发 */
-  pointer-events: none;
-  user-select: none;
-  -webkit-user-select: none;
-}
-
-/* 虚拟屏：真机同宽 390pt，按 scale 铺满预览框。
-   --pv-scale 由 PreviewScreen 用 ResizeObserver 量出来（预览框宽度 / 390）。 */
-.pv-screen {
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 390px;
-  height: 693.33px;
-  transform: scale(var(--pv-scale, 1));
-  transform-origin: 0 0;
-  background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-ui);
-  overflow: hidden;
-}
-
-/* 纹理层：和 .dm-texture 同一个口径 */
-.pv-tex {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background-image: var(--texture);
-  background-size: var(--texture-size, auto);
-  pointer-events: none;
-}
-
-.pv-screen > .t-head,
-.pv-screen > .stage-card {
-  position: relative;
-  z-index: 1;
-}
-
-/* 底部导航在真机上是 fixed，放进虚拟屏就得回到屏幕内 */
-.pv-screen .tabbar {
-  position: absolute;
-  bottom: 26px;
-  z-index: 30;
-}
-
-/* 换皮肤后的提示条 */
 .dress-toast {
   animation: toastIn 0.22s var(--ease-pop);
 }
@@ -77,27 +14,5 @@
   to {
     opacity: 1;
     transform: translate(-50%, 0);
-  }
-}
-
-/* 减弱动效：预览里的循环动画一起停（根节点上的 .reduce-motion 由 AppV2 挂，
-   这里再在预览容器自己身上收一道，删掉根节点也不会漏） */
-.dress-preview.reduce-motion .cr,
-.dress-preview.reduce-motion .ground,
-.dress-preview.reduce-motion .g-track i {
-  animation: none !important;
-}
-
-.dress-preview.reduce-motion,
-.dress-preview.reduce-motion * {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
-}
-
-/* 横屏 / 宽屏下别把预览拉得比手机还大 */
-@media (min-width: 720px) {
-  .dress-pv-box {
-    max-width: 430px;
   }
 }

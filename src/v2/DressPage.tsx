@@ -3,16 +3,14 @@ import type { CSSProperties } from 'react'
 import { t } from '../lib/i18n'
 import type { Locale, MessageKey } from '../lib/i18n'
 import { INTL_LOCALE, LOCALES, LOCALE_LABELS } from '../lib/i18n'
-import { reduceMotionOn } from '../lib/prefs'
 import type { PrefsState } from '../lib/prefs'
 import { FREE_SKIN_PACKS, previewUnlocked } from '../lib/entitlement'
 import { playSfx } from '../lib/sfx'
-import { SKIN_PACKS, resolveNum, resolveTexture } from '../lib/skin'
+import { SKIN_PACKS } from '../lib/skin'
 import type { NumStyle, SkinPack, SkinState, TextureStyle } from '../lib/skin'
 import type { SinceView } from '../lib/itemview'
 import type { DayEvent } from '../lib/types'
 import { StageCard } from './StageCard'
-import { TabBar } from './TabBar'
 import './dress.css'
 
 export type DressPageProps = {
@@ -137,11 +135,6 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
         ))}
       </div>
       <p className="g-hint">{t('dress.swipeHint')}</p>
-
-      <div className="sec-title">
-        {t('dress.previewTitle')} <small>{t('dress.previewHint')}</small>
-      </div>
-      <PreviewScreen skin={skin} prefs={prefs} locale={locale} />
 
       <div className="sec-title">
         {t('dress.custom')} <small>{t('dress.customHint')}</small>
@@ -378,65 +371,6 @@ function previewView(): SinceView {
   }
 }
 
-/** 虚拟屏幕的宽度：和真机同宽，里面按真实尺寸排版，最后整体缩放 */
-const PV_W = 390
-
-const noop = () => {}
-
-/**
- * 整屏预览，照原型的方式做：一块 390pt 宽的虚拟屏幕，里面就是真的 .t-head +
- * StageCard + TabBar，再整体 scale 到预览框宽度——不是另画一套骨架。
- *
- * 容器上带 data-skin / data-accent / data-num / data-texture，令牌全部生效，
- * 换包、换主色、换字体、换纹理当场跟着变（不用点保存）。
- */
-function PreviewScreen({ skin, prefs, locale }: { skin: SkinState; prefs: PrefsState; locale: Locale }) {
-  const boxRef = useRef<HTMLDivElement | null>(null)
-  const [scale, setScale] = useState(1)
-  // 减弱动效：用户开关或系统设置任一为真，预览里的循环动画都停
-  const reduce = reduceMotionOn(prefs)
-  // 文案跟语言走：换语言时把预览里那份假数据重算一遍
-  const view = useMemo(() => previewView(), [locale])
-  const date = useMemo(() => dayLabel(locale), [locale])
-
-  useEffect(() => {
-    const box = boxRef.current
-    if (!box) return undefined
-    const measure = () => setScale(box.clientWidth / PV_W)
-    measure()
-    const ro = new ResizeObserver(measure)
-    ro.observe(box)
-    return () => ro.disconnect()
-  }, [])
-
-  return (
-    <div className="dress-pv-box" ref={boxRef}>
-      <div
-        className={reduce ? 'dress-preview reduce-motion' : 'dress-preview'}
-        data-skin={skin.pack}
-        data-accent={typeof skin.accent === 'number' ? String(skin.accent) : 'auto'}
-        data-num={resolveNum(skin.pack, skin.num)}
-        data-texture={resolveTexture(skin.pack, skin.texture)}
-        role="img"
-        aria-label={`${t('dress.previewTitle')} · ${t(`dress.pack.${skin.pack}` as MessageKey)}`}
-        style={{ '--pv-scale': scale } as CSSProperties}
-      >
-        <div className="pv-screen">
-          <div className="pv-tex" aria-hidden="true" />
-          <header className="t-head">
-            <div>
-              <div className="t-date">{date}</div>
-              <div className="t-greet">{t('greet.morning')}</div>
-            </div>
-          </header>
-          <StageCard view={view} onLog={noop} onSayDone={noop} onPoke={noop} onProfile={noop} />
-          <TabBar active="today" onChange={noop} />
-        </div>
-      </div>
-    </div>
-  )
-}
-
 /** 顶栏日期：跟着当前语言走 */
 function dayLabel(locale: Locale): string {
   try {
@@ -474,6 +408,9 @@ function numPreview(style: NumStyle): CSSProperties {
   if (style === 'round') return { fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui' }
   return {}
 }
+
+/** 预览只读：卡片上的按住、横滑、点击都不接 */
+const noop = () => {}
 
 /**
  * 缩略机：照原型 miniPhone 的做法——400px 宽的虚拟屏里放真的 .t-head + StageCard，
