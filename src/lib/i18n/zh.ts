@@ -123,6 +123,8 @@ export const zh = {
   'dress.previewHint': '按你现在的选择实时渲染',
   'dress.previewUnlock': '预览版 · 全部功能已解锁',
   'dress.previewUnlockHint': '正式版仍按买断解锁',
+  'dress.swipeHint': '左右滑动预览 · 松手就换上',
+  'dress.switched': '已换上「{name}」',
   'dress.pack.jelly': '软糖',
   'dress.pack.paper': '纸本',
   'dress.pack.night': '夜航',

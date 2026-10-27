@@ -1,14 +1,18 @@
+import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
-import { Creature } from '../components/Creature'
 import { t } from '../lib/i18n'
 import type { Locale, MessageKey } from '../lib/i18n'
 import { INTL_LOCALE, LOCALES, LOCALE_LABELS } from '../lib/i18n'
 import { reduceMotionOn } from '../lib/prefs'
 import type { PrefsState } from '../lib/prefs'
 import { FREE_SKIN_PACKS, previewUnlocked } from '../lib/entitlement'
+import { playSfx } from '../lib/sfx'
 import { SKIN_PACKS, resolveNum, resolveTexture } from '../lib/skin'
 import type { NumStyle, SkinPack, SkinState, TextureStyle } from '../lib/skin'
-import { IconDress, IconMuseum, IconToday } from './icons'
+import type { SinceView } from '../lib/itemview'
+import type { DayEvent } from '../lib/types'
+import { StageCard } from './StageCard'
+import { TabBar } from './TabBar'
 import './dress.css'
 
 export type DressPageProps = {
@@ -29,6 +33,77 @@ const TEXTURES: readonly TextureStyle[] = ['auto', 'plain', 'dots', 'grid', 'lin
 
 /** 装扮：风格包、主色、数字字体、纹理，和其他偏好 */
 export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onExport, onImport, pro, onUpgrade }: DressPageProps) {
+  // 画廊与预览对齐原型：横滑到哪一张，松手就换上（点击也算一次落定）
+  const galleryRef = useRef<HTMLDivElement | null>(null)
+  const settleTimer = useRef(0)
+  const [center, setCenter] = useState(() => Math.max(0, SKIN_PACKS.indexOf(skin.pack)))
+  const [toast, setToast] = useState<string | null>(null)
+  const toastTimer = useRef(0)
+
+  function showToast(text: string) {
+    setToast(text)
+    window.clearTimeout(toastTimer.current)
+    toastTimer.current = window.setTimeout(() => setToast(null), 1800)
+  }
+
+  useEffect(
+    () => () => {
+      window.clearTimeout(settleTimer.current)
+      window.clearTimeout(toastTimer.current)
+    },
+    [],
+  )
+
+  // 首次进来把画廊滚到当前这套（原型也是这样，避免「选中的在屏幕外」）
+  useEffect(() => {
+    const gal = galleryRef.current
+    if (!gal) return
+    const item = gal.querySelectorAll<HTMLElement>('.g-item')[Math.max(0, SKIN_PACKS.indexOf(skin.pack))]
+    if (!item) return
+    // 先关掉吸附再定位，否则首次定位会被 snap 动画带偏
+    gal.style.scrollSnapType = 'none'
+    gal.scrollLeft = item.offsetLeft + item.offsetWidth / 2 - gal.clientWidth / 2
+    requestAnimationFrame(() => {
+      gal.style.scrollSnapType = ''
+    })
+    // 只在挂载时定位一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  /** 换一套：免费版碰到锁着的包就弹付费墙 */
+  function applyPack(pack: SkinPack) {
+    if (!pro && !(FREE_SKIN_PACKS as readonly string[]).includes(pack)) {
+      onUpgrade()
+      return false
+    }
+    onSkin({ pack })
+    playSfx('tap')
+    return true
+  }
+
+  function pickPack(pack: SkinPack) {
+    setCenter(Math.max(0, SKIN_PACKS.indexOf(pack)))
+    if (applyPack(pack)) showToast(t('dress.switched', { name: t(`dress.pack.${pack}` as MessageKey) }))
+  }
+
+  /** 松手落定：看哪一张停在正中，就换上哪一张 */
+  function onGalleryScroll() {
+    window.clearTimeout(settleTimer.current)
+    settleTimer.current = window.setTimeout(() => {
+      const gal = galleryRef.current
+      if (!gal) return
+      const index = centeredIndex(gal)
+      setCenter(index)
+      const pack = SKIN_PACKS[index]
+      if (!pack || pack === skin.pack) return
+      // 锁着的包只让看，不换上；点它才弹付费墙
+      if (!pro && !(FREE_SKIN_PACKS as readonly string[]).includes(pack)) return
+      onSkin({ pack })
+      playSfx('tap')
+      showToast(t('dress.switched', { name: t(`dress.pack.${pack}` as MessageKey) }))
+    }, 140)
+  }
+
   return (
     <div className="dress">
       <header className="dress-h">
@@ -36,27 +111,15 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
         <p>{t('dress.sub')}</p>
       </header>
 
-      <div className="sec-title">
-        {t('dress.previewTitle')} <small>{t('dress.previewHint')}</small>
-      </div>
-      <PreviewScreen skin={skin} prefs={prefs} locale={locale} />
-
-      <div className="gallery">
+      <div className="gallery" ref={galleryRef} onScroll={onGalleryScroll}>
         {SKIN_PACKS.map((pack) => (
           <button
             key={pack}
             type="button"
             className={`g-item ${skin.pack === pack ? 'is-on' : ''}`}
-            onClick={() => {
-              // 免费版只给软糖，点别的包就弹付费墙
-              if (!pro && !(FREE_SKIN_PACKS as readonly string[]).includes(pack)) {
-                onUpgrade()
-                return
-              }
-              onSkin({ pack })
-            }}
+            onClick={() => pickPack(pack)}
           >
-            <MiniPhone pack={pack} />
+            <MiniPhone pack={pack} locale={locale} />
             <b>{t(`dress.pack.${pack}` as MessageKey)}</b>
             <small>{t(`dress.pack.${pack}.tag` as MessageKey)}</small>
             <span className="applied">{t('dress.applied')}</span>
@@ -69,10 +132,16 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
       </div>
 
       <div className="g-dots">
-        {SKIN_PACKS.map((pack) => (
-          <i key={pack} className={skin.pack === pack ? 'on' : ''} />
+        {SKIN_PACKS.map((pack, index) => (
+          <i key={pack} className={center === index ? 'on' : ''} />
         ))}
       </div>
+      <p className="g-hint">{t('dress.swipeHint')}</p>
+
+      <div className="sec-title">
+        {t('dress.previewTitle')} <small>{t('dress.previewHint')}</small>
+      </div>
+      <PreviewScreen skin={skin} prefs={prefs} locale={locale} />
 
       <div className="sec-title">
         {t('dress.custom')} <small>{t('dress.customHint')}</small>
@@ -271,24 +340,77 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           <small>›</small>
         </button>
       </div>
+
+      {toast ? (
+        <div className="toast dress-toast" role="status">
+          {toast}
+        </div>
+      ) : null}
     </div>
   )
 }
 
+/** 预览里的这「一件事」：虚构的数据，交给真的 StageCard 去渲染 */
+function previewView(): SinceView {
+  const startedAt = Date.now() - 128 * 24 * 60 * 60 * 1000
+  const title = t('dress.previewName')
+  const event: DayEvent = {
+    id: 'preview',
+    title,
+    startedAt,
+    createdAt: startedAt,
+    color: 1,
+    species: 'sprout',
+    history: [],
+  }
+  return {
+    kind: 'since',
+    key: 'since:preview',
+    id: 'preview',
+    title,
+    color: 1,
+    species: 'sprout',
+    stage: 4,
+    growth: 128,
+    mood: 'idle',
+    days: 128,
+    event,
+  }
+}
+
+/** 虚拟屏幕的宽度：和真机同宽，里面按真实尺寸排版，最后整体缩放 */
+const PV_W = 390
+
+const noop = () => {}
+
 /**
- * 整屏预览：一块真 DOM 的缩小界面（顶栏 + stage-card 骨架 + tabbar）。
+ * 整屏预览，照原型的方式做：一块 390pt 宽的虚拟屏幕，里面就是真的 .t-head +
+ * StageCard + TabBar，再整体 scale 到预览框宽度——不是另画一套骨架。
  *
- * 不是截图、也不是第二套样式：容器上带 data-skin / data-accent / data-num /
- * data-texture，里面全读令牌，所以换包、换主色、换字体、换纹理都是当场生效
- * （不用点保存），组件里也没有一处 if (skin === …)。
+ * 容器上带 data-skin / data-accent / data-num / data-texture，令牌全部生效，
+ * 换包、换主色、换字体、换纹理当场跟着变（不用点保存）。
  */
 function PreviewScreen({ skin, prefs, locale }: { skin: SkinState; prefs: PrefsState; locale: Locale }) {
+  const boxRef = useRef<HTMLDivElement | null>(null)
+  const [scale, setScale] = useState(1)
   // 减弱动效：用户开关或系统设置任一为真，预览里的循环动画都停
   const reduce = reduceMotionOn(prefs)
-  const days = 128
-  const grown = 96
+  // 文案跟语言走：换语言时把预览里那份假数据重算一遍
+  const view = useMemo(() => previewView(), [locale])
+  const date = useMemo(() => dayLabel(locale), [locale])
+
+  useEffect(() => {
+    const box = boxRef.current
+    if (!box) return undefined
+    const measure = () => setScale(box.clientWidth / PV_W)
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(box)
+    return () => ro.disconnect()
+  }, [])
+
   return (
-    <div className="dress-pv-box">
+    <div className="dress-pv-box" ref={boxRef}>
       <div
         className={reduce ? 'dress-preview reduce-motion' : 'dress-preview'}
         data-skin={skin.pack}
@@ -297,71 +419,19 @@ function PreviewScreen({ skin, prefs, locale }: { skin: SkinState; prefs: PrefsS
         data-texture={resolveTexture(skin.pack, skin.texture)}
         role="img"
         aria-label={`${t('dress.previewTitle')} · ${t(`dress.pack.${skin.pack}` as MessageKey)}`}
-        // 卡片里的配色跟主色走：真界面里 --c/--c2 由每件事自己的颜色给
-        style={{ '--c': 'var(--accent)', '--c2': 'var(--accent-2)' } as CSSProperties}
+        style={{ '--pv-scale': scale } as CSSProperties}
       >
-        <div className="pv-tex" aria-hidden="true" />
-
-        <div className="pv-top">
-          <div className="pv-top-l">
-            <span className="pv-date">{dayLabel(locale)}</span>
-            <span className="pv-greet">{t('greet.morning')}</span>
-          </div>
-          <span className="pv-avatar">
-            <Creature species="sprout" stage={2} size={26} />
-          </span>
-        </div>
-
-        <div className="pv-card">
-          <div className="pv-card-top">
-            <span className="pv-tag">{t('kind.since')}</span>
-            <b className="pv-title">{t('dress.previewName')}</b>
-          </div>
-
-          <div className="pv-hero">
-            <span className="pv-bubble">{t('line.since.long', { n: days })}</span>
-            <span className="pv-cr">
-              <Creature species="sprout" stage={3} size={64} />
-            </span>
-            <span className="pv-ground" aria-hidden="true" />
-          </div>
-
-          <div className="pv-num">
-            <span className="pv-digits">{days}</span>
-            <span className="pv-unit">{t('unit.daySuffix')}</span>
-          </div>
-          <div className="pv-sub">{t('stage.since.sub', { date: sinceLabel(locale, days) })}</div>
-
-          <div className="pv-growth">
-            <div className="pv-grow-h">
-              <span>{t('growth.total', { n: grown })}</span>
-              <b>62%</b>
+        <div className="pv-screen">
+          <div className="pv-tex" aria-hidden="true" />
+          <header className="t-head">
+            <div>
+              <div className="t-date">{date}</div>
+              <div className="t-greet">{t('greet.morning')}</div>
             </div>
-            <div className="pv-track">
-              <i />
-            </div>
-          </div>
-
-          <div className="pv-actions">
-            <span className="pv-btn">{t('action.poke')}</span>
-            <span className="pv-btn solid">{t('action.hold')}</span>
-          </div>
+          </header>
+          <StageCard view={view} onLog={noop} onSayDone={noop} onPoke={noop} onProfile={noop} />
+          <TabBar active="today" onChange={noop} />
         </div>
-
-        <nav className="pv-tabs" aria-hidden="true">
-          <i className="on">
-            <IconToday size={14} />
-            {t('tab.today')}
-          </i>
-          <i>
-            <IconMuseum size={14} />
-            {t('tab.museum')}
-          </i>
-          <i>
-            <IconDress size={14} />
-            {t('tab.dress')}
-          </i>
-        </nav>
       </div>
     </div>
   )
@@ -376,15 +446,19 @@ function dayLabel(locale: Locale): string {
   }
 }
 
-/** 「从 X 起」里的 X：把预览里那个天数倒推出来，看起来才像真的 */
-function sinceLabel(locale: Locale, days: number): string {
-  try {
-    return new Intl.DateTimeFormat(INTL_LOCALE[locale], { month: 'short', day: 'numeric' }).format(
-      new Date(Date.now() - days * 24 * 60 * 60 * 1000),
-    )
-  } catch {
-    return ''
-  }
+/** 画廊：哪一张停在正中（原型同款算法） */
+function centeredIndex(gal: HTMLElement): number {
+  const mid = gal.scrollLeft + gal.clientWidth / 2
+  let best = 0
+  let bestDistance = Number.POSITIVE_INFINITY
+  gal.querySelectorAll<HTMLElement>('.g-item').forEach((el, index) => {
+    const distance = Math.abs(el.offsetLeft + el.offsetWidth / 2 - mid)
+    if (distance < bestDistance) {
+      bestDistance = distance
+      best = index
+    }
+  })
+  return best
 }
 
 /** 打开随包发布的静态页（隐私政策 / 帮助）；在原生壳里是同源页面，不出应用 */
@@ -401,43 +475,25 @@ function numPreview(style: NumStyle): CSSProperties {
   return {}
 }
 
-/** 缩略机：走的是同一套令牌，所以换包这里立刻跟着变 */
-function MiniPhone({ pack }: { pack: SkinPack }) {
+/**
+ * 缩略机：照原型 miniPhone 的做法——400px 宽的虚拟屏里放真的 .t-head + StageCard，
+ * 再整体 scale(0.485) 塞进 200×356 的窗口。不是另画一张小图，所以卡片内容、
+ * 圆角、描边、阴影都和换到真机上一模一样。
+ */
+function MiniPhone({ pack, locale }: { pack: SkinPack; locale: Locale }) {
+  const view = useMemo(() => previewView(), [locale])
   return (
     <div className="mini" data-skin={pack} aria-hidden="true">
       <div className="mini-inner">
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Creature species="sprout" stage={2} size={38} />
-          <div style={{ textAlign: 'left' }}>
-            <div style={{ fontSize: 11, fontWeight: 700, opacity: 0.7 }}>{t('greet.morning')}</div>
-            <div style={{ fontSize: 12, fontWeight: 800 }}>{t('dress.previewName')}</div>
+        <header className="t-head">
+          <div>
+            <div className="t-date">{dayLabel(locale)}</div>
+            <div className="t-greet">{t('greet.morning')}</div>
           </div>
-        </div>
-        <div
-          style={{
-            fontFamily: 'var(--font-num)',
-            fontStyle: 'var(--num-style)',
-            fontWeight: 'var(--num-w)',
-            fontSize: 44,
-            lineHeight: 1,
-            marginTop: 10,
-          }}
-        >
-          128
-        </div>
-        <div style={{ fontSize: 11, opacity: 0.6, marginTop: 2 }}>{t('unit.day', { n: 128 })}</div>
-        <div
-          style={{
-            marginTop: 12,
-            height: 8,
-            borderRadius: 99,
-            background: 'var(--hair)',
-            overflow: 'hidden',
-          }}
-        >
-          <div style={{ width: '62%', height: '100%', background: 'var(--c2)' }} />
-        </div>
+        </header>
+        <StageCard view={view} onLog={noop} onSayDone={noop} onPoke={noop} onProfile={noop} />
       </div>
     </div>
   )
 }
+
