@@ -162,6 +162,8 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           <button
             className={`toggle ${skin.followSystem ? 'on' : ''}`}
             type="button"
+            role="switch"
+            aria-checked={skin.followSystem}
             aria-label={t('dress.followSystem')}
             onClick={() => onSkin({ followSystem: !skin.followSystem })}
           />
@@ -174,6 +176,8 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           <button
             className={`toggle ${prefs.sound ? 'on' : ''}`}
             type="button"
+            role="switch"
+            aria-checked={prefs.sound}
             aria-label={t('dress.sound')}
             onClick={() => onPrefs({ sound: !prefs.sound })}
           />
@@ -186,6 +190,8 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           <button
             className={`toggle ${prefs.haptic ? 'on' : ''}`}
             type="button"
+            role="switch"
+            aria-checked={prefs.haptic}
             aria-label={t('dress.haptic')}
             onClick={() => onPrefs({ haptic: !prefs.haptic })}
           />
@@ -198,6 +204,8 @@ export function DressPage({ skin, onSkin, prefs, onPrefs, locale, onLocale, onEx
           <button
             className={`toggle ${prefs.reduceMotion ? 'on' : ''}`}
             type="button"
+            role="switch"
+            aria-checked={prefs.reduceMotion}
             aria-label={t('dress.reduceMotion')}
             onClick={() => onPrefs({ reduceMotion: !prefs.reduceMotion })}
           />

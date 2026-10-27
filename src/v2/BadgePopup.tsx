@@ -32,7 +32,7 @@ export function BadgePopup({ badge, onClose }: BadgePopupProps) {
 
   return (
     <div className="ov" style={{ zIndex: 55 }}>
-      <div className="dim" onClick={onClose} />
+      <div className="dim" onClick={onClose} aria-hidden="true" />
       <div className="badge-pop" role="dialog" aria-modal="true">
         <Badge kind={art.kind} label={art.label ?? ''} size={96} />
         <div className="badge-pop__title">{t('badge.title')}</div>

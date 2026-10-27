@@ -50,7 +50,7 @@ export function HatchOverlay({ info, onDone }: HatchOverlayProps) {
 
   return (
     <div className="ov" style={{ zIndex: 80 }}>
-      <div className="hatch" style={{ '--c': `var(--h-${info.color})` } as React.CSSProperties}>
+      <div className="hatch" role="dialog" aria-modal="true" aria-label={t('hatch.title')} style={{ '--c': `var(--h-${info.color})` } as React.CSSProperties}>
         <div className="hatch-mid">
           {born ? <div className="confetti" aria-hidden="true" /> : null}
           <button

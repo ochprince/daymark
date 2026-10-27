@@ -40,7 +40,7 @@ export function PaywallSheet({ mode = 'upgrade', onClose, onUnlocked, onToast }:
 
   return (
     <div className="ov" style={{ zIndex: 65 }}>
-      <div className="dim" onClick={onClose} />
+      <div className="dim" onClick={onClose} aria-hidden="true" />
       <div className="sheet paywall" role="dialog" aria-modal="true">
         <div className="sheet-h">{mode === 'limit' ? t('pro.limitTitle', { n: FREE_ITEM_LIMIT }) : t('pro.title')}</div>
         <p className="sheet-sub">

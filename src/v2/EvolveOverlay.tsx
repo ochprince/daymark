@@ -68,7 +68,7 @@ export function EvolveOverlay({ info, onDone }: EvolveOverlayProps) {
 
   return (
     <div className="ov" style={{ zIndex: 50 }}>
-    <div className={skipped ? 'evolve skipped' : 'evolve'} style={style} role="dialog" aria-modal="true">
+    <div className={skipped ? 'evolve skipped' : 'evolve'} style={style} role="dialog" aria-modal="true" aria-label={t('evolve.title', { name: t(`creature.${info.species}` as MessageKey) })}>
       <div className="ev-rays" aria-hidden="true" />
       <button className="ev-skip" type="button" onClick={() => setSkipped(true)}>
         {t('common.skip')}

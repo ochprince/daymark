@@ -20,8 +20,8 @@ const GROUPS: { kind: ItemView['kind']; label: () => string }[] = [
 export function Switcher({ views, activeKey, onPick, onAdd, onClose }: SwitcherProps) {
   return (
     <div className="ov">
-      <div className="dim" onClick={onClose} />
-      <div className="sheet">
+      <div className="dim" onClick={onClose} aria-hidden="true" />
+      <div className="sheet" role="dialog" aria-modal="true" aria-label={t('switcher.title')}>
         <div className="grab" />
         <div className="sheet-h">
           <h3>{t('switcher.title')}</h3>
