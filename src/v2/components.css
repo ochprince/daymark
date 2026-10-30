@@ -623,6 +623,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .spine .sp-band { position: absolute; left: 0; right: 0; top: 30%; height: 6px; background: rgba(255, 255, 255, 0.55); }
 .spine.lean { transform: rotate(-8deg); transform-origin: bottom left; margin-left: 10px; }
 .spine.gone::before { content: '✈'; position: absolute; top: -18px; font-size: 13px; color: var(--ink2); }
+/* 书脊上的章数角标：一件事一本书，翻过几章写在这里 */
+.sp-ch {
+  position: absolute; top: -10px; right: -8px; z-index: 2;
+  font-size: 10px; font-weight: 800; line-height: 1; padding: 3px 5px;
+  border-radius: 8px; background: var(--surface); color: var(--ink2);
+  border: var(--bw) solid var(--line); box-shadow: var(--pop-sm);
+}
+[data-skin='pixel'] .sp-ch { border-radius: 0; }
 .shelf-cap { font-size: 12.5px; color: var(--ink3); text-align: center; margin: 28px 0 0; }
 .dex { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 6px 16px; }
 .dex-name { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; margin: 12px 4px 0; font-weight: 800; font-size: 15px; }
@@ -670,6 +678,21 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .bp-facts b { display: block; color: #2b2638; font-size: 15px; }
 .bp-nav { display: flex; justify-content: space-between; align-items: center; margin-top: 14px; color: #fff; font-weight: 700; font-size: 13px; }
 .bp-nav button { border: 0; background: rgba(255, 255, 255, 0.16); color: #fff; height: 38px; padding: 0 14px; border-radius: 99px; font-weight: 700; }
+/* 书页里的「翻过的章」：一件事的历史都夹在这本书里 */
+.bp-meta { text-align: center; color: #7d7490; font-size: 13px; font-weight: 600; margin-top: 6px; }
+.bp-chapters { margin-top: 16px; }
+.bp-ch-h { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; color: #9a91a8; margin-bottom: 8px; }
+.bp-ch-empty { margin: 0; font-size: 13px; color: #9a91a8; text-align: center; padding: 10px 0; }
+.bp-ch-list { display: grid; gap: 6px; max-height: 220px; overflow-y: auto; scrollbar-width: none; padding-right: 2px; }
+.bp-ch-list::-webkit-scrollbar { display: none; }
+.bp-ch {
+  display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 2px 10px;
+  padding: 9px 12px; border-radius: 12px; background: #f6f1e8; position: relative;
+}
+.bp-ch b { font-family: var(--font-num); font-size: 15px; font-weight: 800; color: #2b2638; }
+.bp-ch span { font-size: 12.5px; color: #7d7490; font-weight: 600; }
+.bp-ch small { grid-column: 1 / -1; font-size: 12.5px; color: #5e566e; }
+.bp-ch i { position: absolute; right: 10px; top: 9px; font-style: normal; font-size: 10px; font-weight: 800; color: #b3a9c2; }
 
 /* 装扮 */
 .dress-h { padding: 10px 22px 0; }

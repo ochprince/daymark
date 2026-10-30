@@ -12,12 +12,12 @@ import {
   DEX_TOTAL,
   SPECIES_WITH_DEX,
   badgeCount,
-  collectChapters,
+  collectBooks,
   dexCount,
   dexCountOf,
   hasDex,
 } from '../lib/museum'
-import type { ShelfChapter } from '../lib/museum'
+import type { ShelfBook } from '../lib/museum'
 import { FREE_CHAPTER_LIMIT } from '../lib/entitlement'
 import { BADGE_ART } from './BadgePopup'
 
@@ -33,10 +33,11 @@ export type MuseumPageProps = {
 
 export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProps) {
   const [pane, setPane] = useState<Pane>('chapters')
-  const [opened, setOpened] = useState<ShelfChapter | null>(null)
+  const [opened, setOpened] = useState<ShelfBook | null>(null)
   // 翻书方向：翻的时候给 currentTarget 挂 flip-l / flip-r，0.5s 后自动落位
   const [flip, setFlip] = useState<'l' | 'r' | null>(null)
-  const books = useMemo(() => collectChapters(views), [views])
+  // 一件事一本书：翻过的章夹在书里，点开才铺出来
+  const books = useMemo(() => collectBooks(views), [views])
 
   /** 翻书：上一本 / 下一本，到头回绕。免费版翻到门外就弹付费墙，不放行 */
   function navChapter(dir: 1 | -1) {
@@ -68,7 +69,7 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
       </header>
 
       <div className="m-stats">
-        <Stat value={String(books.length)} label={t('museum.stat.chapters')} />
+        <Stat value={String(books.length)} label={t('museum.stat.books')} />
         <Stat value={`${dexCount(collection)}`} sub={`/${DEX_TOTAL}`} label={t('museum.stat.dex')} />
         <Stat value={String(badgeCount(collection))} label={t('museum.stat.badges')} />
         <Stat value={String(collection.notes.length)} label={t('museum.stat.notes')} />
@@ -160,11 +161,36 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
             style={{ '--c': `var(--h-${opened.color})` } as CSSProperties}
           >
             <div className="bp-t">{opened.title}</div>
-            <div className="bp-num">{opened.days > 0 ? opened.days : '★'}</div>
-            <div className="bp-line">{t('museum.chapter.closed', { date: formatDate(opened.endedAt) })}</div>
-            {opened.line ? <p className="bp-facts">{opened.line}</p> : null}
+            <div className="bp-num">
+              {opened.days > 0 ? opened.days : '★'}
+              <small>{opened.days > 0 ? t('unit.dayShort') : ''}</small>
+            </div>
+            <div className="bp-meta">{bookMeta(opened)}</div>
+
+            <div className="bp-chapters">
+              <div className="bp-ch-h">{t('museum.book.past', { n: opened.chapters.length })}</div>
+              {opened.chapters.length === 0 ? (
+                <p className="bp-ch-empty">{t('museum.book.none')}</p>
+              ) : (
+                <div className="bp-ch-list">
+                  {opened.chapters.map((chapter, index) => (
+                    <div className="bp-ch" key={chapter.key}>
+                      <b>{chapter.days > 0 ? t('unit.day', { n: chapter.days }) : '★'}</b>
+                      <span>{formatDate(chapter.endedAt)}</span>
+                      {chapter.line ? <small>{chapter.line}</small> : null}
+                      <i>{opened.chapters.length - index}</i>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
             <div className="bp-dates">
-              <Creature species={opened.species as CreatureSpecies} stage={Math.min(4, opened.stage) as 0 | 1 | 2 | 3 | 4} size={72} />
+              <Creature
+                species={opened.species as CreatureSpecies}
+                stage={Math.min(4, opened.stage) as 0 | 1 | 2 | 3 | 4}
+                size={72}
+              />
             </div>
             {books.length > 1 ? (
               <div className="bp-nav">
@@ -207,11 +233,11 @@ function Shelf({
   pro,
   onOpen,
 }: {
-  books: ShelfChapter[]
+  books: ShelfBook[]
   pro: boolean
-  onOpen: (book: ShelfChapter) => void
+  onOpen: (book: ShelfBook) => void
 }) {
-  const rows: ShelfChapter[][] = []
+  const rows: ShelfBook[][] = []
   for (let index = 0; index < books.length; index += 5) rows.push(books.slice(index, index + 5))
 
   return (
@@ -232,9 +258,10 @@ function Shelf({
               >
                 <span className="sp-band" />
                 <span className="sp-t">{book.title.slice(0, 5)}</span>
+                {book.chapters.length > 0 ? <span className="sp-ch">×{book.chapters.length + 1}</span> : null}
                 <span className="sp-n">
                   {book.days > 0 ? book.days : '★'}
-                  <small>{book.days > 0 ? t('unit.dayShort') : '★'}</small>
+                  <small>{book.days > 0 ? t('unit.dayShort') : t('museum.book.arrived')}</small>
                 </span>
               </button>
             )
@@ -243,6 +270,15 @@ function Shelf({
       ))}
     </>
   )
+}
+
+/** 书页上的那一行小字：这本书现在讲到哪儿 */
+function bookMeta(book: ShelfBook): string {
+  if (book.kind === 'since') return t('museum.book.since', { date: formatDate(book.startedAt) })
+  if (book.kind === 'habit') return t('museum.book.habit', { n: book.days })
+  return book.days > 0
+    ? t('museum.book.left', { n: book.days, date: formatDate(book.nextAt ?? book.startedAt) })
+    : t('museum.book.arrivedOn')
 }
 
 function DexPane({ collection }: { collection: CollectionState }) {
