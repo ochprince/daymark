@@ -377,7 +377,13 @@ export function ProfilePage({
 
       {confirm ? (
         <div className="dim" onClick={() => setConfirm(null)}>
-          <div className="modal" onClick={(event) => event.stopPropagation()}>
+          <div
+            className="modal"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t(confirm === 'end' ? 'profile.confirmEnd.title' : 'profile.confirmDelete.title')}
+            onClick={(event) => event.stopPropagation()}
+          >
             <h3>{t(confirm === 'end' ? 'profile.confirmEnd.title' : 'profile.confirmDelete.title')}</h3>
             <p className="sheet-sub">{t(confirm === 'end' ? 'profile.confirmEnd.body' : 'profile.confirmDelete.body')}</p>
             {confirm === 'end' ? (

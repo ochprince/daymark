@@ -371,7 +371,25 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .page-h { display: flex; align-items: center; justify-content: space-between; padding: 8px 18px; }
 .back { display: inline-flex; align-items: center; gap: 2px; border: 0; background: transparent; font-weight: 700; font-size: 16px; padding: 8px 4px; color: var(--ink); }
 
-.modal { position: absolute; left: 24px; right: 24px; top: 50%; transform: translateY(-50%); animation: modalIn 0.45s var(--ease-pop); }
+/* 确认对话框：必须自带面板，否则文字和按钮会直接浮在被压暗的页面上，
+   看起来像「弹窗没弹出来、字插进了设置卡里」 */
+.modal {
+  position: absolute; left: 20px; right: 20px; top: 50%; transform: translateY(-50%);
+  background: var(--bg); border: var(--bw) solid var(--line); border-radius: 30px;
+  padding: 22px 20px 18px; box-shadow: var(--pop);
+  animation: modalIn 0.45s var(--ease-pop);
+}
+[data-skin='paper'] .modal { border-color: var(--hair); border-radius: 20px; }
+[data-skin='pixel'] .modal { border-radius: 0; }
+[data-skin='night'] .modal {
+  /* --c 只有卡片里才有，弹窗要带兜底，否则整条声明失效、面板变透明 */
+  background: linear-gradient(180deg, color-mix(in oklab, var(--c, var(--accent)) 20%, var(--surface)), var(--surface) 72%);
+}
+.modal h3 { margin: 0; font-size: 21px; font-weight: 800; font-family: var(--font-title); letter-spacing: -0.01em; }
+[data-skin='pixel'] .modal h3 { font-family: var(--font-ui); }
+.modal .sheet-sub { margin: 6px 0 0; }
+.modal .input { margin-top: 12px; }
+.modal .d-actions { margin: 16px 0 0; }
 
 /* 切换注意力 */
 .sw-group { font-size: 12px; font-weight: 700; color: var(--ink3); margin: 14px 4px 8px; letter-spacing: 0.04em; }
