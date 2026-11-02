@@ -240,7 +240,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
   const cfg = { on: true, pack: 'card' }
   let layer, spr, sayEl
   let last = 0
-  const st = { x: 260, y: 120, vx: 0, vy: 0, f: 1, mode: 'fall', fi: 0, ft: 0, timer: 0, plat: null, tx: null, wall: 0, say: 0, taps: [], cheering: false, debuted: false, debuting: false }
+  const st = { x: 260, y: 120, vx: 0, vy: 0, f: 1, mode: 'fall', fi: 0, ft: 0, timer: 0, h: 0, hw: 30, W: 402, H: 874, sw: 0, sh: 0, sayDir: null, plat: null, tx: null, wall: 0, say: 0, taps: [], cheering: false, debuted: false, debuting: false }
   let debutEl = null
   let debutStepEl = null
   let debutTok = 0
@@ -352,10 +352,51 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     spr.style.transform = `translate3d(${(st.x - ax).toFixed(1)}px, ${(st.y - ay).toFixed(1)}px, 0) scaleX(${flip ? -1 : 1})`
     st.h = f.h * sc
     st.hw = f.w * sc * 0.5
-    if (st.say > 0) {
-      const bx = Math.max(10, Math.min(st.W - 10, st.x))
-      sayEl.style.transform = `translate3d(${bx.toFixed(0)}px, ${(st.y - st.h - 8).toFixed(0)}px, 0)`
+    if (st.say > 0) placeSay()
+  }
+
+  // 状态栏和灵动岛盖在宠物层上面，气泡不能进这一带
+  const SAY_TOP = 64
+  const SAY_BOT = 24
+  const SAY_EDGE = 8
+  const SAY_GAP = 11
+  function placeSay() {
+    const W = st.W
+    const H = st.H || 874
+    const bw = st.sw
+    const bh = st.sh
+    const head = st.y - st.h
+    const side = st.hw * 0.8 + SAY_GAP
+    const cy = st.y - st.h * 0.55
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v))
+    const fits = {
+      t: head - SAY_GAP - bh >= SAY_TOP,
+      r: st.x + side + bw <= W - SAY_EDGE,
+      l: st.x - side - bw >= SAY_EDGE,
+      b: st.y + SAY_GAP + bh <= H - SAY_BOT,
     }
+    let dir = st.sayDir
+    if (!dir || !fits[dir]) {
+      const near = W - st.x >= st.x ? ['r', 'l'] : ['l', 'r']
+      dir = ['t', ...near, 'b'].find((d) => fits[d]) || 't'
+    }
+    let x, y, tail
+    if (dir === 't' || dir === 'b') {
+      x = clamp(st.x - bw / 2, SAY_EDGE, W - SAY_EDGE - bw)
+      y = dir === 't' ? head - SAY_GAP - bh : st.y + SAY_GAP
+      tail = clamp(st.x - x, 16, bw - 16)
+    } else {
+      x = dir === 'r' ? st.x + side : st.x - side - bw
+      y = clamp(cy - bh / 2, SAY_TOP, H - SAY_BOT - bh)
+      tail = clamp(cy - y, 12, bh - 12)
+    }
+    if (st.sayDir !== dir) {
+      st.sayDir = dir
+      sayEl.dataset.dir = dir
+    }
+    sayEl.style.setProperty('--tail', tail.toFixed(0) + 'px')
+    sayEl.style.transformOrigin = { t: `${tail}px 100%`, b: `${tail}px 0`, r: `0 ${tail}px`, l: `100% ${tail}px` }[dir]
+    sayEl.style.transform = `translate3d(${x.toFixed(0)}px, ${y.toFixed(0)}px, 0)`
   }
 
   function setMode(m, dur) {
@@ -372,9 +413,12 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     if (!sayEl) return
     sayEl.textContent = text
     sayEl.classList.remove('on')
-    void sayEl.offsetWidth
-    sayEl.classList.add('on')
+    st.sw = sayEl.offsetWidth
+    st.sh = sayEl.offsetHeight
+    st.sayDir = null
     st.say = ms / 1000
+    placeSay()
+    sayEl.classList.add('on')
   }
 
   function hearts(n = 4, kind = 'h') {
@@ -510,6 +554,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
   function step(dt) {
     const g = geom()
     st.W = g.W
+    st.H = g.H
     const P = platforms(g)
     const hw = st.hw || 30
 
@@ -1149,6 +1194,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     sayEl = layer.querySelector('.pet-say')
     const g = geom()
     st.W = g.W
+    st.H = g.H
     st.x = g.W * 0.72
     st.y = 150
     spr.style.visibility = 'hidden'

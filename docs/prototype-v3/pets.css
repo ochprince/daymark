@@ -261,7 +261,6 @@
   position: absolute;
   left: 0;
   top: 0;
-  translate: -50% -100%;
   max-width: 190px;
   padding: 6px 11px;
   border-radius: 14px;
@@ -278,10 +277,11 @@
   opacity: 1;
   animation: petSay 0.28s cubic-bezier(0.3, 1.6, 0.5, 1);
 }
+/* 小尾巴指向宠物：--tail 是尾巴在气泡边上的位置，由 JS 按宠物位置算 */
 .pet-say::after {
   content: '';
   position: absolute;
-  left: 50%;
+  left: var(--tail, 50%);
   bottom: -7px;
   width: 9px;
   height: 9px;
@@ -289,6 +289,25 @@
   border-right: 2px solid #2b2638;
   border-bottom: 2px solid #2b2638;
   transform: translateX(-50%) rotate(45deg);
+}
+.pet-say[data-dir='b']::after {
+  bottom: auto;
+  top: -7px;
+  transform: translateX(-50%) rotate(225deg);
+}
+.pet-say[data-dir='r']::after,
+.pet-say[data-dir='l']::after {
+  bottom: auto;
+  top: var(--tail, 50%);
+}
+.pet-say[data-dir='r']::after {
+  left: -7px;
+  transform: translateY(-50%) rotate(135deg);
+}
+.pet-say[data-dir='l']::after {
+  left: auto;
+  right: -7px;
+  transform: translateY(-50%) rotate(-45deg);
 }
 @keyframes petSay {
   from {
