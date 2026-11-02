@@ -1,0 +1,15 @@
+/* 演示台（手机之外的左右说明栏）的补充样式 */
+
+.flows-foot { margin: 14px 2px 0; font-size: 11.5px; line-height: 1.6; color: #a39b8e; }
+.step span { flex: 1; }
+.step { transition: background 0.15s; }
+.flow h3 { margin-top: 2px; }
+.notes h2 { line-height: 1.35; letter-spacing: -0.005em; }
+.notes ul { list-style: none; padding-left: 0; }
+.notes li { position: relative; padding-left: 16px; line-height: 1.62; }
+.notes li::before { content: ''; position: absolute; left: 2px; top: 0.68em; width: 6px; height: 6px; border-radius: 50%; background: #c9bfae; }
+.try { line-height: 1.55; }
+.sim-grid button { transition: border-color 0.15s, background 0.15s; }
+.sim-grid button:active, .quick button:active { background: #f1ece3; }
+.scene-key { margin-top: 18px; font: 11px/1 ui-monospace, 'SF Mono', Menlo, monospace; color: #b8b0a2; }
+.phone-caption { font-weight: 600; letter-spacing: 0.02em; }

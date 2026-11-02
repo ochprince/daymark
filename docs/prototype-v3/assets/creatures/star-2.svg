@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" style="--c:#8fe3c0;--c2:#2fa77a;--cr-line:#2b2638;--cr-lw:4.5;--leaf:#7bd389;--petal:#fff;--pistil:#ffd45c;--spark:#ffc93c;--shell:#fffdf6;--gold:#ffd45c;--band:#fff;--foam:#fff;--bubble:rgba(255,255,255,.75);--rb1:#ff9c8a;--rb2:#ffe07a;--rb3:#8fe3c0;--mouth:#e5664b;--blush:#ff9c9c;--gift:#ffe07a;--paper:#fff">
+  <defs><clipPath id="cb0">
+  <path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z"/></clipPath>
+  </defs>
+  <g transform="translate(100 186) scale(0.88) translate(-100 -186)">
+  <g class="cr-body">
+  <path d="M56.6 56.7L66.2 67.4L80.6 66.2L73.4 78.7L78.9 92.0L64.8 89.1L53.9 98.4L52.3 84.1L40.0 76.6L53.2 70.7Z" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M143.4 56.7L146.8 70.7L160.0 76.6L147.7 84.1L146.1 98.4L135.2 89.1L121.1 92.0L126.6 78.7L119.4 66.2L133.8 67.4Z" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="78" cy="181" rx="14" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="122" cy="181" rx="14" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <g clip-path="url(#cb0)">
+  <ellipse cx="136" cy="184" rx="76" ry="34" fill="var(--c2)" opacity=".28" class="cr-shade"/>
+  <ellipse cx="100" cy="166" rx="34" ry="18" fill="#fff" opacity=".32" class="cr-belly"/></g>
+  <ellipse cx="70" cy="94" rx="11" ry="6.5" fill="#fff" opacity=".78" transform="rotate(-32 70 94)" class="cr-hl"/>
+  <g class="cr-face" data-face="122,20,0,"/></g></g></svg>

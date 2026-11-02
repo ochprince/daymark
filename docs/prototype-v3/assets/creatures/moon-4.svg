@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" style="--c:#8fe3c0;--c2:#2fa77a;--cr-line:#2b2638;--cr-lw:4.5;--leaf:#7bd389;--petal:#fff;--pistil:#ffd45c;--spark:#ffc93c;--shell:#fffdf6;--gold:#ffd45c;--band:#fff;--foam:#fff;--bubble:rgba(255,255,255,.75);--rb1:#ff9c8a;--rb2:#ffe07a;--rb3:#8fe3c0;--mouth:#e5664b;--blush:#ff9c9c;--gift:#ffe07a;--paper:#fff">
+  <defs><clipPath id="cb0">
+  <path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z"/></clipPath>
+  </defs>
+  <g transform="translate(100 186) scale(1) translate(-100 -186)">
+  <g class="cr-body">
+  <ellipse cx="38" cy="140" rx="10" ry="15" fill="var(--c)" transform="rotate(28 38 140)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="162" cy="140" rx="10" ry="15" fill="var(--c)" transform="rotate(-28 162 140)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="78" cy="181" rx="14" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="122" cy="181" rx="14" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <g clip-path="url(#cb0)">
+  <ellipse cx="136" cy="184" rx="76" ry="34" fill="var(--c2)" opacity=".28" class="cr-shade"/>
+  <ellipse cx="100" cy="166" rx="34" ry="18" fill="#fff" opacity=".32" class="cr-belly"/></g>
+  <ellipse cx="70" cy="94" rx="11" ry="6.5" fill="#fff" opacity=".78" transform="rotate(-32 70 94)" class="cr-hl"/>
+  <g class="cr-face" data-face="122,20,0,"/>
+  <path d="M60 92 C58 62 82 44 108 44 C134 44 152 62 162 92 C166 104 168 110 160 112 C150 96 140 84 124 80 C104 76 80 82 60 92 Z" fill="var(--c2)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M58 92 C84 78 122 74 150 88" fill="none" stroke="var(--band)" stroke-width="9" stroke-linecap="round"/>
+  <circle cx="160" cy="114" r="10" fill="var(--band)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M104.0 50.0L106.9 56.0L113.5 56.9L108.8 61.5L109.9 68.1L104.0 65.0L98.1 68.1L99.2 61.5L94.5 56.9L101.1 56.0Z" fill="var(--gold)" stroke="var(--cr-line)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M46.0 50.0L48.4 54.8L53.6 55.5L49.8 59.2L50.7 64.5L46.0 62.0L41.3 64.5L42.2 59.2L38.4 55.5L43.6 54.8Z" fill="var(--gold)" stroke="var(--cr-line)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M30.0 87.0L31.5 90.0L34.8 90.5L32.4 92.8L32.9 96.0L30.0 94.5L27.1 96.0L27.6 92.8L25.2 90.5L28.5 90.0Z" fill="var(--gold)" stroke="var(--cr-line)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M170 48 Q170 56 178 56 Q170 56 170 64 Q170 56 162 56 Q170 56 170 48Z" fill="var(--spark)" class="cr-spark"/>
+  <path d="M150 25 Q150 30 155 30 Q150 30 150 35 Q150 30 145 30 Q150 30 150 25Z" fill="var(--spark)" class="cr-spark"/></g></g></svg>

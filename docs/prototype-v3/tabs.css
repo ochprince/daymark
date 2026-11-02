@@ -1,0 +1,86 @@
+/* 底层页面（欢迎 / 空态 / 藏馆 / 装扮）的补充样式 */
+
+/* 欢迎 */
+.w-egg { position: relative; display: grid; place-items: center; }
+.w-egg .cr { animation: wobble 2.2s ease-in-out infinite; transform-origin: 50% 90%; position: relative; z-index: 1; }
+.w-egg-shadow { position: absolute; bottom: 4px; left: 50%; width: 120px; height: 16px; margin-left: -60px; border-radius: 50%; background: var(--ink); opacity: 0.1; }
+.w-hero .orbit { position: absolute; }
+.w-hero .orbit .cr { animation: none; }
+.welcome p { white-space: normal; }
+
+/* 空态 */
+.empty-egg { display: grid; place-items: center; }
+.empty-egg .cr { animation: wobble 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
+.empty .btn { margin: 0 auto; }
+
+/* 藏馆 */
+.museum { padding-bottom: 10px; }
+.m-stat b small { font-size: 13px; color: var(--ink3); font-family: var(--font-ui); font-style: normal; font-weight: 700; }
+.recap-art { width: 42px; height: 42px; border-radius: 14px; display: grid; place-items: center; background: var(--surface); border: var(--bw) solid var(--line); color: var(--h-grape-2); flex: none; }
+.recap-art svg { width: 18px; height: 18px; }
+[data-theme='paper'] .recap-art, [data-theme='paper'] .recap .lock { border-color: var(--hair); }
+[data-theme='pixel'] .recap-art, [data-theme='pixel'] .recap .lock { border-radius: 0; }
+[data-theme='night'] .recap { background: linear-gradient(120deg, #3a2f7a, #24407a); }
+[data-theme='night'] .recap .lock { background: rgba(255, 255, 255, 0.1); }
+.shelf-row:first-of-type { margin-top: 22px; }
+.shelf-row + .shelf-row { margin-top: 30px; }
+.spine { padding-left: 0; padding-right: 0; cursor: pointer; font: inherit; }
+.spine .sp-t { flex: 1; overflow: hidden; }
+.sp-new {
+  position: absolute; top: -12px; right: -10px; z-index: 2; font-size: 11px; font-weight: 800; padding: 2px 6px; border-radius: 8px;
+  background: var(--h-coral-2); color: #fff; border: 2px solid var(--surface); transform: rotate(8deg);
+}
+.spine.gone::before { top: -20px; left: 50%; transform: translateX(-50%); }
+.dex-name span small { margin-left: 2px; }
+.dex-cell .cr { flex: none; }
+.bdg .badge { flex: none; }
+.slips { padding-top: 10px; }
+.slip.locked { white-space: normal; }
+
+/* 装扮 */
+.dress { padding-bottom: 10px; }
+.gallery { padding-top: 16px; }
+.g-item { cursor: pointer; }
+.g-item .mini { box-shadow: 0 14px 28px -16px rgba(0, 0, 0, 0.45); }
+.g-item.is-on .mini { box-shadow: 0 0 0 3px var(--accent), 0 14px 28px -16px rgba(0, 0, 0, 0.45); }
+.mini .t-head { padding-bottom: 10px; }
+.coming small { font-weight: 600; font-size: 12px; text-align: center; line-height: 1.5; }
+.coming-plus { width: 44px; height: 44px; border-radius: 50%; border: 2px dashed var(--ink3); display: grid; place-items: center; }
+.g-hint { text-align: center; color: var(--ink3); font-size: 12.5px; margin: 6px 0 0; font-weight: 600; }
+.li-sub { display: block; font-size: 12.5px; color: var(--ink3); font-weight: 500; margin-top: 1px; }
+.list .li { color: var(--ink); }
+.sw.auto.is-on::after, .sw.is-on::after { border-color: var(--ink); }
+
+/* 减弱动效：演示用，所有循环动画停下 */
+.phone.reduce-motion .cr, .phone.reduce-motion .ground, .phone.reduce-motion .orbit, .phone.reduce-motion .confetti, .phone.reduce-motion .ev-rays { animation: none !important; }
+
+/* ---- 修正 ---- */
+.dex { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.dex-cell { min-width: 0; }
+.dex-cell span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.dex-cell.off .cr { opacity: 0.9; }
+.shelf-row { gap: 9px; }
+.spine { width: 52px; padding-top: 22px; }
+.spine .sp-band { top: 9px; height: 5px; }
+.spine .sp-t { letter-spacing: 0.06em; line-height: 1.15; }
+
+/* 画廊预览里的 <b>/<small> 不吃 .g-item 的标题样式 */
+.mini b { display: inline; margin: 0; font-size: inherit; }
+.mini .g-row b { font-size: 15px; }
+
+/* 状态栏下面垫一层底色，内容滚上去不会压在时间上 */
+.sb { background: linear-gradient(var(--bg) 62%, transparent); }
+[data-theme='night'] .sb { background: linear-gradient(#20236a 62%, transparent); }
+
+/* 按钮文字不折行 */
+.sc-actions .btn { white-space: nowrap; padding: 0 14px; }
+
+/* 像素：今天页里漏掉的圆角 */
+[data-theme='pixel'] .todo button, [data-theme='pixel'] .remind-chip, [data-theme='pixel'] .growth, [data-theme='pixel'] .memo,
+[data-theme='pixel'] .stack .av, [data-theme='pixel'] .focus-dots button, [data-theme='pixel'] .recap .lock, [data-theme='pixel'] .m-stat,
+[data-theme='pixel'] .bdg, [data-theme='pixel'] .opt, [data-theme='pixel'] .list, [data-theme='pixel'] .card { border-radius: 0; }
+[data-theme='pixel'] .mini { border-radius: 6px; }
+.spine .sp-t { font-size: 13px; white-space: nowrap; flex: 0 1 auto; }
+.shelf-row:first-of-type { margin-top: 34px; }
+.recap + .shelf-row { margin-top: 40px; }
+.slip { display: inline-block; width: 100%; margin-top: 8px; }

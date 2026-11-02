@@ -1,0 +1,135 @@
+/* 宠物层：盖在手机屏幕上，只有宠物本体接收指针 */
+#petLayer {
+  position: absolute;
+  inset: 0;
+  z-index: 36;
+  pointer-events: none;
+  overflow: hidden;
+  border-radius: inherit;
+  transition: opacity 0.25s;
+}
+#petLayer.off {
+  opacity: 0;
+  visibility: hidden;
+}
+.pet-sprite {
+  position: absolute;
+  left: 0;
+  top: 0;
+  max-width: none;
+  pointer-events: auto;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+  filter: drop-shadow(0 2px 0 rgba(43, 38, 56, 0.08));
+}
+.pet-sprite:active {
+  cursor: grabbing;
+}
+.pet-say {
+  position: absolute;
+  left: 0;
+  top: 0;
+  translate: -50% -100%;
+  max-width: 190px;
+  padding: 6px 11px;
+  border-radius: 14px;
+  background: #fff;
+  color: #2b2638;
+  border: 2px solid #2b2638;
+  font: 700 12px/1.35 var(--f-body, system-ui, sans-serif);
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s;
+}
+.pet-say.on {
+  opacity: 1;
+  animation: petSay 0.28s cubic-bezier(0.3, 1.6, 0.5, 1);
+}
+.pet-say::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: -7px;
+  width: 9px;
+  height: 9px;
+  background: #fff;
+  border-right: 2px solid #2b2638;
+  border-bottom: 2px solid #2b2638;
+  transform: translateX(-50%) rotate(45deg);
+}
+@keyframes petSay {
+  from {
+    scale: 0.7;
+  }
+  to {
+    scale: 1;
+  }
+}
+
+.pet-fx {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  margin: -7px 0 0 -7px;
+  pointer-events: none;
+  font-style: normal;
+  font-size: 14px;
+  line-height: 14px;
+  text-align: center;
+  color: #ff7a8a;
+  opacity: 0;
+  animation: petFx 1.2s ease-out forwards;
+}
+.pet-fx.h::before {
+  content: '♥';
+}
+.pet-fx.s {
+  color: #ffc83d;
+}
+.pet-fx.s::before {
+  content: '✦';
+}
+@keyframes petFx {
+  0% {
+    opacity: 0;
+    transform: translate(0, 6px) scale(0.5);
+  }
+  20% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+    transform: translate(var(--dx, 0), -52px) scale(1.1) rotate(14deg);
+  }
+}
+
+/* 宠物落在元素上时，元素被轻轻压一下 */
+.pet-bump {
+  animation: petBump 0.38s ease-out;
+}
+@keyframes petBump {
+  0% {
+    transform: none;
+  }
+  35% {
+    transform: translateY(2px) scale(0.965);
+  }
+  70% {
+    transform: translateY(-1px) scale(1.012);
+  }
+  100% {
+    transform: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pet-bump,
+  .pet-say.on,
+  .pet-fx {
+    animation: none;
+  }
+}
