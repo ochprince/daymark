@@ -19,16 +19,16 @@
   <path d="M50 102 C56 98 63 96 70 96" fill="none" stroke="#fff" stroke-opacity=".88" stroke-width="5.5" stroke-linecap="round" class="cr-hl"/>
   <circle cx="46" cy="110" r="2.8" fill="#fff" opacity=".85" class="cr-hl"/>
   <g class="cr-face" data-face="120,16,0,"/>
-  <g transform="translate(140 176) rotate(-36)">
+  <g class="cr-foot cr-foot-r"><g transform="translate(140 176) rotate(-36)">
   <path d="M-13 -6 C-13 -14 13 -14 13 -6 L15 4 C15 10 11 12 6 12 L-6 12 C-11 12 -15 10 -15 4 Z" fill="var(--band)" stroke="var(--cr-line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
   <path d="M-15 5 L15 5 C15 10 11 12 6 12 L-6 12 C-11 12 -15 10 -15 5 Z" fill="var(--c2)" stroke="var(--cr-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
   <path d="M-6 -6 L6 -6 M-7 -1 L7 -1" fill="none" stroke="var(--cr-line)" stroke-width="2" stroke-linecap="round"/>
   <path d="M-9 -9 C-6 -11 -2 -11.5 1 -11.5" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="2" stroke-linecap="round" class="cr-hl"/>
-  </g>
-  <g transform="translate(60 176) rotate(36)">
+  </g></g>
+  <g class="cr-foot cr-foot-l"><g transform="translate(60 176) rotate(36)">
   <path d="M-13 -6 C-13 -14 13 -14 13 -6 L15 4 C15 10 11 12 6 12 L-6 12 C-11 12 -15 10 -15 4 Z" fill="var(--band)" stroke="var(--cr-line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
   <path d="M-15 5 L15 5 C15 10 11 12 6 12 L-6 12 C-11 12 -15 10 -15 5 Z" fill="var(--c2)" stroke="var(--cr-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
   <path d="M-6 -6 L6 -6 M-7 -1 L7 -1" fill="none" stroke="var(--cr-line)" stroke-width="2" stroke-linecap="round"/>
   <path d="M-9 -9 C-6 -11 -2 -11.5 1 -11.5" fill="none" stroke="#fff" stroke-opacity=".8" stroke-width="2" stroke-linecap="round" class="cr-hl"/>
-  </g>
+  </g></g>
   </g></g></svg>

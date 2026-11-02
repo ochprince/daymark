@@ -6,8 +6,8 @@
   </defs>
   <g transform="translate(100 186) scale(0.88) translate(-100 -186)">
   <g class="cr-body">
-  <ellipse cx="78" cy="182" rx="13" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
-  <ellipse cx="122" cy="182" rx="13" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="78" cy="182" rx="13" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round" class="cr-foot cr-foot-l"/>
+  <ellipse cx="122" cy="182" rx="13" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round" class="cr-foot cr-foot-r"/>
   <path d="M100 44 C114 70 166 98 166 132 C166 162 138 182 100 182 C62 182 34 162 34 132 C34 98 86 70 100 44 Z" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
   <g clip-path="url(#cb0)">
   <path d="M60 92 C70 84 80 92 90 85 C100 78 110 86 120 80 C130 74 140 84 146 82 L146 40 L60 40 Z" fill="var(--foam)" opacity=".5" class="cr-belly"/>

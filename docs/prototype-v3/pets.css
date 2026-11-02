@@ -23,10 +23,239 @@
   user-select: none;
   -webkit-user-drag: none;
   will-change: transform;
-  filter: drop-shadow(0 2px 0 rgba(43, 38, 56, 0.08));
 }
 .pet-sprite:active {
   cursor: grabbing;
+}
+.pet-sprite[data-kind='img'] {
+  filter: drop-shadow(0 2px 0 rgba(43, 38, 56, 0.08));
+}
+.pet-sprite img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  -webkit-user-drag: none;
+}
+
+/* 「我的小伙伴」：卡片里那只的 SVG。翻转在 .pet-sprite 上，滤镜和动作在里面，避免 filter + scaleX(-1) 渲成黑剪影 */
+.pet-cr {
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  transform-origin: 50% 93%;
+}
+.pet-cr .cr {
+  display: block;
+  overflow: visible;
+}
+.pet-cr .cr-foot {
+  transform-box: fill-box;
+  transform-origin: 50% 50%;
+}
+[data-theme='pixel'] .pet-cr .cr {
+  filter: url(#pixelate);
+}
+[data-theme='night'] .pet-cr .cr {
+  filter: drop-shadow(0 0 12px color-mix(in oklab, var(--c) 70%, transparent));
+}
+.pet-cr[data-st='stand'] {
+  animation: bob 3.2s ease-in-out infinite;
+}
+.pet-cr[data-st='look'] {
+  animation: petLook 1.8s ease-in-out infinite;
+}
+.pet-cr[data-st='walk'] .cr-foot-l,
+.pet-cr[data-st='run'] .cr-foot-l {
+  animation: petStep 0.48s ease-in-out infinite;
+}
+.pet-cr[data-st='walk'] .cr-foot-r,
+.pet-cr[data-st='run'] .cr-foot-r {
+  animation: petStep 0.48s ease-in-out -0.24s infinite;
+}
+.pet-cr[data-st='walk'] {
+  animation: petWalk 0.48s ease-in-out infinite;
+}
+.pet-cr[data-st='run'],
+.pet-cr[data-st='run'] .cr-foot {
+  animation-duration: 0.3s;
+}
+.pet-cr[data-st='run'] .cr-foot-r {
+  animation-delay: -0.15s;
+}
+.pet-cr[data-st='run'] {
+  animation-name: petRun;
+  animation-timing-function: ease-in-out;
+  animation-iteration-count: infinite;
+}
+/* 还没长脚：一蹦一蹦地走 */
+.pet-cr[data-st='walk']:not(:has(.cr-foot)) {
+  animation: petHop 0.5s ease-in-out infinite;
+}
+.pet-cr[data-st='run']:not(:has(.cr-foot)) {
+  animation: petHop 0.32s ease-in-out infinite;
+}
+.pet-cr[data-st='sit'] {
+  transform: scale(1.06, 0.9);
+}
+.pet-cr[data-st='sleep'] {
+  animation: petSleep 3.6s ease-in-out infinite;
+}
+.pet-cr[data-st='fall'],
+.pet-cr[data-st='jump'] {
+  transform: scale(0.94, 1.08);
+}
+.pet-cr[data-st='drag'] {
+  transform-origin: 50% 8%;
+  animation: petDangle 0.6s ease-in-out infinite;
+}
+.pet-cr[data-st='drag'] .cr-foot {
+  animation: petKick 0.32s ease-in-out infinite;
+}
+.pet-cr[data-st='drag'] .cr-foot-r {
+  animation-delay: -0.16s;
+}
+.pet-cr[data-st='climb'] {
+  animation: petClimb 0.44s ease-in-out infinite;
+}
+.pet-cr[data-st='cling'] {
+  transform: rotate(-6deg) scale(0.96, 1.04);
+}
+.pet-cr[data-st='bounce'],
+.pet-cr[data-st='happy'] {
+  animation: petCheer 0.34s ease-in-out infinite;
+}
+.pet-zz {
+  position: absolute;
+  right: 2px;
+  top: 4px;
+  display: none;
+  font: 800 13px/1 Arial, sans-serif;
+  font-style: normal;
+  color: #7a5ae0;
+  pointer-events: none;
+}
+.pet-zz b {
+  position: relative;
+  top: -9px;
+  font-size: 17px;
+}
+.pet-cr[data-st='sleep'] + .pet-zz {
+  display: block;
+}
+.pet-zz b,
+.pet-zz {
+  animation: petZz 2s ease-in-out infinite;
+}
+.pet-zz b {
+  animation-delay: -1s;
+}
+@keyframes petLook {
+  0%,
+  100% {
+    transform: rotate(-5deg);
+  }
+  50% {
+    transform: rotate(5deg);
+  }
+}
+@keyframes petWalk {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  25% {
+    transform: translateY(-3px) rotate(-3deg);
+  }
+  75% {
+    transform: translateY(-3px) rotate(3deg);
+  }
+}
+@keyframes petRun {
+  0%,
+  50%,
+  100% {
+    transform: translateY(0) rotate(6deg) scale(1.03, 0.97);
+  }
+  25%,
+  75% {
+    transform: translateY(-5px) rotate(6deg) scale(0.97, 1.03);
+  }
+}
+@keyframes petStep {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-7px) rotate(-8deg);
+  }
+}
+@keyframes petHop {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.06, 0.92);
+  }
+  45% {
+    transform: translateY(-9px) scale(0.96, 1.05);
+  }
+}
+@keyframes petSleep {
+  0%,
+  100% {
+    transform: rotate(5deg) scale(1.08, 0.86);
+  }
+  50% {
+    transform: rotate(5deg) scale(1.11, 0.83);
+  }
+}
+@keyframes petDangle {
+  0%,
+  100% {
+    transform: rotate(-6deg) scale(0.92, 1.1);
+  }
+  50% {
+    transform: rotate(6deg) scale(0.92, 1.1);
+  }
+}
+@keyframes petKick {
+  0%,
+  100% {
+    transform: translateY(0) rotate(0);
+  }
+  50% {
+    transform: translateY(5px) rotate(14deg);
+  }
+}
+@keyframes petClimb {
+  0%,
+  100% {
+    transform: rotate(-9deg) translateY(0);
+  }
+  50% {
+    transform: rotate(-4deg) translateY(-4px);
+  }
+}
+@keyframes petCheer {
+  0%,
+  100% {
+    transform: translateY(0) scale(1.08, 0.9);
+  }
+  50% {
+    transform: translateY(-6px) scale(0.94, 1.08);
+  }
+}
+@keyframes petZz {
+  0%,
+  100% {
+    opacity: 0.5;
+    translate: 0 0;
+  }
+  50% {
+    opacity: 1;
+    translate: 2px -3px;
+  }
 }
 .pet-say {
   position: absolute;
@@ -150,6 +379,21 @@
 .bubble.is-away {
   opacity: 0.72;
 }
+/* 连戳五下：兴奋得原地乱蹦，随后走出卡片 */
+.cr-wrap.hyped {
+  pointer-events: none;
+}
+.cr-wrap.hyped .cr {
+  animation: petHyped 0.19s ease-in-out 4 alternate;
+}
+@keyframes petHyped {
+  from {
+    transform: translateY(0) rotate(-7deg) scale(1.1, 0.9);
+  }
+  to {
+    transform: translateY(-14px) rotate(7deg) scale(0.94, 1.08);
+  }
+}
 /* 拖着桌宠悬停在原位上：家亮一下，提示可以放回去 */
 .cr-wrap.pet-out.pet-home-hot {
   outline: 2.5px dashed color-mix(in oklab, var(--c, #7bd389) 70%, var(--cr-line, #2b2638));
@@ -245,7 +489,17 @@
     animation: none;
   }
   .pet-debut.walk .pet-debut-spin .cr,
-  .pet-debut.squash .pet-debut-spin {
+  .pet-debut.squash .pet-debut-spin,
+  .pet-cr,
+  .pet-cr .cr-foot,
+  .pet-zz,
+  .pet-zz b {
     animation: none !important;
   }
+}
+.phone.reduce-motion .pet-cr,
+.phone.reduce-motion .pet-cr .cr-foot,
+.phone.reduce-motion .pet-zz,
+.phone.reduce-motion .pet-zz b {
+  animation: none !important;
 }

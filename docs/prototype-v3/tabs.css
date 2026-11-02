@@ -2,7 +2,7 @@
 
 /* 欢迎 */
 .w-egg { position: relative; display: grid; place-items: center; }
-.w-egg .cr { animation: wobble 2.2s ease-in-out infinite; transform-origin: 50% 90%; position: relative; z-index: 1; }
+.w-egg .cr { animation: dough 2.2s ease-in-out infinite; transform-origin: 50% 92%; position: relative; z-index: 1; }
 .w-egg-shadow { position: absolute; bottom: 4px; left: 50%; width: 120px; height: 16px; margin-left: -60px; border-radius: 50%; background: var(--ink); opacity: 0.1; }
 .w-hero .orbit { position: absolute; }
 .w-hero .orbit .cr { animation: none; }
@@ -10,7 +10,7 @@
 
 /* 空态 */
 .empty-egg { display: grid; place-items: center; }
-.empty-egg .cr { animation: wobble 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
+.empty-egg .cr { animation: dough 2.4s ease-in-out infinite; transform-origin: 50% 92%; }
 .empty .btn { margin: 0 auto; }
 
 /* 藏馆 */

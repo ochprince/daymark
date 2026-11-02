@@ -33,7 +33,7 @@
           .join('')}
         <span class="w-egg" style="${hueStyle('lemon')}">${creature({ species: 'sprout', stage: 'egg', size: 190 })}<i class="w-egg-shadow"></i></span>
       </div>
-      <button class="btn" data-act="welcomeStart">带一颗蛋回家</button>
+      <button class="btn" data-act="welcomeStart">领一团面团回家</button>
       <button class="w-skip" data-act="welcomeSkip">我先随便看看</button>
     </div>`
   }
@@ -41,7 +41,7 @@
   DM.VIEWS.empty = () => `<div class="empty card">
       <div style="${hueStyle('coral')}" class="empty-egg">${creature({ species: 'sprout', stage: 'egg', size: 120 })}</div>
       <h3>这里还空着</h3>
-      <p>要不要带一颗蛋回家？</p>
+      <p>要不要领一团面团回家？</p>
       <button class="btn" data-act="welcomeStart">${ICON.plus} 新的一件事</button>
     </div>`
 

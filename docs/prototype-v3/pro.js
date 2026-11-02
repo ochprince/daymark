@@ -173,7 +173,7 @@
       <div class="sec-title">宠物</div>
       <div class="card list">
         ${tog('🐾', '桌面宠物', '让小伙伴在屏幕上走走', 'petToggle', !!S.petOn)}
-        ${row('📦', '宠物包', `当前：${packName(S.petPack || 'mochi')}`, 'openPetPack')}
+        ${row('📦', '宠物包', `当前：${packName(S.petPack || 'card')}`, 'openPetPack')}
       </div>
 
       <div class="sec-title">关于</div>
@@ -188,7 +188,8 @@
   }
 
   const PACKS = [
-    { id: 'mochi', name: '麻糬 · 默认', sub: '圆圆软软的，自带' },
+    { id: 'card', name: '我的小伙伴 · 默认', sub: '就是卡片里那只，长大、换风格都跟着变' },
+    { id: 'mochi', name: '麻糬', sub: '圆圆软软的，自带' },
     { id: 'local', name: '本地宠物包（导入）', sub: '从文件导入你自己的素材' },
   ]
   const LOCKED = [
@@ -199,10 +200,16 @@
   const packName = (id) => (PACKS.find((p) => p.id === id) || PACKS[0]).name
 
   DM.OV.petpack = () => {
-    const cur = S.petPack || 'mochi'
+    const cur = S.petPack || 'card'
+    const it = DM.focused()
+    const pv = {
+      card: it ? `<i class="pc" style="${DM.hueStyle(it.hue)}">${DM.crOf(it, 52, 'happy')}</i>` : creature('sprout', 2, 52, 'mint'),
+      mochi: creature('sprout', 2, 52, 'mint'),
+      local: '📁',
+    }
     const free = PACKS.map(
-      (p, i) => `<button class="card pk ${cur === p.id ? 'is-on' : ''}" data-act="packPick" data-id="${p.id}">
-        <span class="pv">${i === 0 ? creature('sprout', 2, 52, 'mint') : '📁'}</span>
+      (p) => `<button class="card pk ${cur === p.id ? 'is-on' : ''}" data-act="packPick" data-id="${p.id}">
+        <span class="pv">${pv[p.id]}</span>
         <span class="tx"><b>${p.name}<span class="free-tag">免费</span></b><small>${p.sub}</small></span><span class="ck">${ICON.check}</span></button>`
     ).join('')
     const locked = LOCKED.map(

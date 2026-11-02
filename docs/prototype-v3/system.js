@@ -135,7 +135,7 @@
   // ================================================================ 三种小组件 × 三个尺寸
 
   function emptyW(kind, sz) {
-    return `<div class="sx-w sx-${sz} sx-empty" data-act="add"><div class="sx-emp-cr">${DM.creature({ species: 'moon', stage: 'egg', size: sz === 's' ? 56 : 84 })}</div><b>还没有${KINDS[kind].name}的事</b><small>点一下，去领一颗蛋</small></div>`
+    return `<div class="sx-w sx-${sz} sx-empty" data-act="add"><div class="sx-emp-cr">${DM.creature({ species: 'moon', stage: 'egg', size: sz === 's' ? 56 : 84 })}</div><b>还没有${KINDS[kind].name}的事</b><small>点一下，去领一团面团</small></div>`
   }
 
   function keepW(o, it, sz) {

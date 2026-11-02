@@ -1,5 +1,5 @@
 /*
- * 覆盖层：切换注意力、新建 → 孵化、档案、告别仪式、进化过场、分享、小纸条、翻开一章、徽章。
+ * 覆盖层：切换注意力、新建 → 揉面团、档案、告别仪式、进化过场、分享、小纸条、翻开一章、徽章。
  * 每一层的状态就是 S.ovs 里的那个对象；改状态后 DM.updateOv() 重画（不重播进场）。
  */
 ;(function () {
@@ -63,7 +63,7 @@
       </div>`
   }
 
-  // ================================================================ 新建：类型 → 名字 → 选蛋
+  // ================================================================ 新建：类型 → 名字 → 挑面团
 
   const PRESETS = {
     habit: ['早睡', '喝水', '跑步', '读书', '冥想', '背单词'],
@@ -113,7 +113,7 @@
       <span class="tc-art">${DM.creature({ species: sp, stage: 'egg', size: 62 })}</span>
       <span><h4>${h}</h4><p>${p}</p></span></button>`
     return (
-      addTop(o, '想记点什么？', '先挑一种。之后它会住进一颗蛋里，陪你一起长大。') +
+      addTop(o, '想记点什么？', '先挑一种。之后它会变成一团面团，陪你一起长大。') +
       card('since', 'sprout', 'mint', '坚持一件事', '戒烟、在一起…… 自动数着走过的天数') +
       card('habit', 'moon', 'grape', '养成一个习惯', '早睡、喝水、跑步…… 按住半秒记一次') +
       card('countdown', 'post', 'coral', '等一个日子', '生日、考试、出发…… 倒数，到点提醒你') +
@@ -159,7 +159,7 @@
       <div class="field"><div class="chips">${presets}</div></div>
       ${fields}
       <div class="field">${photo}</div>
-      <button class="btn block" data-act="addNext">下一步 · 选一颗蛋</button>`
+      <button class="btn block" data-act="addNext">下一步 · 挑一团面团</button>`
     )
   }
 
@@ -171,7 +171,7 @@
     const [sp, hue] = eggs[i]
     const info = SPECIES[sp]
     return (
-      addTop(o, '选一颗蛋', `「${esc(d.title)}」会住在这颗蛋里。`) +
+      addTop(o, '挑一团面团', `「${esc(d.title)}」会被揉进这团面团里。`) +
       `<div class="eggs">${eggs
         .map(([s, h], k) => `<button class="egg-btn ${k === i ? 'is-on' : ''}" style="${DM.hueStyle(h)}" data-act="eggPick" data-i="${k}" aria-label="${SPECIES[s].name}">${k === rec ? '<span class="egg-rec">推荐</span>' : ''}${DM.creature({ species: s, stage: 'egg', size: 66 })}</button>`)
         .join('')}</div>
@@ -261,7 +261,7 @@
     },
   })
 
-  // ================================================================ 孵化
+  // ================================================================ 揉面团
 
   DM.OV.hatch = (o) => {
     const d = o.draft
@@ -270,11 +270,11 @@
     const taps = [0, 1, 2].map((i) => `<i class="${i < o.taps ? 'on' : ''}"></i>`).join('')
     return `<div class="hatch" style="${DM.hueStyle(d.hue)}">
       ${o.born ? DM.confetti(30) : ''}
-      <h3>${o.born ? `${name}出生啦` : '轻点三下，帮它出来'}</h3>
-      <p>${o.born ? `以后，它会陪着「${esc(d.title)}」一起长大` : '别急，它也在里面使劲呢'}</p>
+      <h3>${o.born ? `${name}出生啦` : '轻点三下，把它揉出来'}</h3>
+      <p>${o.born ? `以后，它会陪着「${esc(d.title)}」一起长大` : '揉一下，它就醒一点'}</p>
       <div class="hatch-mid">
         ${o.born ? `<div class="bubble">你好呀，我是${name}！</div>` : ''}
-        <button class="hatch-egg ${o.born ? 'born' : ''}" data-act="hatchTap" aria-label="轻点蛋">${art}</button>
+        <button class="hatch-egg ${o.born ? 'born' : ''}" data-act="hatchTap" aria-label="揉一揉面团">${art}</button>
       </div>
       ${o.born ? `<button class="btn block" data-act="hatchGo">开始吧</button>` : `<div class="taps">${taps}</div>`}
     </div>`

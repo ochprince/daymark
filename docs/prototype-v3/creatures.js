@@ -1,15 +1,15 @@
 /*
  * 小伙伴（养成角色）的 SVG 生成器。
  *
- * 一只小伙伴 = 身体（圆团 / 水滴 / 蛋）+ 表情 + 按物种和形态叠加的头饰。
+ * 一只小伙伴 = 身体（圆团 / 水滴 / 星星 / 面团）+ 表情 + 按物种和形态叠加的头饰。
  * 颜色全部走 CSS 变量：--c（主色）、--c2（深一档）、--cr-line（描边），
  * 所以换风格包时不用重画，只换令牌。
  *
  *   creature({ species, stage, mood, size, extra })
  *     species  sprout 芽芽 / moon 眠眠 / drop 咕噜 / star 跑跑 / post 信信
- *     stage    0 壳宝宝 · 1 (3 天) · 2 (7 天) · 3 (30 天) · 4 (100 天)；'egg' 表示还没孵出来
+ *     stage    0 面团宝宝 · 1 (3 天) · 2 (7 天) · 3 (30 天) · 4 (100 天)；'egg' 表示还是一团面团（头顶的小料按物种）
  *     mood     idle / happy / sleep / wow
- *     extra    { pumpkin, crack (0-3), hold: 'letter'|'gift'|'party', silhouette }
+ *     extra    { pumpkin, crack (揉了几下 0-3), hold: 'letter'|'gift'|'party', silhouette }
  */
 ;(function () {
   const L = 'var(--cr-line)'
@@ -49,7 +49,7 @@
     return `<path d="M${cx} ${cy - r} Q${cx} ${cy} ${cx + r} ${cy} Q${cx} ${cy} ${cx} ${cy + r} Q${cx} ${cy} ${cx - r} ${cy} Q${cx} ${cy} ${cx} ${cy - r}Z" fill="${fill}" class="cr-spark"/>`
   }
 
-  /** 刚孵出来的那片蛋壳 */
+  /** 后备：素材缺失时 stage 0 头顶的小帽 */
   const shellCap = `<path d="M62 86 L70 72 L79 82 L88 68 L98 80 L108 67 L117 80 L127 69 L136 84 C132 52 66 52 62 86 Z" fill="var(--shell)" ${stroke(3.5)}/>`
 
   /** 返回 { back, front }：back 画在身体后面（耳朵、彩虹），front 画在前面 */
@@ -252,10 +252,10 @@
     return `<svg viewBox="0 0 200 200">${defs}<g transform="translate(100 186) scale(${s}) translate(-100 -186)"><g class="cr-body">${inner}</g></g></svg>`
   }
 
-  /** 文件键：芽芽 3 阶 → sprout-3；蛋 → egg-<裂纹>；信信 → post-<手持>。南瓜等一次性装扮不进文件 */
+  /** 文件键：芽芽 3 阶 → sprout-3；面团 → dough-<物种>-<揉了几下>；信信 → post-<手持>。南瓜等一次性装扮不进文件 */
   function keyOf({ species = 'sprout', stage = 0, extra = {} }) {
     if (extra.pumpkin) return null
-    if (stage === 'egg') return `egg-${extra.crack || 0}`
+    if (stage === 'egg') return `dough-${species}-${extra.crack || 0}`
     if (species === 'post') return `post-${extra.hold || 'letter'}`
     return `${species}-${stage}`
   }

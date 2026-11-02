@@ -6,7 +6,8 @@
  * - 与功能组件联动：长按「记一下」按钮时它跑过去加油；记下后跳起来庆祝；
  *   焦点那件事睡着了它也跟着打盹；坚持类的页面里它在「日子轨道」上自己往前走。
  * - 素材是「宠物包」：{ states:{ stand/walk/sit/... : [{src,dur,anchor}] } }。
- *   内置一套原创的「麻糬」矢量包；也能导入 Shimeji 格式的本地包（shimeN.png + actions.xml），
+ *   默认包「我的小伙伴」直接内嵌卡片里那只的 SVG（随物种、形态、配色、风格变化）；
+ *   另有原创的「麻糬」矢量包；也能导入 Shimeji 格式的本地包（shimeN.png + actions.xml），
  *   只在本机浏览器里读取，不会进仓库、不会上传。真实 Shimeji 素材多为同人创作，见 docs/prototype-v3/README.md 的版权说明。
  *
  * 出场：舞台卡上的成长萌宠往上走进去、变小、踏上小台阶，再从中间跳下，交接给桌宠引擎。
@@ -88,6 +89,21 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
       happy: fr(cheer),
     },
   }
+
+  // ================================================================ 内置宠物包：我的小伙伴（就是卡片里那只）
+  // 同一张 SVG 内嵌渲染：物种、形态、颜色、风格都跟着卡片走；动作靠 CSS（.pet-cr[data-st]）
+
+  const CR_SIZE = 88
+  const crFrame = [{ dur: 1e9, anchor: [CR_SIZE / 2, CR_SIZE * 0.93], w: CR_SIZE, h: CR_SIZE }]
+  const CARD = {
+    id: 'card',
+    name: '我的小伙伴',
+    card: true,
+    face: 'right',
+    scale: 1,
+    states: Object.fromEntries(['stand', 'look', 'walk', 'run', 'sit', 'sleep', 'fall', 'jump', 'drag', 'climb', 'cling', 'bounce', 'happy'].map((k) => [k, crFrame])),
+  }
+  const ST_MOOD = { fall: 'wow', drag: 'wow', climb: 'wow', cling: 'wow', jump: 'happy', bounce: 'happy', happy: 'happy', sleep: 'sleep' }
 
   // ================================================================ Shimeji 格式宠物包（本地导入）
 
@@ -220,8 +236,8 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
 
   // ================================================================ 引擎
 
-  const PACKS = { mochi: MOCHI }
-  const cfg = { on: true, pack: 'mochi' }
+  const PACKS = { card: CARD, mochi: MOCHI }
+  const cfg = { on: true, pack: 'card' }
   let layer, spr, sayEl
   let last = 0
   const st = { x: 260, y: 120, vx: 0, vy: 0, f: 1, mode: 'fall', fi: 0, ft: 0, timer: 0, plat: null, tx: null, wall: 0, say: 0, taps: [], cheering: false, debuted: false, debuting: false }
@@ -231,7 +247,16 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
 
   const PLAT_SEL = ['#view .hold', '#view .growth', '#view .sc-actions .btn', '#view .stage-card', '#tabbar', '#view .pill-switch', '#view .icon-btn', '#view .card', '#view [data-pet-plat]']
   const NO_BUMP = /stage-card|card\b/
-  const pk = () => PACKS[cfg.pack] || MOCHI
+  const pk = () => {
+    const p = PACKS[cfg.pack] || MOCHI
+    return p.card && !DM.focused() ? MOCHI : p
+  }
+  const petName = () => {
+    const p = pk()
+    if (!p.card) return p.name
+    const it = DM.focused()
+    return it.type === 'countdown' ? DM.SPECIES.post.name : DM.SPECIES[it.species].name
+  }
   const rand = (a, b) => a + Math.random() * (b - a)
   const pick = (a) => a[Math.floor(Math.random() * a.length)]
   const isSleepy = () => {
@@ -262,14 +287,52 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
   }
 
   // ---- 外观
+  function stateKey() {
+    if (st.mode === 'cheer') return 'bounce'
+    if (st.mode === 'climb') return st.climbing === false ? 'cling' : 'climb'
+    return MOCHI.states[st.mode] ? st.mode : 'stand'
+  }
+
   function frameNow() {
     const p = pk()
-    const map = { run: 'run', cheer: 'bounce', happy: 'happy', climb: st.climbing === false ? 'cling' : 'climb' }
-    const key = st.mode === 'cheer' ? 'bounce' : map[st.mode] || st.mode
+    const key = stateKey()
     const alt = { run: 'walk', cling: 'climb', bounce: 'happy', happy: 'bounce', look: 'sit', sleep: 'sit', jump: 'fall', drag: 'fall', climb: 'stand', fall: 'stand', sit: 'stand', walk: 'stand' }
     let list = p.states[key] || p.states[alt[key]] || p.states.stand
     if (!list) list = MOCHI.states.stand
     return list
+  }
+
+  function setKind(kind) {
+    if (spr.dataset.kind === kind) return
+    spr.dataset.kind = kind
+    spr.dataset.key = ''
+    spr.innerHTML = kind === 'card' ? '<div class="pet-cr"></div><i class="pet-zz">z<b>Z</b></i>' : '<img alt="" draggable="false"/>'
+  }
+
+  function paintImg(f) {
+    setKind('img')
+    if (spr.dataset.key !== f.src) {
+      spr.firstChild.src = f.src
+      spr.dataset.key = f.src
+    }
+  }
+
+  function paintCard(flip) {
+    setKind('card')
+    const it = DM.focused()
+    const sk = stateKey()
+    const base = DM.moodOf(it)
+    const mood = ST_MOOD[sk] === 'sleep' ? 'sleep' : ST_MOOD[sk] || (base === 'happy' ? 'happy' : 'idle')
+    const form = it.type === 'countdown' ? 'L' + DM.left(it) : 'S' + DM.stageOf(DM.growthOf(it))
+    const key = [it.id, it.hue, form, mood, S.halloween ? 1 : 0].join('|')
+    const box = spr.firstChild
+    if (spr.dataset.key !== key) {
+      spr.dataset.key = key
+      box.style.cssText = DM.hueStyle(it.hue)
+      box.innerHTML = DM.crOf(it, CR_SIZE, mood)
+    }
+    if (box.dataset.st !== sk) box.dataset.st = sk
+    spr.lastChild.style.transform = flip ? 'scaleX(-1)' : ''
   }
 
   function paint() {
@@ -278,15 +341,13 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     if (st.fi >= list.length) st.fi = 0
     const f = list[st.fi]
     const sc = p.scale
-    if (spr.dataset.src !== f.src) {
-      spr.src = f.src
-      spr.dataset.src = f.src
-    }
+    const flip = st.f === (p.face === 'left' ? 1 : -1)
+    if (p.card) paintCard(flip)
+    else paintImg(f)
     spr.style.width = f.w * sc + 'px'
     spr.style.height = f.h * sc + 'px'
     const ax = f.anchor[0] * sc
     const ay = f.anchor[1] * sc
-    const flip = st.f === (p.face === 'left' ? 1 : -1)
     spr.style.transformOrigin = `${ax}px 0`
     spr.style.transform = `translate3d(${(st.x - ax).toFixed(1)}px, ${(st.y - ay).toFixed(1)}px, 0) scaleX(${flip ? -1 : 1})`
     st.h = f.h * sc
@@ -298,6 +359,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
   }
 
   function setMode(m, dur) {
+    if (st.mode === 'sleep' && m !== 'sleep') st.wokeAt = performance.now()
     if (st.mode !== m) {
       st.mode = m
       st.fi = 0
@@ -388,6 +450,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     return true
   }
 
+  const WAKE_GRACE = 25000
   function think(P, g) {
     const p = platOf(P)
     if (!p) return
@@ -403,7 +466,9 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     })
     add(2, () => setMode('sit', rand(2.2, 4.5)))
     add(1.2, () => setMode('look', rand(1.6, 2.8)))
-    add(sleepy ? 4 : 0.35, () => {
+    // 刚被叫醒的，至少清醒一阵再考虑睡
+    const groggy = performance.now() - (st.wokeAt || -1e9) < WAKE_GRACE
+    add(groggy ? 0 : sleepy ? 4 : 0.35, () => {
       setMode('sleep', rand(4, 8))
       if (sleepy && Math.random() < 0.5) say('陪它一起睡一会儿……', 2200)
     })
@@ -727,7 +792,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     DM.sfx && DM.sfx('pop')
     if (st.mode === 'sleep') {
       setMode('look', 1.4)
-      return say('呜……再睡五分钟。', 1800)
+      return say('唔……被你叫醒啦。', 1800)
     }
     if (st.taps.length >= 5) {
       st.taps = []
@@ -774,8 +839,9 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
       else setMode('happy', 1)
       say(wasSleeping ? '欢迎回来！它没有变小。' : milestone ? '长大啦！' : pick(['记下啦！', '漂亮！', '又多了一天。']), 2400)
     })
-    DM.bus.on('pet', () => {
+    DM.bus.on('pet', (e) => {
       if (!cfg.on) return
+      if (e && e.it) return cardTap(e.it)
       hearts(2)
       if (st.plat) hop(40)
     })
@@ -785,6 +851,37 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     })
   }
 
+  // ---- 卡片里连戳五下：兴奋起来，自己走出卡片
+  const TAP_GAP = 900
+  const streak = { n: 0, t: 0 }
+  function cardTap(it) {
+    if (S.petOut || st.debuting) return
+    const now = performance.now()
+    streak.n = now - streak.t < TAP_GAP ? streak.n + 1 : 1
+    streak.t = now
+    if (streak.n < 5) return
+    streak.n = 0
+    const card = document.querySelector(`#view [data-card="${it.id}"]`)
+    const wrap = card && card.querySelector('.cr-wrap')
+    const bub = card && card.querySelector('[data-bubble]')
+    const text = '不行了，我要出去玩！'
+    S.bubble = { id: it.id, text }
+    if (bub) bub.textContent = text
+    if (wrap) {
+      wrap.classList.remove('jump')
+      wrap.classList.add('hyped')
+    }
+    DM.sfx && DM.sfx('hatch')
+    DM.buzz && DM.buzz([10, 30, 10, 30, 16])
+    setTimeout(() => {
+      if (wrap) wrap.classList.remove('hyped')
+      if (S.bubble && S.bubble.text === text) S.bubble = null
+      if (S.petOut || st.debuting || !cfg.on) return
+      st.debuted = false
+      debut(false, '出来玩咯！')
+    }, 760)
+  }
+
   // ---- 对外
   function setPack(id) {
     if (id === 'local' && !PACKS.local) return pickLocal()
@@ -792,9 +889,20 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     cfg.pack = id
     S.pet = id
     st.fi = 0
-    spr.dataset.src = ''
+    spr.dataset.kind = ''
     hearts(3, 's')
-    say(PACKS[id].name + ' 来啦！', 1800)
+    say(petName() + ' 来啦！', 1800)
+  }
+  /** 演示台：让小伙伴先待在卡片里，不自动出场 */
+  function parkHome() {
+    abortDebut()
+    cfg.on = true
+    S.petOn = true
+    S.petOut = false
+    st.debuted = true
+    streak.n = 0
+    if (spr) spr.style.visibility = 'hidden'
+    setMode('home')
   }
   function setEnabled(b) {
     const was = cfg.on
@@ -863,11 +971,11 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     const q = P.find((p) => p.sel === '#view .stage-card') || P.find((p) => p.sel === 'floor')
     document.querySelectorAll('#view .stage-card .cr-wrap').forEach((el) => el.classList.add('pet-away'))
     handoffFall(g.W * 0.5, (q ? q.t : 160) - 80, rand(-40, 40), 0)
-    say(pk().name + ' 来啦！', 2200)
+    say(petName() + ' 来啦！', 2200)
   }
 
   /** force=true 可重播（演示台用） */
-  async function debut(force) {
+  async function debut(force, line) {
     if (!layer || !cfg.on) return
     if (st.debuting && !force) return
     if (st.debuted && !force) return
@@ -1026,7 +1134,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     const aimX = land ? Math.min(land.r - 20, Math.max(land.l + 20, midX)) : midX
     handoffFall(midX, peakY + 8, (aimX - midX) * 1.4, 120)
     hearts(5, 's')
-    say('我从卡片里出来啦！', 2600)
+    say(line || '我从卡片里出来啦！', 2600)
     leap.finished.catch(() => {})
   }
 
@@ -1035,7 +1143,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     if (!screen || document.getElementById('petLayer')) return
     layer = document.createElement('div')
     layer.id = 'petLayer'
-    layer.innerHTML = '<img class="pet-sprite" alt="" draggable="false"/><div class="pet-say"></div>'
+    layer.innerHTML = '<div class="pet-sprite"></div><div class="pet-say"></div>'
     screen.appendChild(layer)
     spr = layer.querySelector('.pet-sprite')
     sayEl = layer.querySelector('.pet-say')
@@ -1067,16 +1175,18 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
       { id: 'N3', label: '焦点睡着了 · 它陪着打盹', run: () => { DM.demo.reseed(); const it = DM.demo.item('sleep'); it.lastDay = -4; it.todayCount = 0; DM.demo.today('sleep'); setEnabled(true) } },
       { id: 'N4', label: '拎起来、扔出去', run: () => { DM.demo.ensureSeed(); DM.demo.today('water'); setEnabled(true); setTimeout(() => say('拎起我试试？', 2600), 500) } },
       { id: 'N5', label: '导入本地宠物包（Shimeji 格式）', run: () => { DM.demo.ensureSeed(); DM.demo.today('smoke'); pickLocal() } },
+      { id: 'N6', label: '连戳五下 · 它兴奋地走出卡片', run: () => { DM.demo.ensureSeed(); DM.demo.today('smoke'); parkHome() } },
     ],
   })
   DM.sceneHooks.push(() => (!S.ovs.length && /^N\d/.test(S.step || '') ? 'pets-' + S.step : null))
   const kk = 'N · 宠物与互动'
   Object.assign(DM.NOTES, {
     'pets-N0': { k: kk, t: '卡片里的小伙伴，自己走进桌面', d: [2, 1], p: ['舞台上的成长萌宠会朝卡片深处走去，越走越小。', '走到一截小台阶上顿一下，再从画面中间跳下来——落地的瞬间换成会走会爬的桌宠。', '这是「养成角色」和「桌面生命」之间的桥：同一个陪伴，换了一种在场的方式。'], try: '看完出场后，点它或拖它。' },
-    'pets-N1': { k: kk, t: '宠物不再是一张贴图：它住在页面里', d: [2, 1], p: ['宠物把页面里的卡片、按钮、底部导航当作「平台」：会站、走、坐、睡，跳到别的元素上，甚至爬屏幕边缘。', '落在按钮上，按钮会轻轻被压一下；这些小反馈比一段文案更能让人觉得它「真的在这儿」。', '动作由一张状态图驱动，参数是 Shimeji 同款的概念：Stand / Walk / Sit / Fall / ClimbWall / Dragged……所以可以直接换成真实桌宠素材。', '内置的「麻糬」是原创矢量角色，仅作占位与演示；可在设置里的「宠物包」导入本地 Shimeji 包。'], try: '等它走一走，或点它、拖它。' },
+    'pets-N1': { k: kk, t: '宠物不再是一张贴图：它住在页面里', d: [2, 1], p: ['宠物把页面里的卡片、按钮、底部导航当作「平台」：会站、走、坐、睡，跳到别的元素上，甚至爬屏幕边缘。', '落在按钮上，按钮会轻轻被压一下；这些小反馈比一段文案更能让人觉得它「真的在这儿」。', '动作由一张状态图驱动，参数是 Shimeji 同款的概念：Stand / Walk / Sit / Fall / ClimbWall / Dragged……所以可以直接换成真实桌宠素材。', '桌面上的就是卡片里那只：芽芽、眠眠、咕噜、跑跑、信信各有各的样子，长大、换配色、换风格，桌面上的它跟着变。', '有脚的形态走路会迈步，还没长脚的就一蹦一蹦地走。也可以在设置的「宠物包」换成麻糬，或导入本地 Shimeji 包。'], try: '等它走一走，或点它、拖它。' },
     'pets-N2': { k: kk, t: '你在记一件事，它在旁边加油', d: [1, 2], p: ['长按「记一下」时，宠物会跳到按钮上方跳跃加油；蓄满的一刻它为你欢呼。', '没有进度条之外的额外压力：它只是在场，不催促。'], try: '长按下面的圆角按钮。' },
     'pets-N3': { k: kk, t: '事情睡着了，它就陪着一起睡', d: [2], p: ['习惯断了不是「失败」：小伙伴只是睡着了，宠物也会靠在旁边打盹。', '你回来记一下，它第一句话是「欢迎回来，它没有变小」。'], try: '长按记一下，把它叫醒。' },
     'pets-N4': { k: kk, t: '拎起来、扔出去：有重量的陪伴', d: [2], p: ['拖动时它会挂着乱蹬腿；松手按手势的速度抛出去，有重力、会弹墙、会落到别的元素上。', '碰到屏幕边缘有时会顺势抓住墙往上爬。'], try: '把它甩向屏幕边缘。' },
+    'pets-N6': { k: kk, t: '戳得太开心，它自己跑出来了', d: [2], p: ['小伙伴在卡片里时，连续快速戳它五下（每下间隔不到 0.9 秒），它会兴奋地原地乱蹦，喊一声「不行了，我要出去玩！」，然后走出卡片变成桌宠。', '慢慢摸不会触发，所以平时摸一下、聊一句的节奏不受影响。', '玩够了把它拖回卡片中央，它就回家了，可以再戳一次。关掉桌宠时只会正常摸摸。'], try: '快速连点卡片里的小伙伴五下。' },
     'pets-N5': { k: kk, t: '导入你自己的 Shimeji 宠物包（仅本机）', d: [2, 3], p: ['选择含 shime1.png…（以及可选的 conf/actions.xml）的文件夹，页面会按动作表读取站、走、坐、爬、被拎起等动画。', '图片只在这个浏览器标签里读取，不上传、不进仓库；本地目录 pets-local/ 已被 .gitignore 忽略。', '上架前须换成有授权或原创的素材：热门桌宠多是同人创作，版权不在我们手里。'], try: '在弹出的文件选择框里选一个宠物文件夹。' },
   })
   DM.onRender.push(() => {
