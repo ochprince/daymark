@@ -2,7 +2,18 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { emptyCollection } from './collection'
 import { buildItemViews } from './itemview'
-import { DEX_TOTAL, badgeCount, collectBooks, collectChapters, dexCount, dexCountOf, hasDex } from './museum'
+import {
+  DEX_TOTAL,
+  SPECIES_HUE,
+  badgeCount,
+  collectBooks,
+  collectChapters,
+  dexCount,
+  dexCountOf,
+  hasDex,
+  speciesHue,
+  stageTint,
+} from './museum'
 
 const at = (y: number, m: number, d: number) => new Date(y, m - 1, d).getTime()
 
@@ -222,4 +233,25 @@ test('书架：没有历史章节的书也照样上台', () => {
   assert.equal(books.length, 1)
   assert.deepEqual(books[0].chapters, [])
   assert.ok(books[0].days > 0)
+})
+
+test('图鉴配色：颜色属于「谁」，不属于「长到第几形态」', () => {
+  // 色相只认物种，五个形态取到的都是同一个
+  assert.deepEqual([0, 1, 2, 3, 4].map(() => speciesHue('sprout')), Array(5).fill('mint'))
+  // 五种小伙伴五种颜色，互不撞色
+  assert.equal(new Set(Object.values(SPECIES_HUE)).size, Object.keys(SPECIES_HUE).length)
+  assert.equal(speciesHue('moon'), 'grape')
+  assert.equal(speciesHue('drop'), 'sky')
+  assert.equal(speciesHue('star'), 'lemon')
+  assert.equal(speciesHue('post'), 'coral')
+  // 未知物种不能把界面变成没有颜色的黑块
+  assert.equal(speciesHue('nope'), 'mint')
+})
+
+test('图鉴底色随形态递进：0→4 单调加深，越界被夹住', () => {
+  const tints = [0, 1, 2, 3, 4].map(stageTint)
+  assert.deepEqual(tints, [14, 20, 26, 32, 38])
+  assert.equal(stageTint(-3), 14)
+  assert.equal(stageTint(9), 38)
+  assert.equal(stageTint(2.7), 26)
 })

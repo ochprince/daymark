@@ -18,6 +18,33 @@ export type ShelfChapter = {
 }
 
 export const SPECIES_WITH_DEX = ['sprout', 'moon', 'drop', 'star'] as const
+
+/**
+ * 每种小伙伴一套底色，形态只在这套底色里做深浅，不换色相。
+ *
+ * 原来是「形态换颜色」：第 0 到第 4 形态铺开 lemon→grape→mint→rose→lemon，
+ * 同一只芽芽在五个阶段像五只不同的生物。颜色是「这是谁」的标记，不该随成长跳色。
+ * 依据原型 docs/prototype-v2/tabs.js 的 DEX_HUE。
+ */
+export const SPECIES_HUE = {
+  sprout: 'mint',
+  moon: 'grape',
+  drop: 'sky',
+  star: 'lemon',
+  post: 'coral',
+} as const
+
+export type SpeciesHue = (typeof SPECIES_HUE)[keyof typeof SPECIES_HUE]
+
+export function speciesHue(species: string): SpeciesHue {
+  return (SPECIES_HUE as Record<string, SpeciesHue>)[species] ?? SPECIES_HUE.sprout
+}
+
+/** 形态越靠后，底色越沉一点：同一色相内 0→4 递增，只用来看进度 */
+export function stageTint(stage: number): number {
+  const clamped = Math.max(0, Math.min(4, Math.trunc(stage)))
+  return 14 + clamped * 6
+}
 export const DEX_STAGE_COUNT = 5
 
 /**

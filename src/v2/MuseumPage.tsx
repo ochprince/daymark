@@ -16,6 +16,8 @@ import {
   dexCount,
   dexCountOf,
   hasDex,
+  speciesHue,
+  stageTint,
 } from '../lib/museum'
 import type { ShelfBook } from '../lib/museum'
 import { FREE_CHAPTER_LIMIT } from '../lib/entitlement'
@@ -294,7 +296,13 @@ function DexPane({ collection }: { collection: CollectionState }) {
               <div
                 key={`${species}-${stage}`}
                 className={`dex-cell ${on ? 'on' : 'off'}`}
-                style={{ '--c': `var(--h-${(stage * 2) % 8})` } as CSSProperties}
+                style={
+                  {
+                    '--c': `var(--h-${speciesHue(species)})`,
+                    '--c2': `var(--h-${speciesHue(species)}-2)`,
+                    '--tint': `${stageTint(stage)}%`,
+                  } as CSSProperties
+                }
               >
                 <Creature
                   species={species}
