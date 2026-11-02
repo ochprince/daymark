@@ -107,7 +107,6 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
                 setOpened(book)
               }}
             />
-            <p className="shelf-cap">{t('museum.chapters.cap')}</p>
           </>
         )
       ) : null}
@@ -130,7 +129,6 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
               )
             })}
           </div>
-          <p className="shelf-cap">{t('museum.badges.cap')}</p>
         </>
       ) : null}
 
@@ -337,7 +335,6 @@ function DexPane({ collection }: { collection: CollectionState }) {
         <span>{t('museum.dex.winter')}</span>
       </div>
 
-      <p className="shelf-cap">{t('museum.dex.cap')}</p>
     </div>
   )
 }

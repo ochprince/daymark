@@ -502,6 +502,7 @@ export function AppV2() {
           onImport={(file) => void pickBackup(file)}
           pro={pro}
           onUpgrade={() => setPaywall('upgrade')}
+          sampleTitle={focus?.title}
         />
       ) : null}
 

@@ -172,7 +172,6 @@ export function ProfilePage({
                 )
               })}
             </div>
-            <div className="path-note">{t('profile.path.note')}</div>
           </>
         ) : null}
 

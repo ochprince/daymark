@@ -4,7 +4,7 @@ import { t } from '../lib/i18n'
 import type { Locale, MessageKey } from '../lib/i18n'
 import { INTL_LOCALE, LOCALES, LOCALE_LABELS } from '../lib/i18n'
 import type { PrefsState } from '../lib/prefs'
-import { FREE_SKIN_PACKS, previewUnlocked } from '../lib/entitlement'
+import { FREE_SKIN_PACKS } from '../lib/entitlement'
 import { playSfx } from '../lib/sfx'
 import { choosePack, SKIN_PACKS } from '../lib/skin'
 import type { NumStyle, SkinPack, SkinState, TextureStyle } from '../lib/skin'
@@ -26,13 +26,28 @@ export type DressPageProps = {
   onImport: (file: File) => void
   pro: boolean
   onUpgrade: () => void
+  /** 缩略机里显示的那件事：优先用用户自己的，没有才用中性示例 */
+  sampleTitle?: string
 }
 
 const NUM_STYLES: readonly NumStyle[] = ['auto', 'round', 'serif', 'pixel', 'hand']
 const TEXTURES: readonly TextureStyle[] = ['auto', 'plain', 'dots', 'grid', 'lines']
 
 /** 装扮：风格包、主色、数字字体、纹理，和其他偏好 */
-export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, onLocale, onExport, onImport, pro, onUpgrade }: DressPageProps) {
+export function DressPage({
+  skin,
+  appliedPack,
+  onSkin,
+  prefs,
+  onPrefs,
+  locale,
+  onLocale,
+  onExport,
+  onImport,
+  pro,
+  onUpgrade,
+  sampleTitle,
+}: DressPageProps) {
   // 画廊与预览对齐原型：横滑到哪一张，松手就换上（点击也算一次落定）
   const galleryRef = useRef<HTMLDivElement | null>(null)
   const settleTimer = useRef(0)
@@ -119,16 +134,12 @@ export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, o
             className={`g-item ${appliedPack === pack ? 'is-on' : ''}`}
             onClick={() => pickPack(pack)}
           >
-            <MiniPhone pack={pack} locale={locale} />
+            <MiniPhone pack={pack} locale={locale} title={sampleTitle ?? t('dress.sampleTitle')} />
             <b>{t(`dress.pack.${pack}` as MessageKey)}</b>
             <small>{t(`dress.pack.${pack}.tag` as MessageKey)}</small>
             <span className="applied">{t('dress.applied')}</span>
           </button>
         ))}
-        <div className="coming">
-          <span className="coming-plus">+</span>
-          <span>{t('dress.more')}</span>
-        </div>
       </div>
 
       <div className="g-dots">
@@ -145,12 +156,12 @@ export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, o
       <div className="card opt">
         <div className="opt-h">
           <span>{t('dress.accent')}</span>
-          <small>{skin.accent === 'auto' ? t('dress.num.auto') : `${skin.accent}`}</small>
+          <small>{skin.accent === 'auto' ? t('dress.accent.auto') : t(`dress.hue.${skin.accent}` as MessageKey)}</small>
         </div>
         <div className="swatches">
           <button
             type="button"
-            aria-label="auto"
+            aria-label={t('dress.accent.auto')}
             onClick={() => onSkin({ accent: 'auto' })}
             style={{
               width: 28,
@@ -164,7 +175,7 @@ export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, o
             <button
               key={color}
               type="button"
-              aria-label={`accent ${color}`}
+              aria-label={t(`dress.hue.${color}` as MessageKey)}
               onClick={() => onSkin({ accent: color })}
               style={{
                 width: 28,
@@ -215,16 +226,7 @@ export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, o
         </div>
       </div>
 
-      {pro ? (
-        previewUnlocked ? (
-          <div className="card opt" style={{ padding: '13px 18px' }}>
-            <div className="opt-h" style={{ marginBottom: 0 }}>
-              <span>{t('dress.previewUnlock')}</span>
-              <small>{t('dress.previewUnlockHint')}</small>
-            </div>
-          </div>
-        ) : null
-      ) : (
+      {pro ? null : (
         <button className="card opt" type="button" onClick={onUpgrade} style={{ display: 'block', width: 'calc(100% - 32px)', textAlign: 'left' }}>
           <div className="opt-h" style={{ marginBottom: 0 }}>
             <span>{t('pro.title')}</span>
@@ -238,7 +240,7 @@ export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, o
         <div className="li">
           <span className="grow">
             {t('dress.followSystem')}
-            <small className="li-sub">{t('dress.pack.night.tag')}</small>
+            <small className="li-sub">{t('dress.followSystemHint')}</small>
           </span>
           <button
             className={`toggle ${skin.followSystem ? 'on' : ''}`}
@@ -302,10 +304,7 @@ export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, o
           </span>
         </div>
         <div className="li">
-          <span className="grow">
-            {t('dress.dataNote')}
-            <small className="li-sub">{t('dress.about')}</small>
-          </span>
+          <span className="grow">{t('dress.dataNote')}</span>
         </div>
         <button className="li" type="button" onClick={onExport}>
           <span className="grow">{t('dress.export')}</span>
@@ -346,9 +345,8 @@ export function DressPage({ skin, appliedPack, onSkin, prefs, onPrefs, locale, o
 }
 
 /** 预览里的这「一件事」：虚构的数据，交给真的 StageCard 去渲染 */
-function previewView(): SinceView {
+function previewView(title: string): SinceView {
   const startedAt = Date.now() - 128 * 24 * 60 * 60 * 1000
-  const title = t('dress.previewName')
   const event: DayEvent = {
     id: 'preview',
     title,
@@ -419,8 +417,8 @@ const noop = () => {}
  * 再整体 scale(0.485) 塞进 200×356 的窗口。不是另画一张小图，所以卡片内容、
  * 圆角、描边、阴影都和换到真机上一模一样。
  */
-function MiniPhone({ pack, locale }: { pack: SkinPack; locale: Locale }) {
-  const view = useMemo(() => previewView(), [locale])
+function MiniPhone({ pack, locale, title }: { pack: SkinPack; locale: Locale; title: string }) {
+  const view = useMemo(() => previewView(title), [title])
   return (
     <div className="mini" data-skin={pack} aria-hidden="true">
       <div className="mini-inner">
