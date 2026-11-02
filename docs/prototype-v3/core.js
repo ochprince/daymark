@@ -557,6 +557,7 @@
   function stageCard(it, mini = false) {
     const fx = !mini && S.fx && S.fx.id === it.id ? S.fx : null
     const enter = !mini && S.enter ? `enter-${S.enter}` : ''
+    const out = !mini && S.petOut
     const sl = sleeping(it)
     const bub = !mini && S.bubble && S.bubble.id === it.id ? S.bubble.text : lineFor(it)
     const bg = it.photo ? `<div class="photo">${photoSVG()}</div><div class="photo-blur"></div>` : '<div class="deco"></div>'
@@ -564,16 +565,20 @@
       ? `<div class="fx">${particles(fx.milestone ? 22 : 14)}${fx.plus ? `<span class="plus1">${fx.plus}</span>` : ''}${fx.milestone ? '<span class="flash"></span>' : ''}</div>`
       : ''
     const party = it.type === 'countdown' && left(it) === 0 ? confetti() : ''
+    // 出门了也保留家里的占位（尺寸不塌），CSS 藏画；以后还要走回来
+    const art = !out && fx && fx.milestone
+      ? creature({ species: it.species, stage: fx.from, mood: 'happy', size: 158, extra: { pumpkin: S.halloween } })
+      : crOf(it, 158, !out && fx ? 'happy' : undefined)
     return `<section class="stage-card ${it.photo ? 'has-photo' : ''} ${enter}" style="${hueStyle(it.hue)}" data-card="${it.id}">
       ${bg}
       <div class="sc-top"><span class="tag">${typeTag(it)}</span><h2 class="sc-title">${esc(it.title)}</h2><button class="sc-more" data-act="detail" data-id="${it.id}">档案 ›</button></div>
       <div class="sc-hero">
-        <div class="bubble ${fx ? 'pop' : ''}" data-bubble>${bub}</div>
-        <div class="cr-wrap ${sl ? 'sleep' : ''} ${fx ? 'jump' : ''}" data-cr>
+        <div class="bubble ${fx ? 'pop' : ''} ${out ? 'is-away' : ''}" data-bubble>${out ? '小伙伴去桌面上玩了' : bub}</div>
+        <div class="cr-wrap ${sl && !out ? 'sleep' : ''} ${fx ? 'jump' : ''} ${out ? 'pet-out' : ''}" ${out ? '' : 'data-cr'}>
           <svg class="charge-ring" viewBox="0 0 200 200"><circle class="track" cx="100" cy="100" r="92.6"/><circle class="bar" cx="100" cy="100" r="92.6"/></svg>
-          ${fx && fx.milestone ? creature({ species: it.species, stage: fx.from, mood: 'happy', size: 158, extra: { pumpkin: S.halloween } }) : crOf(it, 158, fx ? 'happy' : undefined)}
+          ${art}
           <div class="ground"></div>
-          ${sl ? '<div class="zzz"><span>z</span><span>z</span><span>Z</span></div>' : ''}
+          ${sl && !out ? '<div class="zzz"><span>z</span><span>z</span><span>Z</span></div>' : ''}
         </div>
       </div>
       ${numBlock(it, fx)}
@@ -678,6 +683,12 @@
 
   function pet(it) {
     it = it || focused()
+    // 已经跳到桌面上了：卡片原位摸不到，去点桌宠
+    if (S.petOut) {
+      DM.pets && DM.pets.say && DM.pets.say(pick(['在这儿呢~', '摸我这边！', '咕？']), 1600)
+      DM.bus.emit('pet')
+      return
+    }
     const card = document.querySelector(`#view [data-card="${it.id}"]`)
     if (!card) return
     const wrap = card.querySelector('[data-cr]')
@@ -686,7 +697,7 @@
     const text = S.taps % 7 === 0 ? '今天第 7 次摸我了……有点害羞。' : sleeping(it) ? '呼……（它翻了个身，又睡着了）' : pick(TAP_LINES.filter((t) => t !== bub.textContent))
     S.bubble = { id: it.id, text }
     bub.textContent = text
-    for (const [el, cls] of [[bub, 'pop'], [wrap, 'jump']]) {
+    for (const [el, cls] of [[bub, 'pop'], [wrap, 'jump']].filter(([el]) => el)) {
       el.classList.remove(cls)
       void el.offsetWidth
       el.classList.add(cls)

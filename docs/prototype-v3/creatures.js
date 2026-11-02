@@ -143,9 +143,13 @@
       s += `<path d="M${xR - 7 * k} ${cy} Q${xR} ${cy + 6 * k} ${xR + 7 * k} ${cy}" fill="none" ${stroke(4)}/>`
       s += `<ellipse cx="100" cy="${cy + 15}" rx="3.5" ry="4" fill="var(--cr-line)"/>`
     } else if (mood === 'happy') {
-      s += `<path d="M${xL - 7 * k} ${cy + 3} Q${xL} ${cy - 7 * k} ${xL + 7 * k} ${cy + 3}" fill="none" ${stroke(4.5)}/>`
-      s += `<path d="M${xR - 7 * k} ${cy + 3} Q${xR} ${cy - 7 * k} ${xR + 7 * k} ${cy + 3}" fill="none" ${stroke(4.5)}/>`
-      s += `<path d="M90 ${cy + 11} Q100 ${cy + 26} 110 ${cy + 11} Z" fill="var(--mouth)" ${stroke(3.5)}/>`
+      const eye = (x) =>
+        `<path d="M${x - 7.5 * k} ${cy + 3} C${x - 5 * k} ${cy - 5.5 * k} ${x + 5 * k} ${cy - 5.5 * k} ${x + 7.5 * k} ${cy + 3} C${x + 5 * k} ${cy - 1.5 * k} ${x - 5 * k} ${cy - 1.5 * k} ${x - 7.5 * k} ${cy + 3} Z" fill="var(--cr-line)" ${stroke(2)}/>`
+      s += eye(xL) + eye(xR)
+      const mouth = `M88 ${cy + 11} Q100 ${cy + 15} 112 ${cy + 11} C111 ${cy + 20} 106 ${cy + 25} 100 ${cy + 25} C94 ${cy + 25} 89 ${cy + 20} 88 ${cy + 11} Z`
+      s += `<path d="${mouth}" fill="var(--mouth)"/>`
+      s += `<path d="M93 ${cy + 21.5} C95 ${cy + 18.5} 105 ${cy + 18.5} 107 ${cy + 21.5} C105 ${cy + 24.5} 95 ${cy + 24.5} 93 ${cy + 21.5} Z" fill="var(--blush)"/>`
+      s += `<path d="${mouth}" fill="none" ${stroke(3)}/>`
     } else {
       const ry = mood === 'wow' ? 8.5 : 7.5
       const rx = mood === 'wow' ? 7.5 : 5.8

@@ -9,7 +9,8 @@
  *   内置一套原创的「麻糬」矢量包；也能导入 Shimeji 格式的本地包（shimeN.png + actions.xml），
  *   只在本机浏览器里读取，不会进仓库、不会上传。真实 Shimeji 素材多为同人创作，见 docs/prototype-v3/README.md 的版权说明。
  *
- * 对外：DM.pets = { setEnabled, setPack, pickLocal, importFiles, say, summon, hop, state }
+ * 出场：舞台卡上的成长萌宠往上走进去、变小、踏上小台阶，再从中间跳下，交接给桌宠引擎。
+ * 对外：DM.pets = { setEnabled, setPack, pickLocal, importFiles, say, summon, hop, debut, state }
  */
 ;(function () {
   'use strict'
@@ -223,7 +224,10 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
   const cfg = { on: true, pack: 'mochi' }
   let layer, spr, sayEl
   let last = 0
-  const st = { x: 260, y: 120, vx: 0, vy: 0, f: 1, mode: 'fall', fi: 0, ft: 0, timer: 0, plat: null, tx: null, wall: 0, say: 0, taps: [], cheering: false }
+  const st = { x: 260, y: 120, vx: 0, vy: 0, f: 1, mode: 'fall', fi: 0, ft: 0, timer: 0, plat: null, tx: null, wall: 0, say: 0, taps: [], cheering: false, debuted: false, debuting: false }
+  let debutEl = null
+  let debutStepEl = null
+  let debutTok = 0
 
   const PLAT_SEL = ['#view .hold', '#view .growth', '#view .sc-actions .btn', '#view .stage-card', '#tabbar', '#view .pill-switch', '#view .icon-btn', '#view .card', '#view [data-pet-plat]']
   const NO_BUMP = /stage-card|card\b/
@@ -450,7 +454,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     }
 
     const m = st.mode
-    if (m === 'drag') return
+    if (m === 'drag' || m === 'debut' || m === 'home' || m === 'homing') return
     if (m === 'fall' || m === 'jump') {
       const py = st.y
       st.vy += G * dt
@@ -557,7 +561,8 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     const dt = Math.min(0.05, (now - last) / 1000 || 0.016)
     last = now
     if (!layer) return
-    const hidden = !cfg.on || S.ovs.length > 0 || S.onboarded === false
+    const deskActive = S.petOut || st.debuting || st.mode === 'homing'
+    const hidden = !cfg.on || !deskActive || S.ovs.length > 0 || S.onboarded === false
     layer.classList.toggle('off', hidden)
     if (hidden) return
     step(dt)
@@ -571,7 +576,91 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     paint()
   }
 
-  // ---- 交互：点它 / 拎起来 / 扔出去
+  // ---- 回家：拖到舞台卡中央（原位）松手
+  function homeZone(g) {
+    const wrap = document.querySelector('#view .stage-card .cr-wrap')
+    if (!wrap) return null
+    const b = wrap.getBoundingClientRect()
+    const l = (b.left - g.r.left) / g.k
+    const r = (b.right - g.r.left) / g.k
+    const t = (b.top - g.r.top) / g.k
+    const bot = (b.bottom - g.r.top) / g.k
+    return { l, r, t, b: bot, cx: (l + r) / 2, cy: (t + bot) / 2, feetY: t + (bot - t) * 0.78 }
+  }
+
+  function overHome(g) {
+    if (!S.petOut) return false
+    const h = homeZone(g)
+    if (!h) return false
+    // 中央区域：原位盒子往里缩一圈，避免擦边误触
+    const mx = (h.r - h.l) * 0.18
+    const my = (h.b - h.t) * 0.16
+    return st.x >= h.l + mx && st.x <= h.r - mx && st.y >= h.t + my && st.y <= h.b - my
+  }
+
+  function setHomeHot(on) {
+    document.querySelectorAll('#view .stage-card .cr-wrap').forEach((el) => el.classList.toggle('pet-home-hot', !!on))
+  }
+
+  function goHome() {
+    if (!S.petOut || st.mode === 'homing') return
+    setHomeHot(false)
+    setMode('homing')
+    st.vx = 0
+    st.vy = 0
+    st.plat = null
+    const g = geom()
+    const h = homeZone(g)
+    const tx = h ? h.cx : st.x
+    const ty = h ? h.feetY : st.y
+    say('回家——', 1400)
+    const fromX = st.x
+    const fromY = st.y
+    const t0 = performance.now()
+    const dur = 420
+    const tickHome = (now) => {
+      const u = Math.min(1, (now - t0) / dur)
+      const e = 1 - Math.pow(1 - u, 3)
+      st.x = fromX + (tx - fromX) * e
+      st.y = fromY + (ty - fromY) * e
+      // 落回原位时略缩小，像钻回卡片
+      if (spr) spr.style.opacity = String(1 - u * 0.85)
+      paint()
+      if (u < 1) return requestAnimationFrame(tickHome)
+      finishHome()
+    }
+    requestAnimationFrame(tickHome)
+  }
+
+  function finishHome() {
+    hearts(4)
+    S.petOut = false
+    st.debuted = false
+    if (spr) {
+      spr.style.visibility = 'hidden'
+      spr.style.opacity = ''
+    }
+    setMode('home')
+    DM.renderView && DM.renderView()
+    const wrap = document.querySelector('#view .stage-card .cr-wrap')
+    if (wrap) {
+      wrap.classList.remove('pet-out', 'pet-home-hot')
+      wrap.classList.remove('jump')
+      void wrap.offsetWidth
+      wrap.classList.add('jump')
+      setTimeout(() => wrap.classList.remove('jump'), 600)
+    }
+    const bub = document.querySelector('#view .stage-card [data-bubble]')
+    if (bub) {
+      bub.textContent = '我回来了。'
+      bub.classList.remove('is-away', 'pop')
+      void bub.offsetWidth
+      bub.classList.add('pop')
+    }
+    DM.sfx && DM.sfx('pop')
+  }
+
+  // ---- 交互：点它 / 拎起来 / 扔出去；拖到卡片中央 = 放回原位
   function bindPointer() {
     let pd = null
     spr.addEventListener('pointerdown', (e) => {
@@ -596,6 +685,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
         st.y = py + st.h * 0.42
         pd.samples.push([performance.now(), px, py])
         if (pd.samples.length > 6) pd.samples.shift()
+        setHomeHot(overHome(g))
       }
     })
     const up = () => {
@@ -603,6 +693,13 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
       const d = pd
       pd = null
       if (d.drag) {
+        const g = geom()
+        const home = overHome(g)
+        setHomeHot(false)
+        if (home) {
+          goHome()
+          return
+        }
         const s = d.samples
         let vx = 0
         let vy = 0
@@ -700,9 +797,237 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     say(PACKS[id].name + ' 来啦！', 1800)
   }
   function setEnabled(b) {
+    const was = cfg.on
     cfg.on = !!b
     S.petOn = cfg.on
     layer && layer.classList.toggle('off', !cfg.on)
+    if (!cfg.on) {
+      if (st.debuting) abortDebut()
+      // 桌宠收起：小伙伴回到卡片原位
+      S.petOut = false
+      st.debuted = false
+      DM.renderView && DM.renderView()
+      return
+    }
+    if (!was || !st.debuted) setTimeout(() => debut(), 240)
+  }
+
+  // ================================================================ 出场：往上走进去 → 台阶 → 跳下变成桌宠
+
+  const waitMs = (ms) => new Promise((r) => setTimeout(r, ms))
+
+  function clearDebutDom() {
+    if (debutEl) {
+      debutEl.remove()
+      debutEl = null
+    }
+    if (debutStepEl) {
+      debutStepEl.remove()
+      debutStepEl = null
+    }
+  }
+
+  function restoreCardPet() {
+    document.querySelectorAll('#view .cr-wrap.pet-away').forEach((el) => el.classList.remove('pet-away'))
+  }
+
+  function abortDebut() {
+    debutTok++
+    st.debuting = false
+    clearDebutDom()
+    if (!S.petOut) restoreCardPet()
+    if (spr) spr.style.visibility = ''
+  }
+
+  function handoffFall(x, y, vx, vy) {
+    // 跳出来了就别再站回卡片上
+    S.petOut = true
+    clearDebutDom()
+    st.x = x
+    st.y = y
+    st.vx = vx
+    st.vy = vy
+    st.f = vx >= 0 ? 1 : -1
+    st.plat = null
+    st.debuting = false
+    st.debuted = true
+    if (spr) spr.style.visibility = ''
+    setMode('fall')
+    paint()
+    DM.renderView && DM.renderView()
+  }
+
+  function skipDebut() {
+    const g = geom()
+    const P = platforms(g)
+    const q = P.find((p) => p.sel === '#view .stage-card') || P.find((p) => p.sel === 'floor')
+    document.querySelectorAll('#view .stage-card .cr-wrap').forEach((el) => el.classList.add('pet-away'))
+    handoffFall(g.W * 0.5, (q ? q.t : 160) - 80, rand(-40, 40), 0)
+    say(pk().name + ' 来啦！', 2200)
+  }
+
+  /** force=true 可重播（演示台用） */
+  async function debut(force) {
+    if (!layer || !cfg.on) return
+    if (st.debuting && !force) return
+    if (st.debuted && !force) return
+    if (force && st.debuting) abortDebut()
+    if (S.onboarded === false) return
+    if (S.reduce || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+      skipDebut()
+      return
+    }
+
+    // 重播时先让卡片上的小伙伴回来，才能再走出去
+    if (force || S.petOut) {
+      S.petOut = false
+      st.debuted = false
+      DM.renderView && DM.renderView()
+      await waitMs(40)
+    }
+
+    const tok = ++debutTok
+    st.debuting = true
+    st.debuted = false
+    setMode('debut')
+    if (spr) spr.style.visibility = 'hidden'
+    clearDebutDom()
+
+    let wrap = null
+    for (let i = 0; i < 24; i++) {
+      if (tok !== debutTok) return
+      if (!S.ovs.length) wrap = document.querySelector('#view .stage-card .cr-wrap')
+      if (wrap && wrap.querySelector('.cr')) break
+      wrap = null
+      await waitMs(80)
+    }
+    if (tok !== debutTok) return
+    if (!wrap) {
+      skipDebut()
+      return
+    }
+
+    const cr = wrap.querySelector('.cr')
+    const g = geom()
+    const br = cr.getBoundingClientRect()
+    const card = wrap.closest('.stage-card')
+    const cb = card.getBoundingClientRect()
+    const startX = (br.left + br.width / 2 - g.r.left) / g.k
+    const startY = (br.bottom - g.r.top) / g.k - 6
+    const midX = (cb.left + cb.width / 2 - g.r.left) / g.k
+    const stepY = (cb.top - g.r.top) / g.k + 56
+    const startS = Math.max(0.72, Math.min(1.05, br.width / g.k / 158))
+
+    wrap.classList.add('pet-away')
+
+    // 克隆离开舞台卡后不再继承 --c 等色板，不拷会整只变黑
+    const hueSrc = card || wrap
+    const hueCs = getComputedStyle(hueSrc)
+    const paintHue = (el) => {
+      ;[
+        '--c',
+        '--c2',
+        '--cr-line',
+        '--cr-lw',
+        '--leaf',
+        '--gold',
+        '--band',
+        '--foam',
+        '--bubble',
+        '--rb1',
+        '--rb2',
+        '--rb3',
+        '--shell',
+        '--petal',
+        '--pistil',
+        '--spark',
+        '--mouth',
+        '--blush',
+        '--paper',
+        '--gift',
+      ].forEach((k) => {
+        const v = hueCs.getPropertyValue(k).trim()
+        if (v) el.style.setProperty(k, v)
+      })
+    }
+
+    debutEl = document.createElement('div')
+    debutEl.className = 'pet-debut'
+    debutEl.innerHTML = `<div class="pet-debut-spin">${cr.outerHTML}</div>`
+    paintHue(debutEl)
+    const cloneCr = debutEl.querySelector('.cr')
+    cloneCr.style.width = br.width / g.k + 'px'
+    cloneCr.style.height = br.height / g.k + 'px'
+    cloneCr.removeAttribute('width')
+    cloneCr.removeAttribute('height')
+    layer.appendChild(debutEl)
+
+    debutStepEl = document.createElement('i')
+    debutStepEl.className = 'pet-debut-step'
+    paintHue(debutStepEl)
+    layer.appendChild(debutStepEl)
+
+    const put = (x, y, s) => {
+      debutEl.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${s})`
+    }
+    put(startX, startY, startS)
+    debutStepEl.style.left = midX.toFixed(1) + 'px'
+    debutStepEl.style.top = stepY.toFixed(1) + 'px'
+
+    await waitMs(160)
+    if (tok !== debutTok) return
+
+    // 直接往上走进去，越来越小；台阶在终点亮起
+    debutEl.classList.add('walk')
+    const walk = debutEl.animate(
+      [
+        { transform: `translate3d(${startX}px, ${startY}px, 0) scale(${startS})` },
+        { transform: `translate3d(${(startX + midX) / 2}px, ${(startY + stepY) / 2 - 6}px, 0) scale(${startS * 0.72})`, offset: 0.55 },
+        { transform: `translate3d(${midX}px, ${stepY}px, 0) scale(${startS * 0.42})` },
+      ],
+      { duration: 1680, easing: 'cubic-bezier(0.35, 0.1, 0.25, 1)', fill: 'forwards' },
+    )
+    setTimeout(() => {
+      if (tok === debutTok && debutStepEl) debutStepEl.classList.add('on')
+    }, 1100)
+    await walk.finished.catch(() => {})
+    if (tok !== debutTok) return
+    if (walk.commitStyles) walk.commitStyles()
+    walk.cancel()
+    put(midX, stepY, startS * 0.42)
+
+    // 3) 在台阶上顿一下
+    debutEl.classList.remove('walk')
+    debutEl.classList.add('squash')
+    await waitMs(320)
+    if (tok !== debutTok) return
+    debutEl.classList.remove('squash')
+
+    // 4) 从中间跳下；半空换成桌宠精灵，交给物理引擎
+    const P = platforms(g)
+    const jumpH = 96
+    const jvy = -Math.sqrt(2 * G * jumpH)
+    const peakT = Math.abs(jvy) / G
+    const peakY = stepY + jvy * peakT + 0.5 * G * peakT * peakT
+    const leap = debutEl.animate(
+      [
+        { transform: `translate3d(${midX}px, ${stepY}px, 0) scale(${startS * 0.42})`, opacity: 1 },
+        { transform: `translate3d(${midX}px, ${peakY}px, 0) scale(${startS * 0.5})`, opacity: 1, offset: 0.4 },
+        { transform: `translate3d(${midX}px, ${peakY + 20}px, 0) scale(${startS * 0.56})`, opacity: 0 },
+      ],
+      { duration: 420, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)', fill: 'forwards' },
+    )
+    if (debutStepEl) debutStepEl.classList.add('gone')
+    await waitMs(250)
+    if (tok !== debutTok) return
+
+    // 落点偏向卡片中线，稍带一点水平速度
+    const land = P.find((p) => p.sel === '#view .hold') || P.find((p) => p.sel === '#view .growth') || P.find((p) => p.sel === '#view .stage-card')
+    const aimX = land ? Math.min(land.r - 20, Math.max(land.l + 20, midX)) : midX
+    handoffFall(midX, peakY + 8, (aimX - midX) * 1.4, 120)
+    hearts(5, 's')
+    say('我从卡片里出来啦！', 2600)
+    leap.finished.catch(() => {})
   }
 
   function init() {
@@ -718,14 +1043,16 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     st.W = g.W
     st.x = g.W * 0.72
     st.y = 150
+    spr.style.visibility = 'hidden'
+    setMode('debut')
     bindPointer()
     wire()
     autoLocal()
     requestAnimationFrame(tick)
-    setTimeout(() => say('我是麻糬，我就在这儿看着。', 3000), 900)
+    setTimeout(() => debut(), 720)
   }
 
-  DM.pets = { setEnabled, setPack, pickLocal, importFiles, say, summon, hop, packs: PACKS, state: st, cfg }
+  DM.pets = { setEnabled, setPack, pickLocal, importFiles, say, summon, hop, debut, goHome, packs: PACKS, state: st, cfg }
   Object.defineProperty(DM.pets, 'enabled', { get: () => cfg.on })
 
   // ================================================================ 演示台：宠物实验室
@@ -734,6 +1061,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
     key: 'N',
     title: '宠物与互动',
     steps: [
+      { id: 'N0', label: '出场 · 往上走进去再跳下来', run: () => { DM.demo.ensureSeed(); DM.demo.today('smoke'); setEnabled(true); setTimeout(() => debut(true), 380) } },
       { id: 'N1', label: '自由活动 · 它会走、跳、爬墙', run: () => { DM.demo.ensureSeed(); DM.demo.today('smoke'); setEnabled(true) } },
       { id: 'N2', label: '长按记一下 · 它来加油', run: () => { DM.demo.reseed(); DM.demo.today('sleep', { guide: 'hold' }); setEnabled(true); setTimeout(summon, 400) } },
       { id: 'N3', label: '焦点睡着了 · 它陪着打盹', run: () => { DM.demo.reseed(); const it = DM.demo.item('sleep'); it.lastDay = -4; it.todayCount = 0; DM.demo.today('sleep'); setEnabled(true) } },
@@ -744,6 +1072,7 @@ ${blush ? '<ellipse cx="23.5" cy="56.5" rx="4.2" ry="2.6" fill="#ff9c9c" opacity
   DM.sceneHooks.push(() => (!S.ovs.length && /^N\d/.test(S.step || '') ? 'pets-' + S.step : null))
   const kk = 'N · 宠物与互动'
   Object.assign(DM.NOTES, {
+    'pets-N0': { k: kk, t: '卡片里的小伙伴，自己走进桌面', d: [2, 1], p: ['舞台上的成长萌宠会朝卡片深处走去，越走越小。', '走到一截小台阶上顿一下，再从画面中间跳下来——落地的瞬间换成会走会爬的桌宠。', '这是「养成角色」和「桌面生命」之间的桥：同一个陪伴，换了一种在场的方式。'], try: '看完出场后，点它或拖它。' },
     'pets-N1': { k: kk, t: '宠物不再是一张贴图：它住在页面里', d: [2, 1], p: ['宠物把页面里的卡片、按钮、底部导航当作「平台」：会站、走、坐、睡，跳到别的元素上，甚至爬屏幕边缘。', '落在按钮上，按钮会轻轻被压一下；这些小反馈比一段文案更能让人觉得它「真的在这儿」。', '动作由一张状态图驱动，参数是 Shimeji 同款的概念：Stand / Walk / Sit / Fall / ClimbWall / Dragged……所以可以直接换成真实桌宠素材。', '内置的「麻糬」是原创矢量角色，仅作占位与演示；可在设置里的「宠物包」导入本地 Shimeji 包。'], try: '等它走一走，或点它、拖它。' },
     'pets-N2': { k: kk, t: '你在记一件事，它在旁边加油', d: [1, 2], p: ['长按「记一下」时，宠物会跳到按钮上方跳跃加油；蓄满的一刻它为你欢呼。', '没有进度条之外的额外压力：它只是在场，不催促。'], try: '长按下面的圆角按钮。' },
     'pets-N3': { k: kk, t: '事情睡着了，它就陪着一起睡', d: [2], p: ['习惯断了不是「失败」：小伙伴只是睡着了，宠物也会靠在旁边打盹。', '你回来记一下，它第一句话是「欢迎回来，它没有变小」。'], try: '长按记一下，把它叫醒。' },
