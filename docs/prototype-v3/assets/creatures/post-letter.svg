@@ -1,21 +1,32 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" style="--c:#8fe3c0;--c2:#2fa77a;--cr-line:#2b2638;--cr-lw:4.5;--leaf:#7bd389;--petal:#fff;--pistil:#ffd45c;--spark:#ffc93c;--shell:#fffdf6;--gold:#ffd45c;--band:#fff;--foam:#fff;--bubble:rgba(255,255,255,.75);--rb1:#ff9c8a;--rb2:#ffe07a;--rb3:#8fe3c0;--mouth:#e5664b;--blush:#ff9c9c;--gift:#ffe07a;--paper:#fff">
-  <defs><clipPath id="cb0">
-  <path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z"/></clipPath>
+  <defs>
+  <clipPath id="cb0"><path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z"/></clipPath>
+  <radialGradient id="cb0-sh" cx=".32" cy=".24" r=".92"><stop offset=".42" style="stop-color:var(--c2);stop-opacity:0"/><stop offset="1" style="stop-color:var(--c2);stop-opacity:.5"/></radialGradient>
+  <radialGradient id="cb0-bl" cx=".5" cy=".42" r=".58"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
   </defs>
-  <g transform="translate(100 186) scale(.94) translate(-100 -186)">
+  <g transform="translate(100 186) scale(0.94) translate(-100 -186)">
   <g class="cr-body">
-  <ellipse cx="78" cy="181" rx="14" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
-  <ellipse cx="122" cy="181" rx="14" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="78" cy="182" rx="13" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="122" cy="182" rx="13" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
   <path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
-  <g clip-path="url(#cb0)" class="cr-shade">
-  <ellipse cx="136" cy="182" rx="76" ry="34" fill="var(--c2)" opacity=".28"/></g>
-  <ellipse cx="72" cy="94" rx="11" ry="6.5" fill="#fff" opacity=".75" transform="rotate(-32 72 94)" class="cr-hl"/>
+  <g clip-path="url(#cb0)">
+  <rect x="30" y="60" width="140" height="126" fill="url(#cb0-sh)" class="cr-shade"/>
+  <path d="M43 146 C52 165 73 176 100 177" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="4" stroke-linecap="round" class="cr-hl"/>
+  </g>
+  <path d="M53 114 C53 101 60 92 71 88" fill="none" stroke="#fff" stroke-opacity=".88" stroke-width="5.5" stroke-linecap="round" class="cr-hl"/>
+  <circle cx="54" cy="124" r="2.8" fill="#fff" opacity=".85" class="cr-hl"/>
   <g class="cr-face" data-face="116,20,0,"/>
-  <path d="M62 86 C62 58 138 58 138 86 Z" fill="var(--c2)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M98 86 C118 82 142 86 156 94 C140 98 114 96 98 90 Z" fill="var(--c2)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="100" cy="70" r="6" fill="var(--gold)" stroke="var(--cr-line)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <rect x="70" y="140" width="60" height="38" rx="5" fill="var(--paper)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <path d="M72 143 L100 162 L128 143" fill="none" stroke="var(--cr-line)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"/>
-  <circle cx="100" cy="162" r="5" fill="var(--band)" stroke="var(--cr-line)" stroke-width="2.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <ellipse cx="66" cy="156" rx="9" ry="11" fill="var(--c)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
-  <ellipse cx="134" cy="156" rx="9" ry="11" fill="var(--c)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/></g></g></svg>
+  <path d="M60 92 C58 64 78 52 100 52 C122 52 142 64 140 92 Z" fill="var(--c2)" stroke="var(--cr-line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M61 84 C86 79 114 79 139 84 L140 92 L60 92 Z" fill="var(--cr-line)" opacity=".16" class="cr-shade"/>
+  <path d="M72 74 C74 66 82 59 92 57" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="3.5" stroke-linecap="round" class="cr-hl"/>
+  <path d="M100 92 C120 86 146 88 160 97 C150 103 120 101 100 95 Z" fill="var(--c2)" stroke="var(--cr-line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="100" cy="72" r="6.5" fill="var(--gold)" stroke="var(--cr-line)" stroke-width="2.6" stroke-linejoin="round" stroke-linecap="round"/>
+  <circle cx="98" cy="70" r="1.8" fill="#fff" opacity=".85" class="cr-hl"/>
+  <rect x="70" y="140" width="60" height="38" rx="5" fill="var(--paper)" stroke="var(--cr-line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M73 144 L100 162 L127 144" fill="none" stroke="var(--cr-line)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M73 175 L92 159 M127 175 L108 159" fill="none" stroke="var(--cr-line)" stroke-opacity=".3" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M100 167 C93 162 93 155 97.5 155 C99 155 100 156.5 100 157.5 C100 156.5 101 155 102.5 155 C107 155 107 162 100 167 Z" fill="var(--rb1)" stroke="var(--cr-line)" stroke-width="2.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="68" cy="156" rx="9" ry="11" fill="var(--c)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="132" cy="156" rx="9" ry="11" fill="var(--c)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M64 151 C64 149 65 148 67 147" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="2" stroke-linecap="round" class="cr-hl"/>
+  </g></g></svg>
