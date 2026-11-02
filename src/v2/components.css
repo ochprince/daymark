@@ -632,7 +632,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 [data-skin='pixel'] .sp-ch { border-radius: 0; }
 .shelf-cap { font-size: 12.5px; color: var(--ink3); text-align: center; margin: 28px 0 0; }
-.dex { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 6px 16px; }
+/* minmax(0, 1fr)：1fr 的自动下限是 min-content，格子里的 54px 小伙伴 + aspect-ratio
+   会让轨道拒绝收缩，五列加起来 470px > 358px 的容器，整页横向溢出、第五张卡被切掉 */
+.dex { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; margin: 6px 16px; }
 .dex-name { grid-column: 1 / -1; display: flex; justify-content: space-between; align-items: baseline; margin: 12px 4px 0; font-weight: 800; font-size: 15px; }
 .dex-name small { color: var(--ink3); font-weight: 600; font-size: 12.5px; }
 .dex-cell { aspect-ratio: 0.82; border-radius: 18px; border: var(--bw) solid var(--line); background: var(--surface); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 4px 2px 6px; }
