@@ -11,6 +11,7 @@
  */
 import { countRecordedDays } from './growth'
 import { dexKey, emptyCollection } from './collection'
+import { speciesColor } from './museum'
 import { buildItemViews, itemKey, type ItemView } from './itemview'
 import { migrateSkin, type SkinState } from './skin'
 import type {
@@ -220,6 +221,42 @@ function looksLikeRecord(value: unknown): boolean {
  * 首启执行一次：补字段、写收藏与皮肤、记住焦点。
  * 已经迁过的直接返回 null（幂等）；任何一步失败都不抛错，返回 null 让 App 照常启动。
  */
+/**
+ * 一次性把已有记录的颜色改成「物种色」。
+ *
+ * 新建时的默认色以前是「按剩下的颜色轮流分」，所以喝水（水滴）可能拿到柠檬黄。
+ * 颜色应该是「这是谁」的标记：水滴就是天空蓝。这里把存量记录改过来，
+ * 之后用户在档案里手动换色仍然有效（那是显式选择，不再覆盖）。
+ */
+export const SPECIES_COLOR_FLAG = 'daymark.migrated.speciescolor.v1'
+
+export function applySpeciesColors(storage: MigrationStorage): boolean {
+  try {
+    if (storage.getItem(SPECIES_COLOR_FLAG)) return false
+    const rewrite = (key: string, fallback: Species, guess: boolean) => {
+      const items = parseArray(storage.getItem(key)).filter(looksLikeRecord) as Array<Record<string, unknown>>
+      if (items.length === 0) return
+      const next = items.map((item) => {
+        const stored = typeof item.species === 'string' ? item.species : null
+        const cadence = item.cadence === 'weekly' || item.cadence === 'monthly' ? item.cadence : 'daily'
+        const title = typeof item.title === 'string' ? item.title : ''
+        // 老记录没存 species（addCheckIn 以前会丢掉），按标题重新推荐，别一律当芽芽
+        const species = stored ?? (guess ? pickSpecies(title, cadence) : fallback)
+        return { ...item, color: speciesColor(species) }
+      })
+      storage.setItem(key, JSON.stringify(next))
+    }
+    rewrite(STORAGE_KEYS.events, 'sprout', false)
+    rewrite(STORAGE_KEYS.checkins, 'sprout', true)
+    // 倒数日固定是信使（post），见 itemview
+    rewrite(STORAGE_KEYS.countdowns, 'post', false)
+    storage.setItem(SPECIES_COLOR_FLAG, '1')
+    return true
+  } catch {
+    return false
+  }
+}
+
 export function runMigration(storage: MigrationStorage, now: number = Date.now()): MigrationResult | null {
   try {
     if (storage.getItem(MIGRATION_FLAG)) return null

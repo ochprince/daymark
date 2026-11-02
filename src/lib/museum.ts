@@ -40,6 +40,23 @@ export function speciesHue(species: string): SpeciesHue {
   return (SPECIES_HUE as Record<string, SpeciesHue>)[species] ?? SPECIES_HUE.sprout
 }
 
+/** 色相名 → 颜色索引（--h-0 … --h-7 的顺序），新建时默认配色用 */
+const HUE_INDEX: Record<string, number> = {
+  lemon: 0,
+  coral: 1,
+  grape: 2,
+  sky: 3,
+  mint: 4,
+  lime: 5,
+  rose: 6,
+  slate: 7,
+}
+
+/** 新建一件事时的默认颜色：跟物种走，不按剩余色轮流分 */
+export function speciesColor(species: string): number {
+  return HUE_INDEX[speciesHue(species)] ?? 0
+}
+
 /** 形态越靠后，底色越沉一点：同一色相内 0→4 递增，只用来看进度 */
 export function stageTint(stage: number): number {
   const clamped = Math.max(0, Math.min(4, Math.trunc(stage)))

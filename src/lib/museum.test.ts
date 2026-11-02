@@ -11,6 +11,7 @@ import {
   dexCount,
   dexCountOf,
   hasDex,
+  speciesColor,
   speciesHue,
   stageTint,
 } from './museum'
@@ -254,4 +255,13 @@ test('图鉴底色随形态递进：0→4 单调加深，越界被夹住', () =>
   assert.equal(stageTint(-3), 14)
   assert.equal(stageTint(9), 38)
   assert.equal(stageTint(2.7), 26)
+})
+
+test('新建默认色：颜色由物种决定，水滴不会是柠檬黄', () => {
+  assert.equal(speciesColor('sprout'), 4) // mint
+  assert.equal(speciesColor('moon'), 2) // grape
+  assert.equal(speciesColor('drop'), 3) // sky
+  assert.equal(speciesColor('star'), 0) // lemon
+  assert.equal(speciesColor('post'), 1) // coral
+  assert.equal(speciesColor('nope'), 4)
 })

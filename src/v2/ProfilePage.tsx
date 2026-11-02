@@ -232,7 +232,7 @@ export function ProfilePage({
                   key={color}
                   type="button"
                   onClick={() => onChangeColor(color)}
-                  aria-label={`color ${color}`}
+                  aria-label={t(`dress.hue.${color}` as MessageKey)}
                   style={{
                     width: 22,
                     height: 22,

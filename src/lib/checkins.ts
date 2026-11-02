@@ -393,6 +393,8 @@ export function addCheckIn(draft: CheckInDraft): CheckInEvent {
   return checkins.add({
     title: draft.title.trim().slice(0, 40),
     color: draft.color,
+    // 物种必须落库：视图层只认 event.species，不存就会一律当成芽芽
+    ...(draft.species ? { species: draft.species } : {}),
     cadence: draft.cadence,
     days: {},
     times: {},
