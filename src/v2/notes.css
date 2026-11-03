@@ -7,8 +7,8 @@
 .cnote {
   display: flex;
   flex-direction: column;
-  gap: 10px;
-  margin: 4px 0 6px;
+  gap: 8px;
+  padding: 8px 16px 12px;
 }
 
 .cnote-head {
@@ -39,10 +39,10 @@
   min-height: 0;
   box-sizing: border-box;
   margin: 0;
-  padding: 12px 14px;
-  border: 1px solid transparent;
-  border-radius: 14px;
-  background: color-mix(in oklab, var(--surface, #fff) 42%, transparent);
+  padding: 10px 0;
+  border: 0;
+  border-radius: 0;
+  background: none;
   color: var(--ink, #2b2638);
   font: inherit;
   font-size: 15px;
@@ -59,8 +59,7 @@
 }
 
 .cnote-memo:focus {
-  border-color: color-mix(in oklab, var(--ink2, #5e566e) 38%, transparent);
-  background: var(--surface, #fff);
+  background: color-mix(in oklab, var(--surface, #fff) 55%, transparent);
 }
 
 /* 待办清单 */

@@ -210,7 +210,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 [data-skin='pixel'] .tag { border-radius: 0; }
 .sc-title { flex: 1; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; font-family: var(--font-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-skin='pixel'] .sc-title { font-family: var(--font-ui); }
-.notes-card { padding: 14px 16px 16px; }
+.notes-card { margin: 0 16px; /* 跟 .card.list 同一个外边距、同一条左边线 */ }
 
 .sc-more { border: 0; background: transparent; font-weight: 700; font-size: 14px; color: var(--ink2); padding: 6px 2px; }
 
