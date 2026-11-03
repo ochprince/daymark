@@ -384,6 +384,11 @@ export function PetLayer({
     /** 拖着它悬停到原位上方：家亮一下，松手就是回去 */
     const hot = () => {
       if (!outRef.current || homing) return false
+      // 在别人家串门：那块空位不是它的家，拖过去不该回家
+      if (visitingRef.current) {
+        setHot(false)
+        return false
+      }
       const zone = zoneOf()
       if (!zone) return false
       const inside = insideHome(zone, s.x, s.y)
