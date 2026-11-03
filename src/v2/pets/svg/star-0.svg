@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" style="--c:#8fe3c0;--c2:#2fa77a;--cr-line:#2b2638;--cr-lw:4.5;--leaf:#7bd389;--petal:#fff;--pistil:#ffd45c;--spark:#ffc93c;--shell:#fffdf6;--gold:#ffd45c;--band:#fff;--foam:#fff;--bubble:rgba(255,255,255,.75);--rb1:#ff9c8a;--rb2:#ffe07a;--rb3:#8fe3c0;--mouth:#e5664b;--blush:#ff9c9c;--gift:#ffe07a;--paper:#fff">
+  <defs>
+  <clipPath id="cb0"><path d="M90.4 52 Q100 38 109.6 52 L123.7 72.6 Q128.2 79.2 135.9 81.4 L159.8 88.5 Q176.1 93.3 165.7 106.7 L150.5 126.5 Q145.7 132.8 145.9 140.8 L146.6 165.8 Q147 182.7 131 177 L107.5 168.7 Q100 166 92.5 168.7 L69 177 Q53 182.7 53.4 165.8 L54.1 140.8 Q54.3 132.8 49.5 126.5 L34.3 106.7 Q23.9 93.3 40.2 88.5 L64.1 81.4 Q71.8 79.2 76.3 72.6 Z"/></clipPath>
+  <radialGradient id="cb0-sh" cx=".32" cy=".24" r=".92"><stop offset=".42" style="stop-color:var(--c2);stop-opacity:0"/><stop offset="1" style="stop-color:var(--c2);stop-opacity:.5"/></radialGradient>
+  <radialGradient id="cb0-bl" cx=".5" cy=".42" r=".58"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g transform="translate(100 186) scale(0.74) translate(-100 -186)">
+  <g class="cr-body">
+  <path d="M90.4 52 Q100 38 109.6 52 L123.7 72.6 Q128.2 79.2 135.9 81.4 L159.8 88.5 Q176.1 93.3 165.7 106.7 L150.5 126.5 Q145.7 132.8 145.9 140.8 L146.6 165.8 Q147 182.7 131 177 L107.5 168.7 Q100 166 92.5 168.7 L69 177 Q53 182.7 53.4 165.8 L54.1 140.8 Q54.3 132.8 49.5 126.5 L34.3 106.7 Q23.9 93.3 40.2 88.5 L64.1 81.4 Q71.8 79.2 76.3 72.6 Z" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <g clip-path="url(#cb0)">
+  <rect x="20" y="30" width="160" height="156" fill="url(#cb0-sh)" class="cr-shade"/>
+  <path d="M56 152 C62 164 70 172 78 176" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="4" stroke-linecap="round" class="cr-hl"/>
+  </g>
+  <path d="M50 102 C56 98 63 96 70 96" fill="none" stroke="#fff" stroke-opacity=".88" stroke-width="5.5" stroke-linecap="round" class="cr-hl"/>
+  <circle cx="46" cy="110" r="2.8" fill="#fff" opacity=".85" class="cr-hl"/>
+  <g class="cr-face" data-face="120,16,0,"/>
+  <g transform="translate(100 44) scale(1.55) rotate(8)">
+  <path d="M0 5 L0 -20" stroke="var(--cr-line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M-1 -36.4 Q0 -38.5 1 -36.4 L2.8 -32.9 Q3.4 -31.7 4.7 -31.5 L8.7 -30.9 Q10.9 -30.6 9.3 -29 L6.5 -26.2 Q5.5 -25.2 5.7 -23.9 L6.4 -20 Q6.8 -17.7 4.7 -18.8 L1.2 -20.6 Q0 -21.3 -1.2 -20.6 L-4.7 -18.8 Q-6.8 -17.7 -6.4 -20 L-5.7 -23.9 Q-5.5 -25.2 -6.5 -26.2 L-9.3 -29 Q-10.9 -30.6 -8.7 -30.9 L-4.7 -31.5 Q-3.4 -31.7 -2.8 -32.9 Z" fill="var(--gold)" stroke="var(--cr-line)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+  </g></g></svg>

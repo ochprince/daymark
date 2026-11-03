@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" style="--c:#8fe3c0;--c2:#2fa77a;--cr-line:#2b2638;--cr-lw:4.5;--leaf:#7bd389;--petal:#fff;--pistil:#ffd45c;--spark:#ffc93c;--shell:#fffdf6;--gold:#ffd45c;--band:#fff;--foam:#fff;--bubble:rgba(255,255,255,.75);--rb1:#ff9c8a;--rb2:#ffe07a;--rb3:#8fe3c0;--mouth:#e5664b;--blush:#ff9c9c;--gift:#ffe07a;--paper:#fff">
+  <defs>
+  <clipPath id="cb0"><ellipse cx="100" cy="127" rx="58" ry="55"/></clipPath>
+  <radialGradient id="cb0-sh" cx=".34" cy=".28" r=".85"><stop offset=".5" style="stop-color:var(--c2);stop-opacity:0"/><stop offset="1" style="stop-color:var(--c2);stop-opacity:.4"/></radialGradient>
+  </defs>
+  <g class="cr-body">
+  <ellipse cx="100" cy="127" rx="58" ry="55" fill="color-mix(in oklab, var(--c) 70%, #fff)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <g clip-path="url(#cb0)"><rect x="30" y="72" width="140" height="114" fill="url(#cb0-sh)" class="cr-shade"/></g>
+  <path d="M57.1 120.4 C58.2 105 69.8 90.7 83.8 85.2" fill="none" stroke="#fff" stroke-opacity=".85" stroke-width="5.5" stroke-linecap="round" class="cr-hl"/>
+  <circle cx="54.8" cy="131.4" r="2.6" fill="#fff" opacity=".85" class="cr-hl"/>
+  <g class="cr-eggface" data-face="137,17,1,wow"/>
+  <g transform="translate(100 74) scale(1.5) rotate(8)">
+  <path d="M0 5 L0 -13" stroke="var(--cr-line)" stroke-width="3.2" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M0 -12 C-1 -21 7 -27 15 -25 C14 -16 7 -12 0 -12 Z" fill="var(--leaf)" stroke="var(--cr-line)" stroke-width="2.8" stroke-linejoin="round" stroke-linecap="round"/>
+  </g>
+  <path d="M166 75 C166.7 80.6 167.4 81.3 173 82 C167.4 82.7 166.7 83.4 166 89 C165.3 83.4 164.6 82.7 159 82 C164.6 81.3 165.3 80.6 166 75 Z" fill="var(--spark)" class="cr-spark"/>
+  <circle cx="36" cy="92" r="2.2" fill="var(--spark)" class="cr-spark"/>
+  </g></svg>
