@@ -439,6 +439,17 @@ export const zh = {
   'toast.logged': '{title} · 记下了',
   'museum.chapter.prev': '‹ 上一本',
   'museum.chapter.next': '下一本 ›',
+
+  /* 活的萌宠（v3 物理层） */
+  'pet.say.hello': '咕？',
+  'pet.say.poke': '在呢～',
+  'pet.say.cheer': '好耶！',
+  'pet.say.drag': '呀——放我下来！',
+  'pet.say.throw': '哇啊啊——',
+  'pet.say.land': '咚！',
+  'pet.say.sleep': '嘘……睡了。',
+  'pet.say.climb': '我爬上来了。',
+  'pet.say.idle': '今天也可以什么都不做。',
 } as const
 
 export type MessageKey = keyof typeof zh
