@@ -246,7 +246,7 @@ export function StageCard({
     const timer = window.setInterval(() => {
       on = !on
       setLooking(on)
-    }, 11000)
+    }, 15000)
     return () => window.clearInterval(timer)
   }, [petAway, sleeping])
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target

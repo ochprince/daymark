@@ -53,8 +53,8 @@ import {
 import type { BadgeId } from '../lib/collection'
 import type { ItemView } from '../lib/itemview'
 import './app.css'
-import { type PetStage, PetLayer } from './pets/PetLayer'
-import type { PetSpecies } from './pets/art'
+import { PetLayer, type PetStage } from './pets/PetLayer'
+import type { PetArtSpecies } from './pets/petArt'
 
 type Sheet = 'switcher' | 'add' | null
 
@@ -141,7 +141,7 @@ function useSystemDark(): boolean {
 }
 
 /** 宠物色相：跟着物种走，和实验室里一致 */
-const PET_HUE: Partial<Record<PetSpecies, number>> = { sprout: 4, moon: 2, drop: 3, star: 0 }
+const PET_HUE: Partial<Record<PetArtSpecies, number>> = { sprout: 4, moon: 2, drop: 3, star: 0, post: 1 }
 
 function useApplyReduceMotion() {
   const prefs = useSyncExternalStore(subscribePrefs, getPrefs)
@@ -184,7 +184,7 @@ export function AppV2() {
   // 桌宠在外 / 在卡片里：两种互斥状态，卡片那只与桌上那只是同一只
   const [petOut, setPetOut] = useState(false)
   /** 出门那一刻它是谁（换卡片期间保持不变：颜色、形态、物种都不跟着切卡变） */
-  const [outPet, setOutPet] = useState<{ species: PetSpecies; stage: PetStage; hue: number } | null>(null)
+  const [outPet, setOutPet] = useState<{ species: PetArtSpecies; stage: PetStage; hue: number } | null>(null)
   /** 它是从哪张卡出去的：只有那张卡的家空着，别的卡家里还有自己的那一只 */
   const [outFrom, setOutFrom] = useState<string | null>(null)
   // 让它自己走出去（连戳五下 / 演示）：+1 就播一遍出场
@@ -236,9 +236,10 @@ export function AppV2() {
    * 出门那一刻记住它是谁，换卡片期间保持不变——不然一划就变成新卡片那只，像换了个角色。
    */
   useEffect(() => {
-    if (!focus || focus.species === 'post') {
+    if (!focus) {
       setPetOut(false)
       setOutPet(null)
+      setOutFrom(null)
       return
     }
     if (!petOut) {
@@ -249,9 +250,9 @@ export function AppV2() {
     setOutPet(
       (prev) =>
         prev ?? {
-          species: focus.species as PetSpecies,
+          species: focus.species as PetArtSpecies,
           stage: focus.stage as PetStage,
-          hue: PET_HUE[focus.species as PetSpecies] ?? 4,
+          hue: PET_HUE[focus.species as PetArtSpecies] ?? 4,
         },
     )
     setOutFrom((prev) => prev ?? focus.key)
@@ -538,9 +539,9 @@ export function AppV2() {
       <div className="dm-texture" aria-hidden="true" />
 
       {/* v3 桌宠：站在卡片 / 按钮 / 底栏上，能走能睡能拖能扔 */}
-      {focus && focus.species !== 'post' ? (
+      {focus ? (
         <PetLayer
-          species={(outPet?.species ?? focus.species) as PetSpecies}
+          species={(outPet?.species ?? focus.species) as PetArtSpecies}
           stage={outPet?.stage ?? focus.stage}
           hue={outPet?.hue ?? PET_HUE[focus.species] ?? 4}
           size={92}

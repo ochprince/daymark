@@ -1,10 +1,11 @@
 import { useId, useMemo } from 'react'
 import type { CSSProperties } from 'react'
-import type { PetSpecies, PetStage, PetState } from './art'
+import type { PetStage, PetState } from './art'
+import type { PetArtSpecies } from './petArt'
 import { petHueVars, renderPetSvg } from './petArt'
 
 export type PetProps = {
-  species: PetSpecies
+  species: PetArtSpecies
   stage: PetStage
   state: PetState
   /** 视觉高度（px）；脚底大约在 93% 处 */

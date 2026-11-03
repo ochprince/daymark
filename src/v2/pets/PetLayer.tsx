@@ -3,7 +3,8 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import { t } from '../../lib/i18n'
 import type { MessageKey } from '../../lib/i18n'
 import { Pet } from './Pet'
-import type { PetSpecies, PetStage, PetState } from './art'
+import type { PetStage, PetState } from './art'
+import type { PetArtSpecies } from './petArt'
 import { landingPlatform, placeBubble, throwVelocity, type Platform } from './geometry'
 export type { PetStage } from './art'
 import '../pets.css'
@@ -111,7 +112,8 @@ const HUE_VARS = [
 ] as const
 
 export type PetLayerProps = {
-  species: PetSpecies
+  /** 'post' 是倒数日那只（拿信/礼物），素材在 petArt 里，同样能出门 */
+  species: PetArtSpecies
   stage: PetStage
   /** 配色索引 0–7 */
   hue?: number

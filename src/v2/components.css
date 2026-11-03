@@ -216,7 +216,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cr-wrap .cr {
   position: relative; z-index: 2; overflow: visible;
   /* 原来 3.2s 一直在浮，看久了像在抽搐：放慢到 5.6s，并且偶尔换成「东张西望」 */
-  animation: bob 5.6s ease-in-out infinite;
+  animation: bob 8.5s ease-in-out infinite;
   transform-origin: 50% 92%;
 }
 .cr-wrap .cr.look { animation: look-around 1.6s ease-in-out; }
