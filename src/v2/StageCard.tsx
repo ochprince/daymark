@@ -289,6 +289,11 @@ export function StageCard({
   function tapPoke() {
     if (performance.now() - pressAt.current > 250) return
     if (dragRef.current?.active) return
+    // 手里捏着纸条时，先给你看纸条：这比再摸一下有意思，也省得去戳那个小图标
+    if (noteReady && !petAway) {
+      onOpenNote?.()
+      return
+    }
     onPoke()
     // 它已经出去了，空位里没人可戳，也别把连戳串续上
     if (petAway) return
@@ -405,19 +410,6 @@ export function StageCard({
       <div className="sc-hero">
         {/* 它出门了，卡片里就不该还留着它刚才说的话 */}
         {petAway ? null : <div className="bubble">{line}</div>}
-        {noteReady && !petAway ? (
-          <button
-            className="sc-note"
-            type="button"
-            onClick={(event) => {
-              event.stopPropagation()
-              onOpenNote?.()
-            }}
-            aria-label={t('note.open')}
-          >
-            <span className="sc-note-paper" aria-hidden="true" />
-          </button>
-        ) : null}
         <div
           className={`cr-wrap ${sleeping ? 'sleep' : ''} ${jumping ? 'jump' : ''} ${
             hyped ? 'hyped' : ''
@@ -460,6 +452,23 @@ export function StageCard({
                 />
               ))}
             </div>
+          ) : null}
+          {/* 它手里捏着一张小纸条：外形和「邮差」那只天生拿的信不一样，
+              这是折起来的纸片。点了才展开。 */}
+          {noteReady && !petAway ? (
+            <button
+              className={`sc-note${view.species === 'post' ? ' sc-note--left' : ''}`}
+              type="button"
+              onPointerDown={(event) => event.stopPropagation()}
+              onPointerUp={(event) => event.stopPropagation()}
+              onClick={(event) => {
+                event.stopPropagation()
+                onOpenNote?.()
+              }}
+              aria-label={t('note.open')}
+            >
+              <span className="sc-note-paper" aria-hidden="true" />
+            </button>
           ) : null}
           <div className="ground" />
           {sleeping ? (
@@ -516,8 +525,14 @@ function NumberBlock({ view }: { view: ItemView }) {
     num = String(view.days)
     unit = t('unit.daySuffix')
   } else if (view.kind === 'countdown') {
-    lead = t('stage.number.lead.left')
-    num = String(view.days)
+    // 过了那天的第二天还没「说过了」时，别写成「还有 -1 天」
+    if (view.days < 0) {
+      lead = t('stage.number.lead.past')
+      num = String(Math.abs(view.days))
+    } else {
+      lead = t('stage.number.lead.left')
+      num = String(view.days)
+    }
     unit = t('unit.dayShort')
   } else if (view.target !== null && view.target > 1) {
     lead = view.cadence === 'weekly' ? t('time.thisWeek') : t('time.today')

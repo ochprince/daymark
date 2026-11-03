@@ -55,6 +55,7 @@ export const zh = {
   'tag.weekly': '每周',
   'tag.monthly': '每月',
   'stage.number.lead.day': '第',
+  'stage.number.lead.past': '已经过去',
   'stage.number.lead.left': '还有',
   'unit.timesShort': '次',
   'unit.daySuffix': '天',

@@ -836,6 +836,14 @@ export function AppV2() {
         <div className="ov note-ov" style={{ zIndex: 58 }}>
           <div className="dim" onClick={() => setNoteOpen(null)} aria-hidden="true" />
           <div className="note-card" role="dialog" aria-modal="true" aria-label={t('note.title')}>
+            <button
+              className="note-card-x"
+              type="button"
+              aria-label={t('common.close')}
+              onClick={() => setNoteOpen(null)}
+            >
+              ×
+            </button>
             <span className="note-card-t">{t('note.title')}</span>
             <p className="note-card-body">{noteOpen.text}</p>
             <span className="note-card-sign">

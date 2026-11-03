@@ -55,6 +55,7 @@ export const en: Record<MessageKey, Msg> = {
   'tag.weekly': 'Weekly',
   'tag.monthly': 'Monthly',
   'stage.number.lead.day': 'Day',
+  'stage.number.lead.past': 'passed',
   'stage.number.lead.left': '',
   'unit.timesShort': '×',
   'unit.daySuffix': '',
