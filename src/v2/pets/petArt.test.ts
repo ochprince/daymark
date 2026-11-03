@@ -26,13 +26,16 @@ const deco = (state: Parameters<typeof decoratePetSvg>[1]['state'], uid = 'u1') 
 /** 只截出换进去的那张脸，用来比对形状 */
 const faceOf = (svg: string) => svg.slice(svg.indexOf('class="cr-face"'))
 
-test('键名：蛋阶段走 dough-<species>-<crack>', () => {
-  assert.equal(petSvgKey({ species: 'sprout', stage: 0 }), 'dough-sprout-0')
-  assert.equal(petSvgKey({ species: 'moon', stage: 0, crack: 3 }), 'dough-moon-3')
+test('键名：蛋形态（egg:true）走 dough-<species>-<crack>', () => {
+  assert.equal(petSvgKey({ species: 'sprout', stage: 0, egg: true }), 'dough-sprout-0')
+  assert.equal(petSvgKey({ species: 'moon', stage: 0, crack: 3, egg: true }), 'dough-moon-3')
   // crack 收进 0–3，非法值不炸
-  assert.equal(petSvgKey({ species: 'drop', stage: 0, crack: 9 }), 'dough-drop-3')
-  assert.equal(petSvgKey({ species: 'drop', stage: 0, crack: -2 }), 'dough-drop-0')
-  assert.equal(petSvgKey({ species: 'drop', stage: 0, crack: Number.NaN }), 'dough-drop-0')
+  assert.equal(petSvgKey({ species: 'drop', stage: 0, crack: 9, egg: true }), 'dough-drop-3')
+  assert.equal(petSvgKey({ species: 'drop', stage: 0, crack: -2, egg: true }), 'dough-drop-0')
+  assert.equal(petSvgKey({ species: 'drop', stage: 0, crack: Number.NaN, egg: true }), 'dough-drop-0')
+  // stage 0 不是蛋：五天内的第一个形态要真的有素材
+  assert.equal(petSvgKey({ species: 'sprout', stage: 0 }), 'sprout-0')
+  assert.equal(petSvgKey({ species: 'star', stage: 4 }), 'star-4')
 })
 
 test('键名：post 走 post-<hold>，其它走 <species>-<stage>', () => {

@@ -70,25 +70,35 @@ export function hasPetSvg(key: string): boolean {
 const clampCrack = (n: number) =>
   Number.isFinite(n) ? Math.min(3, Math.max(0, Math.trunc(n))) : 0
 
+/** 成长阶段只有 0–4 五档，越界夹住，别让素材表查空 */
+const clampStage = (n: number) =>
+  Number.isFinite(n) ? Math.min(4, Math.max(0, Math.trunc(n))) : 0
+
 export type PetSvgKeyInput = {
   species: PetArtSpecies
   stage: PetStage
-  /** 蛋阶段揉了几下 0–3 */
+  /** 蛋（孵化仪式）揉了几下 0–3 */
   crack?: number
+  /** 真时为蛋形态，只有孵化仪式会用 */
+  egg?: boolean
   /** 倒数日手持物 */
   hold?: PetHold
 }
 
 /**
  * 文件键：
- * - 蛋阶段（我们用 stage 0 表示未孵化）→ dough-<species>-<crack 0..3>
+ * - 蛋（只在孵化仪式里用，`egg: true`）→ dough-<species>-<crack 0..3>
  * - post（信信）→ post-<hold>
- * - 其它 → <species>-<stage>
+ * - 其余按阶段 → <species>-<stage 0..4>
+ *
+ * 注意 stage 0 不是蛋：设计师给了五个成长阶段 `<species>-0..4`，
+ * 蛋是孵化仪式专用的另一套素材。早先版本把 stage 0 当蛋，
+ * 结果 `<species>-0` 这 4 个文件永远命中不到，第一天的小家伙也一直是个蛋。
  */
-export function petSvgKey({ species, stage, crack = 0, hold = 'letter' }: PetSvgKeyInput): string {
-  if (stage === 0) return `dough-${species}-${clampCrack(crack)}`
+export function petSvgKey({ species, stage, crack = 0, hold = 'letter', egg = false }: PetSvgKeyInput): string {
+  if (egg) return `dough-${species}-${clampCrack(crack)}`
   if (species === 'post') return `post-${hold}`
-  return `${species}-${stage}`
+  return `${species}-${clampStage(stage)}`
 }
 
 /* ------------------------------------------------------------------ */
