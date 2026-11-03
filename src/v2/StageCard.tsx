@@ -4,7 +4,7 @@ import { Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
 import { formatDate, formatSpan } from '../lib/days'
 import { dayKey } from '../lib/daykey'
-import { STAGE_THRESHOLDS, nextStageAt, stageOf } from '../lib/growth'
+import { nextStageAt, stageFills, stageOf } from '../lib/growth'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
@@ -87,16 +87,6 @@ function stageName(species: CreatureSpecies, stage: number): string {
   if (species === 'post') return ''
   const key = `stageName.${species}.${stage}` as MessageKey
   return t(key)
-}
-
-/** 当前形态内的进度（0–100） */
-function stagePercent(growth: number, stage: number): number {
-  const from = STAGE_THRESHOLDS[stage] ?? 0
-  const to = STAGE_THRESHOLDS[stage + 1]
-  if (to === undefined) return 100
-  const span = to - from
-  if (span <= 0) return 100
-  return Math.max(0, Math.min(100, ((growth - from) / span) * 100))
 }
 
 export function StageCard({
@@ -264,7 +254,6 @@ export function StageCard({
   } as CSSProperties
 
   const line = overrideLine ?? bubbleLine(view)
-  const growthPct = stagePercent(view.growth, view.stage)
   const nextStage = nextStageAt(view.growth)
   const rest = nextStage === null ? 0 : nextStage - view.growth
   const nextName = nextStage === null ? '' : stageName(view.species, stageOf(nextStage))
@@ -356,7 +345,7 @@ export function StageCard({
       </div>
 
       <NumberBlock view={view} />
-      <ExtraBlock view={view} growthPct={growthPct} rest={rest} nextName={nextName} />
+      <ExtraBlock view={view} rest={rest} nextName={nextName} />
 
       <div className="sc-actions">
         {canHold ? (
@@ -460,9 +449,9 @@ function NumberBlock({ view }: { view: ItemView }) {
   )
 }
 
-type ExtraProps = { view: ItemView; growthPct: number; rest: number; nextName: string }
+type ExtraProps = { view: ItemView; rest: number; nextName: string }
 
-function ExtraBlock({ view, growthPct, rest, nextName }: ExtraProps) {
+function ExtraBlock({ view, rest, nextName }: ExtraProps) {
   const cups =
     view.kind === 'habit' && view.target !== null && view.target > 1 && view.cadence === 'daily'
       ? Array.from({ length: view.target }, (_, index) => (
@@ -488,14 +477,18 @@ function ExtraBlock({ view, growthPct, rest, nextName }: ExtraProps) {
             <span>{sleeping ? t('growth.sleeping') : growthLabel}</span>
           </div>
           <div
-            className={sleeping ? 'g-track paused' : 'g-track'}
+            className={sleeping ? 'g-segs paused' : 'g-segs'}
             role="progressbar"
             aria-valuemin={0}
-            aria-valuemax={100}
-            aria-valuenow={Math.round(sleeping ? 0 : growthPct)}
-            aria-label={sleeping ? t('growth.sleeping') : growthLabel}
+            aria-valuemax={5}
+            aria-valuenow={view.stage}
+            aria-label={t('growth.progress', { n: view.growth, rest, next: nextName })}
           >
-            <i style={{ width: `${sleeping ? 0 : growthPct}%` }} aria-hidden="true" />
+            {stageFills(view.growth).map((fill, index) => (
+              <span className={`g-seg${index < view.stage ? ' past' : ''}${index === view.stage ? ' cur' : ''}`} key={index}>
+                <i style={{ width: `${fill}%` }} />
+              </span>
+            ))}
           </div>
         </div>
       ) : null}

@@ -5,7 +5,7 @@ import './skins/tokens.css'
 import './skins/custom.css'
 import './v2/components.css'
 import { AppV2 } from './v2/AppV2'
-import { runMigration } from './lib/migrate'
+import { applySpeciesColors, runMigration } from './lib/migrate'
 import { reload as reloadEvents } from './lib/storage'
 import { reload as reloadCountdowns } from './lib/countdowns'
 import { reload as reloadCheckins } from './lib/checkins'
@@ -19,6 +19,7 @@ import { hideSplash } from './lib/native'
  * 否则它们拿到的还是模块加载那一刻的旧数据。
  */
 runMigration(window.localStorage)
+applySpeciesColors(window.localStorage)
 reloadEvents()
 reloadCountdowns()
 reloadCheckins()

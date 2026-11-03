@@ -3,6 +3,7 @@ import test from 'node:test'
 import {
   MIGRATION_FLAG,
   STORAGE_KEYS,
+  applySpeciesColors,
   migrateAll,
   migrateCheckIn,
   migrateDayEvent,
@@ -209,4 +210,40 @@ test('迁移用到的日期工具与天数口径一致（锚点补齐后仍按 2
   assert.equal(migrateCheckIn(checkin).growthDays, 2)
   assert.equal(migrateCheckIn(checkin).species, 'star')
   assert.ok(at(2026, 10, 2) - at(2026, 10, 1) === DAY)
+})
+
+test('存量颜色改成物种色：黄水滴会变回天空蓝，只跑一次', () => {
+  const storage = memoryStorage({
+    [STORAGE_KEYS.events]: JSON.stringify([
+      { id: 'e1', title: '戒烟', startedAt: at(2026, 1, 1), createdAt: at(2026, 1, 1), color: 0, species: 'sprout' },
+    ]),
+    [STORAGE_KEYS.checkins]: JSON.stringify([
+      { id: 'c1', title: '喝水', createdAt: at(2026, 1, 1), color: 0, cadence: 'daily', species: 'drop', days: {}, times: {} },
+      // 老数据没有 species（当时的 addCheckIn 会丢掉）：按标题重新推荐
+      { id: 'c2', title: '喝水', createdAt: at(2026, 1, 1), color: 5, cadence: 'daily', days: {}, times: {} },
+      { id: 'c3', title: '老的', createdAt: at(2026, 1, 1), color: 5, cadence: 'daily', days: {}, times: {} },
+    ]),
+    [STORAGE_KEYS.countdowns]: JSON.stringify([
+      { id: 'd1', title: '生日', startedAt: at(2026, 5, 1), createdAt: at(2026, 1, 1), color: 7, repeat: 'yearly' },
+    ]),
+  })
+
+  assert.equal(applySpeciesColors(storage), true)
+  const dump = storage.dump()
+  const events = JSON.parse(dump[STORAGE_KEYS.events])
+  const checkins = JSON.parse(dump[STORAGE_KEYS.checkins])
+  const countdowns = JSON.parse(dump[STORAGE_KEYS.countdowns])
+  assert.equal(events[0].color, 4) // sprout → mint
+  assert.equal(checkins[0].color, 3) // drop → sky（这就是那颗黄水滴）
+  assert.equal(checkins[1].color, 3) // 没存 species，但标题是「喝水」→ drop
+  assert.equal(checkins[2].color, 4) // 标题认不出物种 → 兜底 sprout
+  assert.equal(countdowns[0].color, 1) // 倒数日固定 post → coral
+  // 其它字段一个都不能少
+  assert.equal(checkins[0].title, '喝水')
+  assert.equal(checkins[0].cadence, 'daily')
+
+  // 第二次是 no-op，不会把用户后来手动换的颜色再冲掉
+  const before = storage.dump()
+  assert.equal(applySpeciesColors(storage), false)
+  assert.deepEqual(storage.dump(), before)
 })

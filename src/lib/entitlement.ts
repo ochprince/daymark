@@ -61,8 +61,20 @@ export function getEntitlement(): EntitlementState {
   return entitlementStore.get()
 }
 
+/**
+ * 预览构建（VITE_PREVIEW=1）里把所有付费闸门放开，方便审核时点到全部功能。
+ *
+ * 只认构建期变量：主站 CI（main）与本地普通构建都不带它，买断口径一行没变；
+ * 想在本机同样放开就 `VITE_PREVIEW=1 npm run dev`。
+ * 上线前删掉这个常量即可，闸门全部回到下面几行的判断。
+ */
+const PREVIEW_UNLOCK = import.meta.env?.VITE_PREVIEW === '1'
+
+/** 预览构建是否处于「全解锁」，UI 上用来提示，不参与任何持久化 */
+export const previewUnlocked = PREVIEW_UNLOCK
+
 export function isPro(): boolean {
-  return entitlementStore.get().pro
+  return PREVIEW_UNLOCK || entitlementStore.get().pro
 }
 
 /** 拿到买断之后写入本地；幂等 */

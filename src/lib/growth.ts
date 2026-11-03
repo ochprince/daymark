@@ -22,6 +22,27 @@ export const SLEEP_AFTER_DAYS: Record<CheckInCadence, number> = {
   monthly: 20,
 }
 
+/**
+ * 五个形态各自的分段进度（0–100）。
+ *
+ * 一根条没法同时表示「总共 18 天」和「距下一形态 12 天」——18/(18+12) 读成 60%，
+ * 而形态内进度是 (18-7)/(30-7) = 47%，看起来像算错了。五段各管一个形态就没有歧义：
+ * 走过的形态整段填满，当前形态只填形态内的比例。
+ */
+export function stageFills(growth: number): number[] {
+  const value = Number.isFinite(growth) ? Math.max(0, growth) : 0
+  const stage = stageOf(value)
+  return STAGE_THRESHOLDS.map((from, index) => {
+    if (index < stage) return 100
+    if (index > stage) return 0
+    const to = STAGE_THRESHOLDS[index + 1]
+    if (to === undefined) return 100
+    const span = to - from
+    if (span <= 0) return 100
+    return Math.max(0, Math.min(100, ((value - from) / span) * 100))
+  })
+}
+
 /** 成长天数 → 形态 */
 export function stageOf(growth: number): Stage {
   const value = Number.isFinite(growth) ? Math.max(0, Math.trunc(growth)) : 0

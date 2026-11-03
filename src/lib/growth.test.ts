@@ -11,6 +11,7 @@ import {
   nextGrowthDays,
   nextStageAt,
   recordedOn,
+  stageFills,
   stageOf,
 } from './growth'
 import type { CheckInEvent, DayEvent } from './types'
@@ -152,4 +153,34 @@ test('睡着：今天记过就不算睡；从没记过从创建时刻起算', ()
   assert.equal(isSleeping(checkin({ days: { [dayKeyOf(now)]: 1 } }), now), false)
   assert.equal(isSleeping(checkin({ createdAt: now - 2 * DAY }), now), false)
   assert.equal(isSleeping(checkin({ createdAt: now - 4 * DAY }), now), true)
+})
+
+test('五段进度：走过的形态整段填满，当前形态只填形态内比例', () => {
+  assert.deepEqual(stageFills(0), [0, 0, 0, 0, 0])
+  // 第 18 天：形态 0、1 满，形态 2 里 (18-7)/(30-7) = 47.8%
+  const fills = stageFills(18)
+  assert.equal(fills[0], 100)
+  assert.equal(fills[1], 100)
+  assert.ok(Math.abs(fills[2] - 47.83) < 0.1)
+  assert.deepEqual(fills.slice(3), [0, 0])
+  // 第 5 天：形态 0 满，形态 1 (5-3)/(7-3) = 50%
+  assert.deepEqual(stageFills(5).map((v) => Math.round(v)), [100, 50, 0, 0, 0])
+  // 满级
+  assert.deepEqual(stageFills(100), [100, 100, 100, 100, 100])
+  assert.deepEqual(stageFills(365), [100, 100, 100, 100, 100])
+})
+
+test('五段进度：永远 5 段、单调不降、坏值不炸', () => {
+  let last: number[] = [0, 0, 0, 0, 0]
+  for (let growth = 0; growth <= 120; growth += 1) {
+    const fills = stageFills(growth)
+    assert.equal(fills.length, 5)
+    fills.forEach((value, index) => {
+      assert.ok(value >= 0 && value <= 100)
+      assert.ok(value >= last[index] - 1e-9, `growth=${growth} 第 ${index} 段回退了`)
+    })
+    last = fills
+  }
+  assert.deepEqual(stageFills(-5), [0, 0, 0, 0, 0])
+  assert.deepEqual(stageFills(Number.NaN), [0, 0, 0, 0, 0])
 })

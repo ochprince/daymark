@@ -2,7 +2,19 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import { emptyCollection } from './collection'
 import { buildItemViews } from './itemview'
-import { DEX_TOTAL, badgeCount, collectChapters, dexCount, dexCountOf, hasDex } from './museum'
+import {
+  DEX_TOTAL,
+  SPECIES_HUE,
+  badgeCount,
+  collectBooks,
+  collectChapters,
+  dexCount,
+  dexCountOf,
+  hasDex,
+  speciesColor,
+  speciesHue,
+  stageTint,
+} from './museum'
 
 const at = (y: number, m: number, d: number) => new Date(y, m - 1, d).getTime()
 
@@ -111,4 +123,145 @@ test('图鉴计数：总数 23，信信默认在，南瓜帽另算', () => {
 test('徽章计数', () => {
   assert.equal(badgeCount(emptyCollection()), 0)
   assert.equal(badgeCount({ ...emptyCollection(), badges: { first: 1, d7: 2 } }), 2)
+})
+
+test('书架：一件事只占一本书，翻过的章夹在书里', () => {
+  const now = at(2026, 10, 25)
+  const views = viewsOf(
+    [
+      {
+        id: 'e1',
+        title: '戒烟',
+        createdAt: at(2025, 1, 1),
+        startedAt: at(2026, 6, 1),
+        color: 0,
+        species: 'sprout',
+        history: [
+          { days: 128, endedAt: at(2026, 3, 1), stage: 4 },
+          { days: 40, endedAt: at(2026, 5, 1), stage: 3 },
+          { days: 12, endedAt: at(2026, 5, 20), stage: 2 },
+        ],
+      },
+    ],
+    [],
+    [],
+    now,
+  )
+
+  const books = collectBooks(views)
+  assert.equal(books.length, 1)
+  assert.equal(books[0].key, 'since:e1')
+  assert.equal(books[0].chapters.length, 3)
+  // 章是新的在前
+  assert.deepEqual(
+    books[0].chapters.map((chapter) => chapter.days),
+    [12, 40, 128],
+  )
+  // 书脊上的厚度看「当前这一章走了多久」，不是历史总和
+  assert.equal(books[0].days, views[0].kind === 'since' ? views[0].days : -1)
+})
+
+test('书架：习惯书按记过的天数算厚度，倒数日按剩余天数（到过就是 0）', () => {
+  const now = at(2026, 10, 25)
+  const views = viewsOf(
+    [],
+    [
+      {
+        id: 'c1',
+        title: '喝水',
+        createdAt: at(2026, 1, 1),
+        color: 3,
+        cadence: 'daily',
+        species: 'drop',
+        target: 8,
+        days: {},
+        times: {},
+        growthDays: 21,
+        chapters: [{ days: 21, endedAt: at(2026, 9, 25), stage: 2 }],
+      },
+    ],
+    [
+      { id: 'd1', title: '生日', startedAt: at(2026, 10, 20), createdAt: at(2026, 1, 1), color: 5, repeat: 'none' },
+    ],
+    now,
+  )
+  const books = collectBooks(views)
+  const habit = books.find((book) => book.key === 'habit:c1')
+  const countdown = books.find((book) => book.key === 'countdown:d1')
+  assert.equal(habit?.days, 21)
+  assert.equal(habit?.chapters.length, 1)
+  assert.ok(countdown)
+  assert.equal(countdown?.days, 0)
+})
+
+test('书架：多件事按「这一章开始的时间」倒序，且一本书不会重复出现', () => {
+  const now = at(2026, 10, 26)
+  const views = viewsOf(
+    [
+      { id: 'old', title: '早睡', createdAt: at(2025, 1, 1), startedAt: at(2025, 2, 1), color: 1, species: 'moon', history: [] },
+      {
+        id: 'new',
+        title: '戒烟',
+        createdAt: at(2025, 1, 1),
+        startedAt: at(2026, 9, 1),
+        color: 0,
+        species: 'sprout',
+        history: [{ days: 30, endedAt: at(2026, 8, 1), stage: 2 }],
+      },
+    ],
+    [],
+    [],
+    now,
+  )
+  const books = collectBooks(views)
+  assert.equal(books.length, 2)
+  assert.deepEqual(
+    books.map((book) => book.title),
+    ['戒烟', '早睡'],
+  )
+  assert.equal(books.filter((book) => book.title === '戒烟').length, 1)
+})
+
+test('书架：没有历史章节的书也照样上台', () => {
+  const now = at(2026, 10, 26)
+  const views = viewsOf(
+    [{ id: 'e1', title: '学法语', createdAt: at(2026, 9, 1), startedAt: at(2026, 9, 1), color: 2, species: 'star' }],
+    [],
+    [],
+    now,
+  )
+  const books = collectBooks(views)
+  assert.equal(books.length, 1)
+  assert.deepEqual(books[0].chapters, [])
+  assert.ok(books[0].days > 0)
+})
+
+test('图鉴配色：颜色属于「谁」，不属于「长到第几形态」', () => {
+  // 色相只认物种，五个形态取到的都是同一个
+  assert.deepEqual([0, 1, 2, 3, 4].map(() => speciesHue('sprout')), Array(5).fill('mint'))
+  // 五种小伙伴五种颜色，互不撞色
+  assert.equal(new Set(Object.values(SPECIES_HUE)).size, Object.keys(SPECIES_HUE).length)
+  assert.equal(speciesHue('moon'), 'grape')
+  assert.equal(speciesHue('drop'), 'sky')
+  assert.equal(speciesHue('star'), 'lemon')
+  assert.equal(speciesHue('post'), 'coral')
+  // 未知物种不能把界面变成没有颜色的黑块
+  assert.equal(speciesHue('nope'), 'mint')
+})
+
+test('图鉴底色随形态递进：0→4 单调加深，越界被夹住', () => {
+  const tints = [0, 1, 2, 3, 4].map(stageTint)
+  assert.deepEqual(tints, [14, 20, 26, 32, 38])
+  assert.equal(stageTint(-3), 14)
+  assert.equal(stageTint(9), 38)
+  assert.equal(stageTint(2.7), 26)
+})
+
+test('新建默认色：颜色由物种决定，水滴不会是柠檬黄', () => {
+  assert.equal(speciesColor('sprout'), 4) // mint
+  assert.equal(speciesColor('moon'), 2) // grape
+  assert.equal(speciesColor('drop'), 3) // sky
+  assert.equal(speciesColor('star'), 0) // lemon
+  assert.equal(speciesColor('post'), 1) // coral
+  assert.equal(speciesColor('nope'), 4)
 })

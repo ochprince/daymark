@@ -1,8 +1,9 @@
 import { useState } from 'react'
 import { startOfDay, todayStart } from '../lib/days'
-import { addCheckIn, suggestColor as suggestCheckInColor } from '../lib/checkins'
-import { addCountdown, updateCountdown, suggestColor as suggestCountdownColor } from '../lib/countdowns'
-import { addEvent, suggestColor as suggestEventColor } from '../lib/storage'
+import { addCheckIn } from '../lib/checkins'
+import { speciesColor } from '../lib/museum'
+import { addCountdown, updateCountdown } from '../lib/countdowns'
+import { addEvent } from '../lib/storage'
 import { pickSpecies } from '../lib/migrate'
 import { setFocusKey } from '../lib/focus'
 import { itemKey } from '../lib/itemview'
@@ -47,14 +48,14 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
         startedAt,
         // 起始日就是今天时，计时锚点写按下的那一刻（满 24 小时才 +1）
         anchorAt: isToday ? now : undefined,
-        color: suggestEventColor(),
+        color: speciesColor('sprout'),
         species: 'sprout',
       })
       born = { species: event.species ?? 'sprout', color: event.color, name: name }
       setFocusKey(itemKey('since', event.id))
     } else if (kind === 'habit') {
       const species = pickSpecies(name)
-      const event = addCheckIn({ title: name, color: suggestCheckInColor(), cadence: 'daily', species })
+      const event = addCheckIn({ title: name, color: speciesColor(species), cadence: 'daily', species })
       born = { species, color: event.color, name }
       setFocusKey(itemKey('habit', event.id))
     } else {
@@ -63,7 +64,7 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
       const event = addCountdown({
         title: name,
         startedAt,
-        color: suggestCountdownColor(),
+        color: speciesColor('post'),
         repeat: past ? 'yearly' : 'none',
       })
       if (past) updateCountdown(event.id, { repeat: 'yearly' })

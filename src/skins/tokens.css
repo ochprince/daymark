@@ -326,3 +326,48 @@
   --h-6: var(--h-rose); --h-6-2: var(--h-rose-2);
   --h-7: var(--h-slate); --h-7-2: var(--h-slate-2);
 }
+
+/* --------------------------------------------------------------------------
+   num / texture 解析成具体值之后的收口
+   auto 现在会在渲染前解析成具体的 data-num / data-texture（src/lib/skin.ts 的
+   NUM_AUTO / TEXTURE_AUTO），所以这两层必须真的画得出来：
+   · dots / grid 在 custom.css 里写成了 background 简写（带 "0 0 / 16px 16px"），
+     塞进 background-image 是非法值，纹理层等于空的。这里按皮肤口径拆成两条：
+     --texture 只放渐变，尺寸走 --texture-size。
+   · 夜航是星星底，尺寸 240×220，不能退化成规则圆点。
+   · 夜航的数字是圆体但字重 600，通用 round 规则会拉到 800，这里守住。
+   -------------------------------------------------------------------------- */
+
+[data-skin][data-texture='dots'] {
+  --texture: radial-gradient(var(--hair) 1.3px, transparent 1.6px);
+  --texture-size: 16px 16px;
+}
+
+[data-skin][data-texture='grid'] {
+  --texture: linear-gradient(var(--hair) 1px, transparent 1px), linear-gradient(90deg, var(--hair) 1px, transparent 1px);
+  --texture-size: 14px 14px;
+}
+
+/* 像素皮肤的格线本来就是 12px */
+[data-skin='pixel'][data-texture='grid'] {
+  --texture-size: 12px 12px;
+}
+
+/* 夜航的星星底（必须排在通用 dots 之后，同优先级靠顺序生效） */
+[data-skin='night'][data-texture='dots'] {
+  --texture: radial-gradient(1px 1px at 20px 30px, #fff8, transparent), radial-gradient(1px 1px at 80px 120px, #fff6, transparent),
+    radial-gradient(1.5px 1.5px at 140px 60px, #fff9, transparent), radial-gradient(1px 1px at 200px 170px, #fff5, transparent);
+  --texture-size: 240px 220px;
+}
+
+/* 换成别的纹理时，别把星星底的尺寸带过去 */
+[data-skin='night'][data-texture='plain'],
+[data-skin='night'][data-texture='lines'] {
+  --texture-size: auto;
+}
+
+[data-skin='night'][data-num='round'] {
+  --font-num: 'Baloo 2', ui-rounded, var(--font-ui);
+  --num-w: 600;
+  --num-style: normal;
+}

@@ -1,0 +1,18 @@
+/* 装扮页 · 换皮肤后的提示条
+   整屏预览已经去掉：预览交给画廊本身（四张 .mini 就是真实界面的缩放版，
+   横滑松手即换，见原型 tabs.js 的 miniPhone / settle）。这里只剩 toast 的一点动效。 */
+
+.dress-toast {
+  animation: toastIn 0.22s var(--ease-pop);
+}
+
+@keyframes toastIn {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 8px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
