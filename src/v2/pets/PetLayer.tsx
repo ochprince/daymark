@@ -709,6 +709,9 @@ export function PetLayer({
       goHome,
       /** 外部动作的反应：记一次、切焦点、被戳 */
       react: (kind: 'log' | 'focus' | 'poke' | 'milestone') => {
+        // 它在家（卡片里那只就是它）时不在这儿反应：
+        // 否则会在隐藏的精灵位置冒出一个没主人的气泡
+        if (!outRef.current) return
         if (kind === 'log') {
           hearts(4)
           hop(90)
