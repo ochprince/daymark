@@ -314,7 +314,9 @@ export function PetLayer({
           const top = b.top - rect.top
           if (r < 8 || l > rect.width - 8) return
           // 状态栏下面才算平台；太靠底也别算（底栏本身除外）
-          if (top < 44) return
+          // 平台上方得留得下它自己的身高：否则它站上去整个人（92px）
+          // 会顶出层外，只露半个身子在状态栏上
+          if (top < Math.max(44, size + 12)) return
           if (top > rect.height - 30 && !el.closest('.tabbar')) return
           out.push({ key: `${sel}#${index}`, l, r, t: top, el, sel })
         })
@@ -752,6 +754,26 @@ export function PetLayer({
         if (w > 0) options.push({ w, run })
       }
       add(3, () => setMode('stand', rand(1.8, 3.6)))
+      // 随机往下跳：挑一个更低的平台跳过去；没有更低的就朝最近的一侧跳下边缘。
+      // 之前只有向上跳（hop 给负速度），看久了像是在原地弹。
+      add(3.5, () => {
+        const below = platforms.filter(
+          (q) => q.key !== p.key && q.t > s.y + 24 && q.r - q.l > 40,
+        )
+        const target = below.length ? pick(below) : null
+        const tx = target
+          ? rand(target.l + 12, Math.max(target.l + 13, target.r - 12))
+          : s.x < rect.width / 2
+            ? rand(rect.width * 0.55, rect.width * 0.9)
+            : rand(rect.width * 0.1, rect.width * 0.45)
+        s.face = tx >= s.x ? 1 : -1
+        // 正数 = 向下；水平速度让它真的朝目标落，而不是垂直砸下去
+        s.vx = Math.max(-240, Math.min(240, (tx - s.x) * 0.85))
+        s.vy = rand(180, 340)
+        s.plat = null
+        s.tx = tx
+        setMode('fall')
+      })
       add(4, () => {
         s.tx = rand(p.l + 14, Math.max(p.l + 15, p.r - 14))
         s.face = s.tx >= s.x ? 1 : -1
