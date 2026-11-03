@@ -258,6 +258,8 @@ export function decoratePetSvg(raw: string, opts: DecorateOptions): string {
 
 export type RenderPetOptions = {
   species: PetArtSpecies
+  /** 真时为蛋形态（孵化仪式专用），主 App 的卡片/桌宠不会用到 */
+  egg?: boolean
   stage: PetStage
   /** 视觉高度（px），脚底大约在 93% 处 */
   size?: number
@@ -284,8 +286,9 @@ export function renderPetSvg({
   uid,
   crack,
   hold,
+  egg,
 }: RenderPetOptions): string {
-  const key = petSvgKey({ species, stage, crack, hold })
+  const key = petSvgKey({ species, stage, crack, hold, egg })
   const raw = ASSETS[key]
   const state: PetMood = mood
 

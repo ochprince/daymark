@@ -1,6 +1,7 @@
-import { useMemo } from 'react'
-import { badge as badgeSvg, creature as creatureSvg } from './creature-art'
+import { useId, useMemo } from 'react'
+import { badge as badgeSvg } from './creature-art'
 import type { CreatureMood, CreatureOptions, CreatureSpecies } from './creature-art'
+import { renderPetSvg } from '../v2/pets/petArt'
 
 export type { CreatureMood, CreatureSpecies }
 
@@ -16,8 +17,12 @@ type CreatureProps = {
 }
 
 /**
- * 小伙伴。生成的是一段静态 SVG 字符串（无用户输入），所以用 innerHTML 渲染是安全的，
- * 也保住了原型里的分层与 class（动画全靠这些 class + 令牌）。
+ * 小伙伴。
+ *
+ * 造型来自设计师给的正式素材（`src/v2/pets/svg/`，43 个 SVG），
+ * 表情由 `data-face` 占位在运行时按 mood 换成真脸，clipPath id 按实例去重。
+ * 以前这里画的是代码现生成的仿制造型——和桌宠那套不是同一只，所以卡片里
+ * 一直是「旧版本」。现在两边共用同一套素材，卡片里和桌面上是同一只。
  */
 export function Creature({
   species = 'sprout',
@@ -28,13 +33,33 @@ export function Creature({
   className,
   label,
 }: CreatureProps) {
-  const html = useMemo(
-    () => creatureSvg({ species, stage, mood, size, extra }),
-    [species, stage, mood, size, extra],
-  )
+  const rawId = useId()
+  // useId 带冒号，SVG 的 id 里不合法，洗一遍
+  const uid = rawId.replace(/[^A-Za-z0-9_-]/g, '')
+
+  const html = useMemo(() => {
+    const isEgg = stage === 'egg'
+    // 旧接口的表情名（happy/wow）对到物理层的状态名（cheer/fall），渲染端只认后者
+    const petMood = mood === 'happy' ? 'cheer' : mood === 'wow' ? 'fall' : mood
+    return renderPetSvg({
+      species,
+      stage: isEgg ? 0 : (stage as 0 | 1 | 2 | 3 | 4),
+      size,
+      mood: petMood,
+      uid,
+      egg: isEgg,
+      crack: extra?.crack,
+      hold: extra?.hold,
+    })
+  }, [species, stage, mood, size, uid, extra])
+
+  // 图鉴里没解锁的格子要剪影：直接把画出来的东西压成黑色轮廓
+  const silhouette = extra?.silhouette ? { filter: 'brightness(0)', opacity: 0.18 } : undefined
+
   return (
     <span
       className={className ? `creature ${className}` : 'creature'}
+      style={silhouette}
       role={label ? 'img' : 'presentation'}
       aria-label={label}
       aria-hidden={label ? undefined : true}
