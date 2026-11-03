@@ -142,6 +142,8 @@ export type PetLayerProps = {
   onOut?: (out: boolean) => void
   /** 每次 +1 就播一遍出场（连戳五下走这条路） */
   debutSeq?: number
+  /** 串门时连戳五下：让两只一起玩（不送主人出门） */
+  playSeq?: number
   /** 回家收尾：卡片那边跳一下、把气泡换成「我回来了。」、播一声 */
   onHomed?: () => void
   /** 拖着它悬停在卡片原位上：卡片里那块空位亮起来 */
@@ -182,6 +184,7 @@ export function PetLayer({
   out,
   onOut,
   debutSeq = 0,
+  playSeq = 0,
   logSeq = 0,
   milestoneSeq = 0,
   focusSeq = 0,
@@ -204,6 +207,8 @@ export function PetLayer({
   callbacks.current = { onOut, onHomed, onHomeHot }
   const apiRef = useRef<{
     debut: () => void
+    /** 串门时两只一起玩 */
+    play: () => void
     retire: () => void
     hot: () => boolean
     goHome: () => void
@@ -300,6 +305,9 @@ export function PetLayer({
     // 出场令牌：用户关掉桌宠 / 重播时 +1，旧动画的每一步都先比这个再往下走
     let debutTok = 0
     let debuting = false
+    /** 两只在一起玩：期间不让它自己乱跑 */
+    let playing = false
+    let playTok = 0
     let homing = false
     /** 上一次的「悬停在家上」：只在变化时通知 React，省掉每帧一次 setState */
     let hotOn = false
@@ -690,6 +698,10 @@ export function PetLayer({
     /** 关掉桌宠：不是凭空消失，直接回卡片原位 */
     const retire = () => {
       abort()
+      playTok += 1
+      playing = false
+      const cardCr = cardWrap()?.querySelector<HTMLElement>('.cr')
+      cardCr?.classList.remove('playing', 'nuzzle')
       homing = false
       clearDebutDom()
       s.sayUntil = 0
@@ -700,9 +712,60 @@ export function PetLayer({
       layer.dataset.petOut = '0'
     }
 
+    /**
+     * 串门的两只一起玩：客人走到主人旁边，两只对跳两下、互蹭一下、冒爱心，
+     * 客人坐下。全程 ~3 秒，期间不让它自己乱走。
+     */
+    const play = async () => {
+      if (!outRef.current || !visitingRef.current || playing) return
+      const wrap = cardWrap()
+      const cr = wrap?.querySelector<HTMLElement>('.cr')
+      if (!wrap || !cr) return
+      const tok = ++playTok
+      playing = true
+      const layerRect = layer.getBoundingClientRect()
+      const br = cr.getBoundingClientRect()
+      const hostMid = br.left + br.width / 2 - layerRect.left
+      const targetX = Math.max(size / 2, Math.min(rect.width - size / 2, hostMid + br.width * 0.3))
+
+      s.tx = targetX
+      s.toWall = false
+      s.face = targetX >= s.x ? 1 : -1
+      setMode('walk')
+      say('pet.say.play', 1800)
+
+      for (let i = 0; i < 40; i += 1) {
+        await waitMs(60)
+        if (tok !== playTok || !alive) return
+        if (Math.abs(s.x - targetX) < 6) break
+      }
+      if (tok !== playTok || !alive) return
+
+      s.face = hostMid >= s.x ? 1 : -1
+      setMode('stand')
+      cr.classList.add('playing')
+      hop(0.9)
+      await waitMs(430)
+      if (tok !== playTok || !alive) return
+      hop(0.7)
+      await waitMs(450)
+      if (tok !== playTok || !alive) return
+      cr.classList.add('nuzzle')
+      setMode('cheer', 0.7)
+      hearts(3)
+      await waitMs(900)
+      if (tok !== playTok || !alive) return
+      cr.classList.remove('playing', 'nuzzle')
+      setMode('sit', 4)
+      playing = false
+    }
+
     apiRef.current = {
       debut: () => {
         void debut()
+      },
+      play: () => {
+        void play()
       },
       retire,
       hot,
@@ -843,7 +906,7 @@ export function PetLayer({
       const H = rect.height
       const hw = size / 2
 
-      if (s.mode === 'drag' || homing || debuting) return
+      if (s.mode === 'drag' || homing || debuting || playing) return
 
       if (s.mode === 'fall') {
         const prevY = s.y
@@ -1019,6 +1082,12 @@ export function PetLayer({
     if (debutSeq <= 0) return
     apiRef.current?.debut()
   }, [debutSeq])
+
+  // 串门时连戳五下：两只凑到一起玩，主人不出门
+  useEffect(() => {
+    if (playSeq <= 0) return
+    apiRef.current?.play()
+  }, [playSeq])
 
   // 关掉桌宠（或换焦点、离开今天页）：它回卡片原位，不是凭空消失
   useEffect(() => {

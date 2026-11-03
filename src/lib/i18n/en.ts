@@ -478,6 +478,8 @@ export const en: Record<MessageKey, Msg> = {
   /* Living pets (v3 physics layer) */
   'pet.say.visit': 'Just visiting!',
   'pet.say.visitor': 'We have a guest!',
+  'pet.say.play': 'Let us play!',
+  'pet.say.playHost': 'Come play with me!',
   'pet.say.logged': 'Logged it!',
   'pet.say.milestone': 'Growing up!',
   'pet.say.hello': 'Hm?',

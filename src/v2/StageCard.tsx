@@ -21,6 +21,8 @@ export type StageCardProps = {
   /** 记录完成（习惯类蓄满 / 倒数日「说过了」） */
   onLog: () => void
   onPoke: () => void
+  /** 这张卡里有客人：连戳五下是喊两只一起玩 */
+  visitor?: boolean
   /** 小伙伴手里有一张折起的纸条，点了才展开 */
   noteReady?: boolean
   onOpenNote?: () => void
@@ -112,6 +114,7 @@ export function StageCard({
   view,
   onLog,
   onPoke,
+  visitor = false,
   noteReady,
   onOpenNote,
   onProfile,
@@ -354,7 +357,7 @@ export function StageCard({
   } as CSSProperties
 
   const line = hyped
-    ? t('pet.say.frenzy')
+    ? t(visitor ? 'pet.say.playHost' : 'pet.say.frenzy')
     : guest
       ? t('pet.say.visitor')
       : back

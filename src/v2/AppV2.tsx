@@ -57,6 +57,7 @@ import { bumpWeek, nextNoteText, shouldOfferNote } from '../lib/notes'
 import type { ItemView } from '../lib/itemview'
 import './app.css'
 import { PetLayer, type PetStage } from './pets/PetLayer'
+import { frenzyKind } from './pets/frenzy'
 import type { PetArtSpecies } from './pets/petArt'
 
 type Sheet = 'switcher' | 'add' | null
@@ -195,6 +196,8 @@ export function AppV2() {
   const [outFrom, setOutFrom] = useState<string | null>(null)
   // 让它自己走出去（连戳五下 / 演示）：+1 就播一遍出场
   const [debutSeq, setDebutSeq] = useState(0)
+  /** 串门时连戳五下：两只一起玩（不送主人出门） */
+  const [playSeq, setPlaySeq] = useState(0)
   // 回家一次 +1：卡片里的它跳一下、气泡换成「我回来了。」
   const [homeNonce, setHomeNonce] = useState(0)
   // 拖着桌宠悬停在卡片原位上：那块空位亮起来
@@ -280,6 +283,22 @@ export function AppV2() {
     )
     setOutFrom((prev) => prev ?? focus.key)
   }, [focus?.key, focus?.species, focus?.stage, petOut])
+
+  // ?visit=1：开发时直接让「已经有一只是来串门的」，方便调两只一起玩的那段。
+  // 放在同步 effect 之后跑，否则会被上面那轮 setOutFrom(null) 抹掉。
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has('visit')) return
+    const id = window.setTimeout(() => {
+      setOutPet({ species: 'sprout', stage: 2, hue: 4 })
+      setOutFrom('__guest__')
+      setPetOut(true)
+      // ?visit=1&play=1：再自动喊一次「一起玩」，省得手点五下
+      if (new URLSearchParams(window.location.search).has('play')) {
+        window.setTimeout(() => setPlaySeq((n) => n + 1), 1200)
+      }
+    }, 0)
+    return () => window.clearTimeout(id)
+  }, [])
 
   useEffect(() => {
     if (!toast) return undefined
@@ -576,6 +595,7 @@ export function AppV2() {
           out={petOut}
           onOut={setPetOut}
           debutSeq={debutSeq}
+          playSeq={playSeq}
           onHomed={() => setHomeNonce((n) => n + 1)}
           onHomeHot={setHomeHot}
           logSeq={fxCount}
@@ -607,8 +627,16 @@ export function AppV2() {
           petAway={petOut && outFrom === focus?.key}
           visited={petOut && !!outFrom && outFrom !== focus?.key}
           homeHot={homeHot}
+          visitor={petOut && !!outFrom && outFrom !== focus?.key}
           homeNonce={homeNonce}
-          onFrenzy={() => setDebutSeq((n) => n + 1)}
+          onFrenzy={() => {
+            // 有客人在场：连戳五下是「喊它俩一起玩」，不是把主人也送出门
+            if (frenzyKind(!!(petOut && outFrom && outFrom !== focus?.key)) === 'play') {
+              setPlaySeq((n) => n + 1)
+            } else {
+              setDebutSeq((n) => n + 1)
+            }
+          }}
           onShift={(dir) => {
             // 横滑换焦点：到头就回绕，只有一件时什么也不做
             if (views.length < 2) return

@@ -15,6 +15,8 @@ export type TodayPageProps = {
   onAdd: () => void
   onLog: () => void
   onPoke: () => void
+  /** 当前这张卡里有客人（别的卡的萌宠串门过来） */
+  visitor?: boolean
   /** 小伙伴手里有没有一张折起的纸条 */
   noteReady?: boolean
   onOpenNote?: () => void
@@ -58,6 +60,7 @@ export function TodayPage({
   onAdd,
   onLog,
   onPoke,
+  visitor,
   noteReady,
   onOpenNote,
   onProfile,
@@ -146,6 +149,7 @@ export function TodayPage({
         view={focus}
         onLog={onLog}
         onPoke={onPoke}
+        visitor={visitor}
         noteReady={noteReady}
         onOpenNote={onOpenNote}
         onProfile={onProfile}
