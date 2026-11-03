@@ -764,7 +764,8 @@ html.reduce-motion .pet-say,
 /* 回家：冒 4 颗爱心 */
 .pet-heart {
   position: absolute;
-  z-index: 3;
+  /* 必须高于精灵本身：原来 z-index:3 而精灵是 5，心全被身体挡住了 */
+  z-index: 7;
   font-size: 15px;
   font-style: normal;
   line-height: 1;

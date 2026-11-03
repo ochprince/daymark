@@ -418,7 +418,11 @@ export function PetLayer({
         heart.className = 'pet-heart'
         heart.textContent = '♥'
         heart.style.left = `${(s.x + rand(-24, 24)).toFixed(0)}px`
-        heart.style.top = `${(s.y - size * 0.72).toFixed(0)}px`
+        // 从头顶冒出来：s.y 是精灵盒顶，素材四周有留白，再往上 0.72 个身高就飞出屏幕了
+        // （站卡片顶边时 s.y≈-4，心会冒到 -67，整颗看不见）。这里贴着上半身起，并钳在层内。
+        // 靠近屏幕顶时改用身体中部当起点：爱心是向上飘的，贴着头发射会整段飘出屏幕
+        const y0 = s.y < 56 ? Math.max(44, s.y + size * 0.3) : s.y - 6
+        heart.style.top = `${y0.toFixed(0)}px`
         heart.style.setProperty('--dx', `${rand(-26, 26).toFixed(0)}px`)
         heart.style.animationDelay = `${i * 80}ms`
         layer.appendChild(heart)
