@@ -800,3 +800,13 @@ html.reduce-motion .pet-heart,
 .reduce-motion .pet-heart {
   animation: none !important;
 }
+
+/* 被踩到的元素抖一下：这是「它有重量」的唯一证据。
+   卡片类不抖（NO_BUMP），否则整屏看着像在晃。 */
+.pet-bump { animation: pet-bump 0.38s cubic-bezier(0.34, 1.56, 0.64, 1); }
+@keyframes pet-bump {
+  0%, 100% { transform: translateY(0) scaleY(1); }
+  32% { transform: translateY(3px) scaleY(0.965); }
+  64% { transform: translateY(-1px) scaleY(1.01); }
+}
+.reduce-motion .pet-bump { animation: none !important; }

@@ -12,6 +12,10 @@ export type Platform = {
   r: number
   t: number
   floor?: boolean
+  /** 真实的 DOM：落地时给它抖一下（bump） */
+  el?: HTMLElement
+  /** 命中的选择器，用来判断哪类平台不该抖 */
+  sel?: string
 }
 
 export type BubbleInput = {

@@ -190,6 +190,9 @@ export function AppV2() {
   // 拖着桌宠悬停在卡片原位上：那块空位亮起来
   const [homeHot, setHomeHot] = useState(false)
   const [evolve, setEvolve] = useState<EvolveInfo | null>(null)
+  /** 桌宠的两条反应计数：形态升级、切焦点 */
+  const [evolveSeq, setEvolveSeq] = useState(0)
+  const [focusSeq, setFocusSeq] = useState(0)
   // 徽章排队：一次只弹一个，而且要让进化过场先播完（两层同时盖住会挡住按钮）
   const [badges, setBadges] = useState<BadgeId[]>([])
   const [profileOpen, setProfileOpen] = useState(false)
@@ -254,6 +257,7 @@ export function AppV2() {
       )
       const unlocked = unlockBadges(fresh)
       playSfx('evolve')
+      setEvolveSeq((n) => n + 1)
       setEvolve({
         key: view.key,
         species: view.species,
@@ -272,6 +276,7 @@ export function AppV2() {
   }, [views])
 
   const changeFocus = useCallback((key: string) => {
+    setFocusSeq((n) => n + 1)
     setFocusKey(key)
     setOverride(null)
     setPokeCount(0)
@@ -516,6 +521,10 @@ export function AppV2() {
           debutSeq={debutSeq}
           onHomed={() => setHomeNonce((n) => n + 1)}
           onHomeHot={setHomeHot}
+          logSeq={fxCount}
+          milestoneSeq={evolveSeq}
+          focusSeq={focusSeq}
+          pokeSeq={pokeCount}
         />
       ) : null}
 

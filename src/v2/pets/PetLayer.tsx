@@ -11,17 +11,27 @@ import '../pets.css'
 export const PET_GRAVITY = 2200
 /** 可站立的东西：页面里真实的卡片、按钮、底栏 */
 /**
- * 宠物能站的平台。
+ * 宠物能站的平台 —— 跟原型对齐的一张清单。
  *
- * 只留底部与显式标记的容器：桌宠是画在所有内容之上的，站到卡片/成长条上
- * 一定会压住它上方那行字（真机量过：站 .growth 压「2026年 · 1个月10天」，站
- * .btn 压成长条）。想让它上桌子的地方，给那个容器加 data-pet-platform。
+ * 只放底栏太单调：它应该能站到按住计时的按钮、成长条、卡片顶边、切换开关、
+ * 图标按钮上。判定沿用原型的几条过滤（见 scan）：太窄（<36）、太靠上（压状态栏）、
+ * 太靠底（钻到底栏后面）都不算平台。
  */
 export const PET_PLATFORM_SELECTORS = [
   '.pet-plat',
+  '.hold',
+  '.growth',
+  '.sc-actions .btn',
+  '.stage-card',
   '.tabbar',
+  '.pill-switch',
+  '.icon-btn',
+  '.card',
   '[data-pet-platform]',
 ] as const
+
+/** 卡片类平台被踩到时不抖：它本身就是承重的大块，抖起来像画面在晃 */
+const NO_BUMP = /stage-card|\bcard\b/
 
 /* ================================================================ 回家：拖回卡片原位 */
 
@@ -106,6 +116,14 @@ export type PetLayerProps = {
   hue?: number
   /** 宠物高度（px），脚底落在 93% 处 */
   size?: number
+  /** 每记一次 +1：撒爱心、跳一下、说一句 */
+  logSeq?: number
+  /** 成长里程碑（形态升级）+1：撒更多爱心、跳更高 */
+  milestoneSeq?: number
+  /** 切了焦点事项 +1：轻轻跳一下 */
+  focusSeq?: number
+  /** 被戳 +1：冒两颗心 */
+  pokeSeq?: number
   /** 初始脚底位置（层内 px）；不给就从上方掉下来 */
   spawn?: { x: number; y: number }
   /**
@@ -157,6 +175,10 @@ export function PetLayer({
   out,
   onOut,
   debutSeq = 0,
+  logSeq = 0,
+  milestoneSeq = 0,
+  focusSeq = 0,
+  pokeSeq = 0,
   onHomed,
   onHomeHot,
 }: PetLayerProps) {
@@ -174,6 +196,7 @@ export function PetLayer({
     retire: () => void
     hot: () => boolean
     goHome: () => void
+    react: (kind: 'log' | 'focus' | 'poke' | 'milestone') => void
   } | null>(null)
   const [view, setView] = useState<PetState>('fall')
   const [bubble, setBubble] = useState<{ id: number; text: string } | null>(null)
@@ -291,8 +314,9 @@ export function PetLayer({
           const top = b.top - rect.top
           if (r < 8 || l > rect.width - 8) return
           // 状态栏下面才算平台；太靠底也别算（底栏本身除外）
-          if (top < 44 || top > rect.height - 30) return
-          out.push({ key: `${sel}#${index}`, l, r, t: top })
+          if (top < 44) return
+          if (top > rect.height - 30 && !el.closest('.tabbar')) return
+          out.push({ key: `${sel}#${index}`, l, r, t: top, el, sel })
         })
       }
       out.push({ key: 'floor', l: 0, r: rect.width, t: rect.height - 14, floor: true })
@@ -352,6 +376,38 @@ export function PetLayer({
       const inside = insideHome(zone, s.x, s.y)
       setHot(inside)
       return inside
+    }
+
+    /**
+     * 踩上去的元素抖一下。
+     *
+     * 原型里这是「它有重量」的唯一证据：落到按钮/开关上会把它压得一颤，
+     * 落到卡片和 stage-card 上不抖（那两块是自己的承重面，抖起来像整屏在晃）。
+     * 底栏特殊：抖的是被踩的那个 tab，不是整条底栏。
+     */
+    const bump = (p: Platform) => {
+      if (!p.el || p.floor) return
+      if (NO_BUMP.test(p.sel ?? '')) return
+      let el = p.el
+      if (p.sel === '.tabbar') {
+        for (const child of Array.from(el.children) as HTMLElement[]) {
+          const b = child.getBoundingClientRect()
+          const l = b.left - rect.left
+          if (s.x >= l && s.x <= l + b.width) el = child
+        }
+      }
+      el.classList.remove('pet-bump')
+      void el.offsetWidth
+      el.classList.add('pet-bump')
+      window.setTimeout(() => el.classList.remove('pet-bump'), 380)
+    }
+
+    /** 原地跳一下：只给初速，剩下的交给重力和平台判定 */
+    const hop = (power: number) => {
+      if (s.mode === 'drag') return
+      s.vy = -Math.max(120, power * 2.4)
+      s.plat = null
+      setMode('fall', 0.5)
     }
 
     const hearts = (n: number) => {
@@ -629,10 +685,28 @@ export function PetLayer({
       retire,
       hot,
       goHome,
+      /** 外部动作的反应：记一次、切焦点、被戳 */
+      react: (kind: 'log' | 'focus' | 'poke' | 'milestone') => {
+        if (kind === 'log') {
+          hearts(4)
+          hop(90)
+          say('pet.say.logged', 2400)
+        } else if (kind === 'milestone') {
+          hearts(8)
+          hop(140)
+          say('pet.say.milestone', 2400)
+        } else if (kind === 'focus') {
+          hop(30)
+        } else {
+          hearts(2)
+          hop(40)
+        }
+      },
     }
 
     const land = (p: Platform) => {
       const hard = s.vy > 760
+      bump(p)
       s.plat = p.key
       s.y = p.t + 3
       s.vx = 0
@@ -879,6 +953,20 @@ export function PetLayer({
       apiRef.current = null
     }
   }, [positionBubble, say, setMode, size, spawn])
+
+  // 外部动作的反馈：记一次 / 形态升级 / 切焦点 / 被戳
+  useEffect(() => {
+    if (logSeq > 0) apiRef.current?.react('log')
+  }, [logSeq])
+  useEffect(() => {
+    if (milestoneSeq > 0) apiRef.current?.react('milestone')
+  }, [milestoneSeq])
+  useEffect(() => {
+    if (focusSeq > 0) apiRef.current?.react('focus')
+  }, [focusSeq])
+  useEffect(() => {
+    if (pokeSeq > 0) apiRef.current?.react('poke')
+  }, [pokeSeq])
 
   // 外面让它「出去」：连戳五下 / 演示时 +1，就播一遍四段接力
   useEffect(() => {
