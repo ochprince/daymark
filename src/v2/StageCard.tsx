@@ -295,7 +295,7 @@ export function StageCard({
         </div>
       ) : null}
       {fxOn ? <div className="flash" aria-hidden="true" /> : null}
-      <div className="deco" />
+      <div className="deco" aria-hidden="true" />
       <div className="sc-top">
         <span className="tag">{typeTag(view)}</span>
         <h2 className="sc-title">{view.title}</h2>
@@ -487,8 +487,15 @@ function ExtraBlock({ view, growthPct, rest, nextName }: ExtraProps) {
             <span>{t('growth.total', { n: view.growth })}</span>
             <span>{sleeping ? t('growth.sleeping') : growthLabel}</span>
           </div>
-          <div className={sleeping ? 'g-track paused' : 'g-track'}>
-            <i style={{ width: `${sleeping ? 0 : growthPct}%` }} />
+          <div
+            className={sleeping ? 'g-track paused' : 'g-track'}
+            role="progressbar"
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.round(sleeping ? 0 : growthPct)}
+            aria-label={sleeping ? t('growth.sleeping') : growthLabel}
+          >
+            <i style={{ width: `${sleeping ? 0 : growthPct}%` }} aria-hidden="true" />
           </div>
         </div>
       ) : null}

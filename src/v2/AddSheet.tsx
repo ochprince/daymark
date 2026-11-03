@@ -77,8 +77,13 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
 
   return (
     <div className="ov">
-      <div className="dim" onClick={onClose} />
-      <div className="sheet">
+      <div className="dim" onClick={onClose} aria-hidden="true" />
+      <div
+        className="sheet"
+        role="dialog"
+        aria-modal="true"
+        aria-label={kind === null ? t('add.title') : t('add.step2')}
+      >
         <div className="grab" />
         <div className="sheet-h">
           <h3>{kind === null ? t('add.title') : t('add.step2')}</h3>

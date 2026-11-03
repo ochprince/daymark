@@ -13,6 +13,9 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 button { font: inherit; color: inherit; cursor: pointer; }
+
+/* 统一键盘焦点环：只在键盘操作时出现，鼠标点击不显示，避免干扰常态视觉 */
+:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .deck {
   display: grid;
   grid-template-columns: 300px minmax(440px, 1fr) 340px;

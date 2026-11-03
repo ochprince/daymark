@@ -110,8 +110,15 @@ export function ShareCard({ model, skin, cardRef, className, template = 'sticker
                 <span>{model.growthLabel}</span>
                 <b>{model.growthPct}%</b>
               </div>
-              <div className="g-track">
-                <i style={{ width: `${model.growthPct}%` }} />
+              <div
+                className="g-track"
+                role="progressbar"
+                aria-valuemin={0}
+                aria-valuemax={100}
+                aria-valuenow={Math.round(model.growthPct)}
+                aria-label={model.growthLabel}
+              >
+                <i style={{ width: `${model.growthPct}%` }} aria-hidden="true" />
               </div>
             </div>
           ) : null}

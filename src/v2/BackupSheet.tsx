@@ -27,7 +27,7 @@ export function BackupSheet({ summary, onCancel, onConfirm }: BackupSheetProps) 
 
   return (
     <div className="ov" style={{ zIndex: 70 }}>
-      <div className="dim" onClick={onCancel} />
+      <div className="dim" onClick={onCancel} aria-hidden="true" />
       <div className="sheet paywall" role="dialog" aria-modal="true">
         <div className="sheet-h">{t('backup.title')}</div>
         <p className="sheet-sub">{t('backup.exportedAt', { date })}</p>

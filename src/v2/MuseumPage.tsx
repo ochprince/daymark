@@ -153,10 +153,13 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
 
       {opened ? (
         <div className="ov" style={{ zIndex: 60 }}>
-          <div className="dim" onClick={() => setOpened(null)} />
+          <div className="dim" onClick={() => setOpened(null)} aria-hidden="true" />
           <div
             key={`${opened.key}:${flip ?? ''}`}
             className={`modal bookpage${flip ? ` flip-${flip}` : ''}`}
+            role="dialog"
+            aria-modal="true"
+            aria-label={opened.title}
             style={{ '--c': `var(--h-${opened.color})` } as CSSProperties}
           >
             <div className="bp-t">{opened.title}</div>

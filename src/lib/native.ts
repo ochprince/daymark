@@ -33,7 +33,7 @@ export type HapticImpact = 'light' | 'medium' | 'heavy'
 
 export type ThemeName = 'dark' | 'light'
 
-/** 与 src/lib/useTheme.ts 里的 THEME_COLORS 保持一致（那边是私有常量，这里不能 import） */
+/** 深/浅主题的启动底色：status bar 只能在启动瞬间同步写入，因此这里手写一份与主题底色相同的值 */
 const STATUS_BAR_COLOR: Record<ThemeName, string> = { dark: '#08090C', light: '#F7F5F2' }
 const STATUS_BAR_STYLE: Record<ThemeName, 'DARK' | 'LIGHT'> = { dark: 'DARK', light: 'LIGHT' }
 
