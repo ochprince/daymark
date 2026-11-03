@@ -1,0 +1,183 @@
+/* 付费页（v3 双轨）：年费推荐档 + 永久档，底部固定恢复购买。
+   只用 components.css / tokens 里已有的变量，四套皮肤自动跟着走。 */
+
+.pw {
+  padding-left: 18px;
+  padding-right: 18px;
+}
+
+.pw .sheet-h {
+  font-size: 24px;
+  font-family: var(--font-title);
+  font-weight: 800;
+}
+
+.pw .paywall-list {
+  margin: 12px 0 10px;
+  gap: 8px;
+}
+
+.pw .paywall-list li {
+  font-size: 13.5px;
+  line-height: 1.35;
+}
+
+.pw-free {
+  margin: 0 0 14px;
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--ink2);
+  font-weight: 600;
+}
+
+/* 两档：并列，年费在左（推荐档） */
+.pw-plans {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  margin: 16px 0 0;
+  padding-top: 8px; /* 给推荐角标留位，别被卡片边框裁掉 */
+}
+
+.pw-plan {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  text-align: left;
+  padding: 14px 12px 13px;
+  border: var(--bw) solid var(--line);
+  border-radius: 24px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  cursor: pointer;
+  transition: transform 0.12s var(--ease-pop), box-shadow 0.16s ease-out;
+}
+
+.pw-plan:active {
+  transform: translateY(2px);
+}
+
+.pw-plan:disabled {
+  opacity: 0.72;
+  cursor: default;
+}
+
+/* 推荐档视觉主推：底色吃掉一点主题色，边框加深，加投影 */
+.pw-plan.is-on {
+  background: color-mix(in oklab, var(--c) 34%, var(--bg));
+  border-color: color-mix(in oklab, var(--ink) 46%, var(--line));
+  box-shadow: 0 8px 20px color-mix(in oklab, var(--ink) 14%, transparent);
+}
+
+.pw-ribbon {
+  position: absolute;
+  top: -9px;
+  left: 12px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: var(--ink);
+  color: var(--bg);
+  font-size: 10.5px;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+}
+
+.pw-name {
+  font-size: 14px;
+  font-weight: 800;
+  font-family: var(--font-title);
+}
+
+.pw-price {
+  display: flex;
+  align-items: baseline;
+  gap: 3px;
+  font-family: var(--font-title);
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.pw-price small {
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--ink2);
+  letter-spacing: 0;
+}
+
+.pw-meta {
+  font-size: 11.5px;
+  line-height: 1.4;
+  color: var(--ink2);
+  font-weight: 600;
+}
+
+.pw-tag {
+  align-self: flex-start;
+  margin-top: 5px;
+  padding: 2px 8px;
+  border-radius: 99px;
+  background: color-mix(in oklab, var(--ink) 12%, transparent);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.pw-note {
+  margin: 10px 0 14px;
+  font-size: 11.5px;
+  line-height: 1.5;
+  color: var(--ink2);
+}
+
+/* 底部固定块：说明一行 + 恢复购买 + 下次再说。
+   贴住 sheet 的底边（padding 用负 margin 抵消），滚动时不跟着走。 */
+.pw-foot {
+  position: sticky;
+  bottom: -26px;
+  z-index: 2;
+  margin: 0 -18px -26px;
+  padding: 10px 18px 18px;
+  background: var(--bg);
+  border-top: var(--bw) solid var(--line);
+}
+
+.pw-status {
+  margin: 0 0 8px;
+  font-size: 11px;
+  line-height: 1.45;
+  color: var(--ink3);
+}
+
+.pw-restore {
+  width: 100%;
+  height: 42px;
+  border: var(--bw) solid var(--line);
+  border-radius: 99px;
+  background: var(--surface);
+  color: var(--ink);
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.pw-restore:disabled {
+  opacity: 0.6;
+}
+
+.pw-foot .link-row {
+  margin-top: 2px;
+  padding: 8px;
+}
+
+/* 320 宽的小屏：两档并排会把价格挤断，改成上下两条 */
+@media (max-width: 340px) {
+  .pw-plans {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+}
