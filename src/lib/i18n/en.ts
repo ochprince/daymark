@@ -479,6 +479,10 @@ export const en: Record<MessageKey, Msg> = {
   'pet.say.sleep': 'Shh… sleeping.',
   'pet.say.climb': 'Climbing up!',
   'pet.say.idle': 'Doing nothing counts today.',
+  'pet.say.frenzy': "That's it — I'm going out to play!",
+  'pet.say.back': 'I am home.',
+  'pet.say.out': 'Out of the card!',
+  'pet.say.home': 'Going home—',
   /* v3 system surfaces (widgets / dynamic island / lock screen / alarm) */
   'sys.todayWalk': 'Today',
   'sys.unitDay': 'days',

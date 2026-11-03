@@ -37,7 +37,22 @@ export type StageCardProps = {
   fxNonce?: number
   /** 「+1」上的字，多单位习惯是「+1 杯」 */
   fxPlus?: string
+  /** 桌宠在外：卡片里保留原尺寸的空位（.pet-away），角色隐藏、不可点 */
+  petAway?: boolean
+  /** 拖着桌宠悬停在这块空位上：亮起来提示可以放回去 */
+  homeHot?: boolean
+  /** 每回家一次 +1：卡片里的它重新出现并跳一下、气泡换成「我回来了。」、播一声 */
+  homeNonce?: number
+  /** 连戳五下（每下间隔 < 0.9s）：它兴奋乱跳，然后自己走出卡片 */
+  onFrenzy?: () => void
 }
+
+/** 连戳判定：每下间隔小于这个才算「同一串」，慢摸不触发 */
+export const POKE_STREAK_GAP = 900
+/** 连戳几下它才出门 */
+export const POKE_STREAK_N = 5
+/** 兴奋乱跳多久之后才真的走出去 */
+const FRENZY_MS = 760
 
 /** 落定那一下的粒子：角度固定，避免每次看起来都不一样 */
 const PARTICLES = Array.from({ length: 8 }, (_, index) => {
@@ -102,10 +117,18 @@ export function StageCard({
   enterDir,
   fxNonce = 0,
   fxPlus = '+1',
+  petAway = false,
+  homeHot = false,
+  homeNonce = 0,
+  onFrenzy,
 }: StageCardProps) {
   const [charging, setCharging] = useState(false)
   const [jumping, setJumping] = useState(false)
   const [party, setParty] = useState(false)
+  /** 连戳五下：兴奋乱跳中 */
+  const [hyped, setHyped] = useState(false)
+  /** 刚回家：气泡换成「我回来了。」 */
+  const [back, setBack] = useState(false)
   // 横滑换焦点：跟手位移 + 松手后吸附回弹
   const [drag, setDrag] = useState<{ dx: number; active: boolean } | null>(null)
   const dragRef = useRef<{ x: number; y: number; dx: number; active: boolean } | null>(null)
@@ -149,6 +172,41 @@ export function StageCard({
     const timer = window.setTimeout(() => setJumping(false), 620)
     return () => window.clearTimeout(timer)
   }, [pokeNonce])
+
+  /**
+   * 回家：桌宠那边走完 420ms 才 +1，此时 petAway 已经变 false、它回到了原位。
+   * 先撤掉 jump 再重排后加回，否则同一个类不会重播（原型也是这么干的）。
+   */
+  const seenHome = useRef(homeNonce)
+  useEffect(() => {
+    // 卡片重新挂载时 homeNonce 还是上一次的值：别把「我回来了」再放一遍
+    if (homeNonce === seenHome.current) return undefined
+    seenHome.current = homeNonce
+    setBack(true)
+    setJumping(false)
+    let raf = 0
+    const timers: number[] = []
+    raf = window.requestAnimationFrame(() => {
+      setJumping(true)
+      timers.push(window.setTimeout(() => setJumping(false), 620))
+    })
+    timers.push(window.setTimeout(() => setBack(false), 2000))
+    playSfx('settle')
+    return () => {
+      window.cancelAnimationFrame(raf)
+      timers.forEach((id) => window.clearTimeout(id))
+    }
+  }, [homeNonce])
+
+  // 连戳一串的进度：间隔超过 POKE_STREAK_GAP 就重新数
+  const streak = useRef({ n: 0, t: 0 })
+  const frenzyTimer = useRef<number | null>(null)
+  useEffect(
+    () => () => {
+      if (frenzyTimer.current !== null) window.clearTimeout(frenzyTimer.current)
+    },
+    [],
+  )
 
   // 相片背景：id 在记录里，图在 IndexedDB 里，这里只负责换成 objectURL
   const photoId = view.event.photoId
@@ -204,6 +262,23 @@ export function StageCard({
     if (performance.now() - pressAt.current > 250) return
     if (dragRef.current?.active) return
     onPoke()
+    // 它已经出去了，空位里没人可戳，也别把连戳串续上
+    if (petAway) return
+    const now = performance.now()
+    streak.current.n = now - streak.current.t < POKE_STREAK_GAP ? streak.current.n + 1 : 1
+    streak.current.t = now
+    if (streak.current.n < POKE_STREAK_N) return
+    // 第五下：兴奋乱跳 + 喊一声，760ms 后自己走一遍出场
+    streak.current.n = 0
+    if (!onFrenzy) return
+    setHyped(true)
+    playSfx('tap')
+    if (frenzyTimer.current !== null) window.clearTimeout(frenzyTimer.current)
+    frenzyTimer.current = window.setTimeout(() => {
+      frenzyTimer.current = null
+      setHyped(false)
+      onFrenzy()
+    }, FRENZY_MS)
   }
 
   /**
@@ -253,7 +328,11 @@ export function StageCard({
     '--c2': `var(--h-${view.color}-2)`,
   } as CSSProperties
 
-  const line = overrideLine ?? bubbleLine(view)
+  const line = hyped
+    ? t('pet.say.frenzy')
+    : back
+      ? t('pet.say.back')
+      : (overrideLine ?? bubbleLine(view))
   const nextStage = nextStageAt(view.growth)
   const rest = nextStage === null ? 0 : nextStage - view.growth
   const nextName = nextStage === null ? '' : stageName(view.species, stageOf(nextStage))
@@ -296,7 +375,9 @@ export function StageCard({
       <div className="sc-hero">
         <div className="bubble">{line}</div>
         <div
-          className={`cr-wrap ${sleeping ? 'sleep' : ''} ${jumping ? 'jump' : ''}`}
+          className={`cr-wrap ${sleeping ? 'sleep' : ''} ${jumping ? 'jump' : ''} ${
+            hyped ? 'hyped' : ''
+          }${petAway ? ' pet-away' : ''}${petAway && homeHot ? ' pet-home-hot' : ''}`}
           onPointerDown={startHold}
           onPointerUp={() => {
             cancelHold()
@@ -304,14 +385,17 @@ export function StageCard({
           }}
           onPointerLeave={cancelHold}
           onPointerCancel={cancelHold}
-          role={canHold ? 'button' : undefined}
-          aria-label={canHold ? t(sleeping ? 'action.holdWake' : 'action.hold') : undefined}
+          role={canHold && !petAway ? 'button' : undefined}
+          aria-label={
+            canHold && !petAway ? t(sleeping ? 'action.holdWake' : 'action.hold') : undefined
+          }
         >
           <svg className="charge-ring" viewBox="0 0 200 200" aria-hidden="true">
             <circle className="track" cx="100" cy="100" r="92.6" />
             <circle className="bar" cx="100" cy="100" r="92.6" />
           </svg>
           <Creature
+            className="cr"
             species={view.species}
             stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
             mood={party ? 'wow' : view.mood}

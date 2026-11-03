@@ -26,6 +26,14 @@ export type TodayPageProps = {
   fxPlus?: string
   overrideLine?: string | null
   pokeNonce?: number
+  /** 桌宠在外：卡片里只留空位 */
+  petAway?: boolean
+  /** 拖着它悬停在空位上：亮起来 */
+  homeHot?: boolean
+  /** 回家一次 +1：卡片里跳一下、换个气泡 */
+  homeNonce?: number
+  /** 连戳五下：让它自己出去 */
+  onFrenzy?: () => void
 }
 
 function greet(now: number): string {
@@ -54,6 +62,10 @@ export function TodayPage({
   onToast,
   fxNonce = 0,
   fxPlus = '+1',
+  petAway = false,
+  homeHot = false,
+  homeNonce = 0,
+  onFrenzy,
 }: TodayPageProps) {
   // 换焦点时新卡片从哪边滑进来：+1 从右边，-1 从左边
   const [shiftDir, setShiftDir] = useState<1 | -1>(1)
@@ -139,6 +151,10 @@ export function TodayPage({
           onShift(dir)
         }}
         onToast={onToast}
+        petAway={petAway}
+        homeHot={homeHot}
+        homeNonce={homeNonce}
+        onFrenzy={onFrenzy}
       />
 
       <div className="focus-dots">
