@@ -16,7 +16,8 @@ export const PET_PLATFORM_SELECTORS = [
   '.tabbar',
   '.btn',
   '.card',
-  '.growth',
+  // 不把 .growth 当平台：它上面就是「2026年 · 1个月10天」那行小字，
+  // 宠物站上去正好把字压住（真机截图量过）。
   '[data-pet-platform]',
 ] as const
 
