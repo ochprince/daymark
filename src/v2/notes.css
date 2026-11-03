@@ -1,20 +1,14 @@
 /* ==========================================================================
-   Daymark · 倒数日「一句备忘 + 待办清单」（v2/CountdownNotes.tsx）
-   只给这个组件用，类名一律 cnote- 前缀，别和 components.css 里的 .notes 撞车。
-   颜色只读令牌（src/skins/tokens.css），没令牌时退回 v2 的中性色。
+   Daymark · 倒数日的「备忘 + 待办」（v2/CountdownNotes.tsx）
+   阅读优先：备忘是一块能换行的文字区，待办是一张清单，点文字就地改。
+   类名一律 cnote- 前缀；颜色只读令牌，没有令牌时退回 v2 中性色。
    ========================================================================== */
 
 .cnote {
   display: flex;
   flex-direction: column;
-  gap: 18px;
-  padding: 4px 2px;
-}
-
-.cnote-block {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
+  gap: 10px;
+  margin: 4px 0 6px;
 }
 
 .cnote-head {
@@ -22,34 +16,41 @@
   align-items: baseline;
   justify-content: space-between;
   gap: 10px;
+  margin-top: 6px;
 }
 
-.cnote-label {
-  font-size: 11.5px;
-  letter-spacing: 0.06em;
-  color: var(--ink3, #9a91a8);
-  text-transform: uppercase;
+.cnote-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: var(--ink2, #5e566e);
 }
 
 .cnote-progress {
-  font-size: 11.5px;
+  font-size: 12.5px;
   color: var(--ink3, #9a91a8);
   font-variant-numeric: tabular-nums;
 }
 
-/* 备忘：一行，没有保存按钮，失焦即写 */
-.cnote-memo,
-.cnote-input {
+/* 备忘：一块能换行的文字，不是单行输入框 */
+.cnote-memo {
   width: 100%;
-  border: 0;
-  border-bottom: 1px solid var(--hair, rgba(43, 38, 56, 0.14));
-  background: transparent;
+  min-height: 68px;
+  box-sizing: border-box;
+  margin: 0;
+  padding: 12px 14px;
+  border: 1px solid transparent;
+  border-radius: 14px;
+  background: color-mix(in oklab, var(--surface, #fff) 42%, transparent);
   color: var(--ink, #2b2638);
   font: inherit;
-  padding: 6px 2px;
+  font-size: 15px;
+  line-height: 1.7;
+  resize: none;
+  overflow: hidden;
   outline: none;
-  border-radius: 0;
-  transition: border-color 0.15s ease;
+  transition: border-color 0.15s ease, background 0.15s ease;
 }
 
 .cnote-memo::placeholder,
@@ -57,45 +58,12 @@
   color: var(--ink3, #9a91a8);
 }
 
-.cnote-memo:focus,
-.cnote-input:focus {
-  border-bottom-color: var(--ink, #2b2638);
-}
-
-/* 加待办：输入框 + 按钮，回车等价于点按钮 */
-.cnote-add {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.cnote-add-btn {
-  flex: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  padding: 5px 11px;
-  border: 1px solid var(--hair, rgba(43, 38, 56, 0.14));
-  border-radius: 999px;
+.cnote-memo:focus {
+  border-color: color-mix(in oklab, var(--ink2, #5e566e) 38%, transparent);
   background: var(--surface, #fff);
-  color: var(--ink2, #5e566e);
-  font-size: 12.5px;
-  line-height: 1.4;
-  transition: opacity 0.15s ease, border-color 0.15s ease;
 }
 
-.cnote-add-btn:disabled {
-  opacity: 0.42;
-  cursor: default;
-}
-
-/* 空态：一句话，不哄人 */
-.cnote-empty {
-  margin: 2px 0 0;
-  font-size: 12.5px;
-  color: var(--ink3, #9a91a8);
-}
-
+/* 待办清单 */
 .cnote-list {
   list-style: none;
   margin: 0;
@@ -107,9 +75,9 @@
 .cnote-item {
   display: flex;
   align-items: flex-start;
-  gap: 8px;
-  padding: 7px 0;
-  border-bottom: 1px dashed var(--hair, rgba(43, 38, 56, 0.1));
+  gap: 10px;
+  padding: 11px 0;
+  border-bottom: 1px solid var(--hair, rgba(43, 38, 56, 0.1));
 }
 
 .cnote-item:last-child {
@@ -117,11 +85,9 @@
 }
 
 .cnote-check {
-  flex: 1;
-  min-width: 0;
+  flex: none;
   display: flex;
   align-items: flex-start;
-  gap: 9px;
   cursor: pointer;
 }
 
@@ -140,11 +106,11 @@
 
 .cnote-box {
   flex: none;
-  width: 17px;
-  height: 17px;
+  width: 19px;
+  height: 19px;
   margin-top: 1px;
   border: 1px solid var(--hair, rgba(43, 38, 56, 0.3));
-  border-radius: 6px;
+  border-radius: 7px;
   display: grid;
   place-items: center;
   color: transparent;
@@ -163,11 +129,18 @@
   outline-offset: 2px;
 }
 
+/* 条目文字本身就是编辑入口：点一下变成输入框 */
 .cnote-text {
   flex: 1;
   min-width: 0;
-  font-size: 13.5px;
-  line-height: 1.55;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+  text-align: left;
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
   color: var(--ink, #2b2638);
   overflow-wrap: anywhere;
   transition: color 0.15s ease;
@@ -181,14 +154,29 @@
   text-decoration-color: var(--ink3, #9a91a8);
 }
 
+.cnote-edit {
+  flex: 1;
+  min-width: 0;
+  margin: -3px 0;
+  padding: 3px 8px;
+  border: 1px solid color-mix(in oklab, var(--ink2, #5e566e) 40%, transparent);
+  border-radius: 9px;
+  background: var(--surface, #fff);
+  color: var(--ink, #2b2638);
+  font: inherit;
+  font-size: 15px;
+  line-height: 1.6;
+  outline: none;
+}
+
 .cnote-del {
   flex: none;
-  width: 24px;
-  height: 24px;
+  width: 30px;
+  height: 30px;
   display: grid;
   place-items: center;
   border: 0;
-  border-radius: 8px;
+  border-radius: 9px;
   background: transparent;
   color: var(--ink3, #9a91a8);
   opacity: 0.55;
@@ -199,6 +187,64 @@
 .cnote-del:focus-visible {
   opacity: 1;
   background: var(--hair, rgba(43, 38, 56, 0.08));
+}
+
+/* 空态：一句话，不哄人 */
+.cnote-empty {
+  margin: 0;
+  padding: 4px 0 2px;
+  font-size: 13.5px;
+  color: var(--ink3, #9a91a8);
+}
+
+/* 加待办：输入框 + 按钮，回车等价于点按钮 */
+.cnote-add {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.cnote-input {
+  flex: 1;
+  min-width: 0;
+  border: 1px solid var(--hair, rgba(43, 38, 56, 0.14));
+  border-radius: 12px;
+  background: color-mix(in oklab, var(--surface, #fff) 66%, transparent);
+  color: var(--ink, #2b2638);
+  font: inherit;
+  font-size: 14.5px;
+  padding: 9px 12px;
+  outline: none;
+  transition: border-color 0.15s ease, background 0.15s ease;
+}
+
+.cnote-input:focus {
+  border-color: color-mix(in oklab, var(--ink2, #5e566e) 45%, transparent);
+  background: var(--surface, #fff);
+}
+
+.cnote-add-btn {
+  flex: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 9px 13px;
+  border: 1px solid var(--ink2, #5e566e);
+  border-radius: 12px;
+  background: var(--ink2, #5e566e);
+  color: var(--surface, #fff);
+  font-size: 13.5px;
+  line-height: 1.3;
+  transition: opacity 0.15s ease, border-color 0.15s ease;
+}
+
+.cnote-add-btn:disabled {
+  opacity: 0.34;
+  border-color: var(--hair, rgba(43, 38, 56, 0.14));
+  background: transparent;
+  color: var(--ink3, #9a91a8);
+  cursor: default;
 }
 
 @media (prefers-reduced-motion: reduce) {

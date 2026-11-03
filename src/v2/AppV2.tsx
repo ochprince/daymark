@@ -8,7 +8,7 @@ import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import { bubbleLine } from '../lib/lines'
 import { patchCheckIn, removeCheckIn, tapCheckIn, untapCheckIn } from '../lib/checkins'
-import { markSaid, patchCountdown, removeCountdown, unsayDone } from '../lib/countdowns'
+import { patchCountdown, removeCountdown } from '../lib/countdowns'
 import { patchEvent, removeEvent } from '../lib/storage'
 import { anchorOf, todayStart } from '../lib/days'
 import { dayKey, parseDayKey } from '../lib/daykey'
@@ -335,19 +335,6 @@ export function AppV2() {
     })
   }, [focus])
 
-  const onSayDone = useCallback(() => {
-    if (!focus || focus.kind !== 'countdown') return
-    // 点完这一次就可能翻到下一次发生，撤销要用点下去那一刻的值
-    const id = focus.id
-    const occurrence = focus.next
-    markSaid(id, occurrence)
-    // 说错了能收回：把 ackedFor / history 里这一次摘掉，卡片回到「就是今天」
-    notify(t('action.said'), {
-      label: t('common.undo'),
-      run: () => unsayDone(id, occurrence),
-    })
-  }, [focus])
-
   const onPoke = useCallback(() => {
     if (!focus) return
     const next = pokeCount + 1
@@ -568,7 +555,6 @@ export function AppV2() {
           onOpenSwitcher={() => setSheet('switcher')}
           onAdd={openAdd}
           onLog={onLog}
-          onSayDone={onSayDone}
           onPoke={onPoke}
           onProfile={() => setProfileOpen(true)}
           overrideLine={override}

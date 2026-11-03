@@ -14,7 +14,6 @@ export type TodayPageProps = {
   onOpenSwitcher: () => void
   onAdd: () => void
   onLog: () => void
-  onSayDone: () => void
   onPoke: () => void
   onProfile: () => void
   /** 横滑换焦点 */
@@ -55,7 +54,6 @@ export function TodayPage({
   onOpenSwitcher,
   onAdd,
   onLog,
-  onSayDone,
   onPoke,
   onProfile,
   overrideLine,
@@ -142,7 +140,6 @@ export function TodayPage({
         enterDir={shiftDir}
         view={focus}
         onLog={onLog}
-        onSayDone={onSayDone}
         onPoke={onPoke}
         onProfile={onProfile}
         overrideLine={overrideLine}

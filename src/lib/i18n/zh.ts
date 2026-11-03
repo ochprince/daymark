@@ -448,6 +448,7 @@ export const zh = {
   'photo.hint': '只存这台设备，不会上传',
   'photo.loading': '正在处理…',
   /* 倒数日：一句备忘 + 待办清单 */
+  'profile.notes': '备忘与待办',
   'notes.memo': '备忘',
   'notes.memo.ph': '写一句就好…',
   'notes.todo': '待办',

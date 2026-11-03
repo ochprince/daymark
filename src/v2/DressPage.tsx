@@ -436,7 +436,7 @@ function MiniPhone({ pack, locale, title }: { pack: SkinPack; locale: Locale; ti
             <div className="t-greet">{t('greet.morning')}</div>
           </div>
         </header>
-        <StageCard view={view} onLog={noop} onSayDone={noop} onPoke={noop} onProfile={noop} />
+        <StageCard view={view} onLog={noop} onPoke={noop} onProfile={noop} />
       </div>
     </div>
   )

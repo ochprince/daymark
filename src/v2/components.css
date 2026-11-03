@@ -210,7 +210,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 [data-skin='pixel'] .tag { border-radius: 0; }
 .sc-title { flex: 1; margin: 0; font-size: 22px; font-weight: 800; letter-spacing: -0.01em; font-family: var(--font-title); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 [data-skin='pixel'] .sc-title { font-family: var(--font-ui); }
+.notes-card { padding: 14px 16px 16px; }
+
 .sc-more { border: 0; background: transparent; font-weight: 700; font-size: 14px; color: var(--ink2); padding: 6px 2px; }
+
+/* 两个定高槽位：三种卡（坚持 / 倒数 / 习惯）因此卡面一样高，没内容的地方留白 */
+.sc-slot { display: flow-root; /* 挡住子元素外边距外溢，槽位才是真定高 */ }
+.sc-slot-num { min-height: 103px; }
+.sc-slot-extra { min-height: 111px; }
+
 .sc-hero { position: relative; height: 192px; display: flex; justify-content: center; align-items: flex-end; margin-top: 4px; }
 .cr-wrap { position: relative; width: 176px; height: 176px; display: grid; place-items: center; touch-action: none; cursor: pointer; }
 .cr-wrap .cr {

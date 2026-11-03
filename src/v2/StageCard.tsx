@@ -20,7 +20,6 @@ export type StageCardProps = {
   view: ItemView
   /** 记录完成（习惯类蓄满 / 倒数日「说过了」） */
   onLog: () => void
-  onSayDone: () => void
   onPoke: () => void
   onProfile: () => void
   /** 记录之后临时换一句气泡 */
@@ -109,7 +108,6 @@ function stageName(species: CreatureSpecies, stage: number): string {
 export function StageCard({
   view,
   onLog,
-  onSayDone,
   onPoke,
   onProfile,
   overrideLine,
@@ -452,42 +450,14 @@ export function StageCard({
         </div>
       </div>
 
-      <NumberBlock view={view} />
-      <ExtraBlock view={view} rest={rest} nextName={nextName} />
-
-      <div className="sc-actions">
-        {canHold ? (
-          <button
-            className={habitDone ? 'hold done' : 'hold'}
-            type="button"
-            onPointerDown={(event) => {
-              event.preventDefault()
-              startHold()
-            }}
-            onPointerUp={cancelHold}
-            onPointerLeave={cancelHold}
-            onPointerCancel={cancelHold}
-            disabled={habitDone}
-          >
-            <span className="hold-fill" />
-            <span className="hold-label">
-              {habitDone ? t('action.logged') : t(sleeping ? 'action.holdWake' : 'action.hold')}
-            </span>
-          </button>
-        ) : null}
-
-        {view.kind === 'since' ? (
-          <button className="btn ghost" type="button" onClick={onPoke}>
-            {t('action.poke')}
-          </button>
-        ) : null}
-
-        {view.kind === 'countdown' && view.days === 0 ? (
-          <button className="btn block" type="button" onClick={onSayDone}>
-            {t('action.said')}
-          </button>
-        ) : null}
+      {/* 两个槽位固定高度：三种卡因此一样高，没内容的地方留白 */}
+      <div className="sc-slot sc-slot-num">
+        <NumberBlock view={view} />
       </div>
+      <div className="sc-slot sc-slot-extra">
+        <ExtraBlock view={view} rest={rest} nextName={nextName} />
+      </div>
+
       </PhotoBackdrop>
     </section>
   )

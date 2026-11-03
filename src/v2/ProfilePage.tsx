@@ -149,6 +149,21 @@ export function ProfilePage({
           </div>
         </div>
 
+        {/* 备忘与待办读在上面：这两块是给人看的，不是设置项 */}
+        {view.kind === 'countdown' ? (
+          <>
+            <div className="sec-title">{t('profile.notes')}</div>
+            <div className="card notes-card">
+              <CountdownNotes
+                memo={view.event.memo ?? ''}
+                todo={view.event.todo ?? []}
+                onMemo={onMemo}
+                onTodo={onTodo}
+              />
+            </div>
+          </>
+        ) : null}
+
         {view.species !== 'post' ? (
           <>
             <div className="sec-title">{t('profile.path')}</div>
@@ -348,15 +363,6 @@ export function ProfilePage({
           </button>
         </div>
       ) : null}
-
-        {view.kind === 'countdown' ? (
-          <CountdownNotes
-            memo={view.event.memo ?? ''}
-            todo={view.event.todo ?? []}
-            onMemo={onMemo}
-            onTodo={onTodo}
-          />
-        ) : null}
 
         <div className="d-actions">
           <button className="btn ghost" type="button" onClick={onShare}>

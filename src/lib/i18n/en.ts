@@ -448,6 +448,7 @@ export const en: Record<MessageKey, Msg> = {
   'photo.hint': 'Stored on this device only, never uploaded',
   'photo.loading': 'Processing…',
   /* Countdown: one-line note + to-do list */
+  'profile.notes': 'Notes & to-dos',
   'notes.memo': 'Note',
   'notes.memo.ph': 'One line is enough…',
   'notes.todo': 'To-do',
