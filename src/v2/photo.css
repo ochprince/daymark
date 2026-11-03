@@ -44,17 +44,40 @@
   -webkit-user-drag: none;
 }
 
-/* 全图压暗：顶部保一点亮度，底部给文字垫底 */
+/* 全图压暗：顶部要压得住浅色照片（雾天、雪景、天花板），否则白字看不见；
+ * 中段放轻，留出照片本身的呼吸，底部继续给数字垫底。 */
 .pb__scrim {
   position: absolute;
   inset: 0;
   background: linear-gradient(
     180deg,
-    rgba(8, 7, 14, 0.34) 0%,
-    rgba(8, 7, 14, 0.12) 24%,
-    rgba(8, 7, 14, 0.26) 46%,
-    rgba(8, 7, 14, 0.72) 100%
+    rgba(8, 7, 14, 0.7) 0%,
+    rgba(8, 7, 14, 0.5) 12%,
+    rgba(8, 7, 14, 0.16) 30%,
+    rgba(8, 7, 14, 0.26) 52%,
+    rgba(8, 7, 14, 0.74) 100%
   );
+}
+
+/* 照片上的一行头信息：标签和「档案」不再是浅边框白字，
+ * 改成半透明深底胶囊，浅色照片（雾、雪、天空）上也读得清 */
+.has-photo .tag {
+  background: rgba(12, 10, 18, 0.55);
+  border-color: rgba(255, 255, 255, 0.26);
+  color: #fff;
+  backdrop-filter: blur(6px);
+}
+
+.has-photo .sc-more {
+  color: #fff;
+  background: rgba(12, 10, 18, 0.5);
+  border-radius: 999px;
+  padding: 5px 11px;
+  backdrop-filter: blur(6px);
+}
+
+.has-photo .sc-title {
+  text-shadow: 0 2px 14px rgba(8, 7, 14, 0.7), 0 1px 3px rgba(8, 7, 14, 0.6);
 }
 
 /* 文字区：模糊 + 再压一层，任何照片上都读得清 */
