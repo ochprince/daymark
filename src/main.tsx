@@ -5,6 +5,7 @@ import './skins/tokens.css'
 import './skins/custom.css'
 import './v2/components.css'
 import { AppV2 } from './v2/AppV2'
+import { SystemLab } from './v2/system/SystemLab'
 import { runMigration } from './lib/migrate'
 import { reload as reloadEvents } from './lib/storage'
 import { reload as reloadCountdowns } from './lib/countdowns'
@@ -29,10 +30,11 @@ applyDocumentLang(getLocale())
 const container = document.getElementById('root')
 if (!container) throw new Error('#root not found')
 
+/** `?lab=sys`：v3 系统表面演示台（小组件 / 灵动岛 / 锁屏 / 闹钟），不加载主 App */
+const lab = new URLSearchParams(window.location.search).get('lab')
+
 createRoot(container).render(
-  <StrictMode>
-    <AppV2 />
-  </StrictMode>,
+  <StrictMode>{lab === 'sys' ? <SystemLab /> : <AppV2 />}</StrictMode>,
 )
 
 // 首帧画完再收启动图，避免白闪；浏览器里这个调用是 no-op
