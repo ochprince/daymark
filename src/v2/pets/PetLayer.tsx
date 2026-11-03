@@ -10,14 +10,16 @@ import '../pets.css'
 /** 重力（px/s²） */
 export const PET_GRAVITY = 2200
 /** 可站立的东西：页面里真实的卡片、按钮、底栏 */
+/**
+ * 宠物能站的平台。
+ *
+ * 只留底部与显式标记的容器：桌宠是画在所有内容之上的，站到卡片/成长条上
+ * 一定会压住它上方那行字（真机量过：站 .growth 压「2026年 · 1个月10天」，
+ * 站 .btn 压成长条）。想让它上桌子的地方，给那个容器加 data-pet-platform。
+ */
 export const PET_PLATFORM_SELECTORS = [
   '.pet-plat',
-  '.stage-card',
   '.tabbar',
-  '.btn',
-  '.card',
-  // 不把 .growth 当平台：它上面就是「2026年 · 1个月10天」那行小字，
-  // 宠物站上去正好把字压住（真机截图量过）。
   '[data-pet-platform]',
 ] as const
 
