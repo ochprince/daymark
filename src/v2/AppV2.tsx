@@ -53,6 +53,8 @@ import {
 import type { BadgeId } from '../lib/collection'
 import type { ItemView } from '../lib/itemview'
 import './app.css'
+import { PetLayer } from './pets/PetLayer'
+import type { PetSpecies } from './pets/art'
 
 type Sheet = 'switcher' | 'add' | null
 
@@ -137,6 +139,9 @@ function useSystemDark(): boolean {
   }, [])
   return dark
 }
+
+/** 宠物色相：跟着物种走，和实验室里一致 */
+const PET_HUE: Partial<Record<PetSpecies, number>> = { sprout: 4, moon: 2, drop: 3, star: 0 }
 
 function useApplyReduceMotion() {
   const prefs = useSyncExternalStore(subscribePrefs, getPrefs)
@@ -482,6 +487,16 @@ export function AppV2() {
   return (
     <div className="dm-screen" data-tab={tab}>
       <div className="dm-texture" aria-hidden="true" />
+
+      {/* v3 桌宠：站在卡片 / 按钮 / 底栏上，能走能睡能拖能扔 */}
+      {focus && focus.species !== 'post' ? (
+        <PetLayer
+          species={focus.species as PetSpecies}
+          stage={focus.stage}
+          hue={PET_HUE[focus.species] ?? 4}
+          size={92}
+        />
+      ) : null}
 
       {tab === 'today' ? (
         <TodayPage
