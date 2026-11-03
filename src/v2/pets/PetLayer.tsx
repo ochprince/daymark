@@ -314,9 +314,9 @@ export function PetLayer({
           const top = b.top - rect.top
           if (r < 8 || l > rect.width - 8) return
           // 状态栏下面才算平台；太靠底也别算（底栏本身除外）
-          // 平台上方得留得下它自己的身高：否则它站上去整个人（92px）
-          // 会顶出层外，只露半个身子在状态栏上
-          if (top < Math.max(44, size + 12)) return
+          // 只挡状态栏这一段：卡片顶边（y≈91）本来就是允许的平台，
+          // 真机上看着正常，别再按身高去过滤
+          if (top < 44) return
           if (top > rect.height - 30 && !el.closest('.tabbar')) return
           out.push({ key: `${sel}#${index}`, l, r, t: top, el, sel })
         })
