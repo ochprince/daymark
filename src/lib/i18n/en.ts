@@ -407,4 +407,15 @@ export const en: Record<MessageKey, Msg> = {
   'toast.logged': '{title} · logged',
   'museum.chapter.prev': '‹ Previous',
   'museum.chapter.next': 'Next ›',
+
+  /* Living pets (v3 physics layer) */
+  'pet.say.hello': 'Hm?',
+  'pet.say.poke': "I'm here~",
+  'pet.say.cheer': 'Yay!',
+  'pet.say.drag': 'Whoa — put me down!',
+  'pet.say.throw': 'Whaaa—',
+  'pet.say.land': 'Thump!',
+  'pet.say.sleep': 'Shh… sleeping.',
+  'pet.say.climb': 'Climbing up!',
+  'pet.say.idle': 'Doing nothing counts today.',
 }

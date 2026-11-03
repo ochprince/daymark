@@ -5,6 +5,7 @@ import './skins/tokens.css'
 import './skins/custom.css'
 import './v2/components.css'
 import { AppV2 } from './v2/AppV2'
+import { PetsLab } from './v2/pets/PetsLab'
 import { runMigration } from './lib/migrate'
 import { reload as reloadEvents } from './lib/storage'
 import { reload as reloadCountdowns } from './lib/countdowns'
@@ -29,10 +30,11 @@ applyDocumentLang(getLocale())
 const container = document.getElementById('root')
 if (!container) throw new Error('#root not found')
 
+// 实验室入口：?lab=pets 只挂宠物原型页，不碰 App 本体
+const lab = new URLSearchParams(window.location.search).get('lab')
+
 createRoot(container).render(
-  <StrictMode>
-    <AppV2 />
-  </StrictMode>,
+  <StrictMode>{lab === 'pets' ? <PetsLab /> : <AppV2 />}</StrictMode>,
 )
 
 // 首帧画完再收启动图，避免白闪；浏览器里这个调用是 no-op
