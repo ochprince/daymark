@@ -71,6 +71,12 @@ jobs:
   deploy:
     needs: build
     runs-on: ubuntu-latest
+    # 显式声明到 job 级：deploy-pages 要靠 OIDC 短时令牌向 Pages 证明「我是这个仓库的这次运行」，
+    # 没有 id-token: write 就会报 Ensure GITHUB_TOKEN has permission "id-token: write"。
+    # 工作流级已经声明过，这里再写一次是为了不被上层默认策略覆盖，也方便出错时一眼看到。
+    permissions:
+      pages: write
+      id-token: write
     # 用独立的环境名：仓库的 github-pages 环境把部署分支限制为 main，
     # 预览分支借用它会被策略挡下（部署失败）。Pages 站点本身是同一个。
     environment:
