@@ -53,7 +53,7 @@ import {
 import type { BadgeId } from '../lib/collection'
 import type { ItemView } from '../lib/itemview'
 import './app.css'
-import { PetLayer } from './pets/PetLayer'
+import { type PetStage, PetLayer } from './pets/PetLayer'
 import type { PetSpecies } from './pets/art'
 
 type Sheet = 'switcher' | 'add' | null
@@ -183,6 +183,8 @@ export function AppV2() {
   const [pokeCount, setPokeCount] = useState(0)
   // 桌宠在外 / 在卡片里：两种互斥状态，卡片那只与桌上那只是同一只
   const [petOut, setPetOut] = useState(false)
+  /** 出门那一刻它是谁（换卡片期间保持不变） */
+  const [outPet, setOutPet] = useState<{ species: PetSpecies; stage: PetStage } | null>(null)
   // 让它自己走出去（连戳五下 / 演示）：+1 就播一遍出场
   const [debutSeq, setDebutSeq] = useState(0)
   // 回家一次 +1：卡片里的它跳一下、气泡换成「我回来了。」
@@ -227,9 +229,22 @@ export function AppV2() {
    * 换页不回：它出去玩就是出去玩了，翻到藏馆、装扮也该看得见它在那儿晃。
    * 页面上没有卡片时它自然没有回家的落点，拖不回去而已，仍然在地面上走。
    */
+  /**
+   * 滑到别的卡片时它不回卡片：出去玩就是出去玩，一次只有这一只在外面。
+   * 出门那一刻记住它是谁，换卡片期间保持不变——不然一划就变成新卡片那只，像换了个角色。
+   */
   useEffect(() => {
-    setPetOut(false)
-  }, [focus?.key])
+    if (!focus || focus.species === 'post') {
+      setPetOut(false)
+      setOutPet(null)
+      return
+    }
+    if (!petOut) {
+      setOutPet(null)
+      return
+    }
+    setOutPet((prev) => prev ?? { species: focus.species as PetSpecies, stage: focus.stage as PetStage })
+  }, [focus?.key, focus?.species, focus?.stage, petOut])
 
   useEffect(() => {
     if (!toast) return undefined
@@ -514,8 +529,8 @@ export function AppV2() {
       {/* v3 桌宠：站在卡片 / 按钮 / 底栏上，能走能睡能拖能扔 */}
       {focus && focus.species !== 'post' ? (
         <PetLayer
-          species={focus.species as PetSpecies}
-          stage={focus.stage}
+          species={(outPet?.species ?? focus.species) as PetSpecies}
+          stage={outPet?.stage ?? focus.stage}
           hue={PET_HUE[focus.species] ?? 4}
           size={92}
           out={petOut}
@@ -527,6 +542,7 @@ export function AppV2() {
           milestoneSeq={evolveSeq}
           focusSeq={focusSeq}
           pokeSeq={pokeCount}
+          onHoldLog={onLog}
         />
       ) : null}
 

@@ -127,6 +127,8 @@ export function StageCard({
   const [party, setParty] = useState(false)
   /** 连戳五下：兴奋乱跳中 */
   const [hyped, setHyped] = useState(false)
+  /** 偶尔东张西望：一直只有呼吸浮动太单调 */
+  const [looking, setLooking] = useState(false)
   /** 刚回家：气泡换成「我回来了。」 */
   const [back, setBack] = useState(false)
   // 横滑换焦点：跟手位移 + 松手后吸附回弹
@@ -227,6 +229,15 @@ export function StageCard({
 
   const canHold = view.kind === 'habit'
   const sleeping = view.mood === 'sleep'
+  useEffect(() => {
+    if (petAway || sleeping) return undefined
+    let on = false
+    const timer = window.setInterval(() => {
+      on = !on
+      setLooking(on)
+    }, 11000)
+    return () => window.clearInterval(timer)
+  }, [petAway, sleeping])
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target
 
   function startHold() {
@@ -395,7 +406,7 @@ export function StageCard({
             <circle className="bar" cx="100" cy="100" r="92.6" />
           </svg>
           <Creature
-            className="cr"
+            className={looking ? 'cr look' : 'cr'}
             species={view.species}
             stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
             mood={party ? 'wow' : view.mood}

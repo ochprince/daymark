@@ -5,6 +5,7 @@ import type { MessageKey } from '../../lib/i18n'
 import { Pet } from './Pet'
 import type { PetSpecies, PetStage, PetState } from './art'
 import { landingPlatform, placeBubble, throwVelocity, type Platform } from './geometry'
+export type { PetStage } from './art'
 import '../pets.css'
 
 /** 重力（px/s²） */
@@ -122,6 +123,8 @@ export type PetLayerProps = {
   milestoneSeq?: number
   /** 切了焦点事项 +1：轻轻跳一下 */
   focusSeq?: number
+  /** 长按一下它（按住不动 0.65 秒）＝ 记一次 */
+  onHoldLog?: () => void
   /** 被戳 +1：冒两颗心 */
   pokeSeq?: number
   /** 初始脚底位置（层内 px）；不给就从上方掉下来 */
@@ -179,6 +182,7 @@ export function PetLayer({
   milestoneSeq = 0,
   focusSeq = 0,
   pokeSeq = 0,
+  onHoldLog,
   onHomed,
   onHomeHot,
 }: PetLayerProps) {
@@ -1072,6 +1076,11 @@ export function PetLayer({
       s.plat = null
       setMode('fall')
       if (Math.hypot(v.vx, v.vy) > 700) say('pet.say.throw', 1400)
+    } else if (performance.now() - d.t >= 650) {
+      // 按住不动：等于按住卡片下方那颗按钮，记一次
+      apiRef.current?.react('log')
+      onHoldLog?.()
+      say('pet.say.logged', 2000)
     } else if (performance.now() - d.t < 450) {
       setMode('cheer', 0.9)
       say(pick(['pet.say.poke', 'pet.say.hello', 'pet.say.cheer'] as const), 2200)

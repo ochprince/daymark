@@ -213,7 +213,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .sc-more { border: 0; background: transparent; font-weight: 700; font-size: 14px; color: var(--ink2); padding: 6px 2px; }
 .sc-hero { position: relative; height: 192px; display: flex; justify-content: center; align-items: flex-end; margin-top: 4px; }
 .cr-wrap { position: relative; width: 176px; height: 176px; display: grid; place-items: center; touch-action: none; cursor: pointer; }
-.cr-wrap .cr { position: relative; z-index: 2; overflow: visible; animation: bob 3.2s ease-in-out infinite; transform-origin: 50% 92%; }
+.cr-wrap .cr {
+  position: relative; z-index: 2; overflow: visible;
+  /* 原来 3.2s 一直在浮，看久了像在抽搐：放慢到 5.6s，并且偶尔换成「东张西望」 */
+  animation: bob 5.6s ease-in-out infinite;
+  transform-origin: 50% 92%;
+}
+.cr-wrap .cr.look { animation: look-around 1.6s ease-in-out; }
 .cr-wrap.sleep .cr { animation: breathe 3.6s ease-in-out infinite; }
 .ground { position: absolute; bottom: 4px; left: 50%; width: 120px; height: 18px; margin-left: -60px; border-radius: 50%; background: var(--c2); opacity: 0.18; z-index: 1; animation: shadow 3.2s ease-in-out infinite; }
 [data-skin='pixel'] .ground { border-radius: 0; height: 8px; bottom: 10px; }
@@ -834,6 +840,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* ---------- 动效 ---------- */
 
 @keyframes bob { 0%, 100% { transform: translateY(0) scale(1, 1); } 50% { transform: translateY(-6px) scale(0.98, 1.02); } }
+/* 偶尔东张西望一下：只有呼吸浮动的循环太单调 */
+@keyframes look-around {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  22% { transform: rotate(-4deg) translateY(-2px); }
+  55% { transform: rotate(4deg) translateY(-2px); }
+  80% { transform: rotate(-1.5deg) translateY(0); }
+}
 @keyframes breathe { 0%, 100% { transform: scale(1, 1); } 50% { transform: scale(1.03, 0.97); } }
 @keyframes shadow { 0%, 100% { transform: scale(1); } 50% { transform: scale(0.88); } }
 @keyframes wiggle { 0%, 100% { transform: rotate(-2deg) scale(1.02); } 50% { transform: rotate(2deg) scale(1.04); } }
