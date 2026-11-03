@@ -222,12 +222,14 @@ export function AppV2() {
   }, [focus?.key])
 
   /**
-   * 换焦点、换页、或者焦点没了（'post' 不养宠物）：桌宠回卡片原位。
-   * 它不会凭空消失——petOut 一收，卡片里那只立刻回到原位。
+   * 换焦点、或者焦点没了（'post' 不养宠物）：桌宠回卡片原位。
+   *
+   * 换页不回：它出去玩就是出去玩了，翻到藏馆、装扮也该看得见它在那儿晃。
+   * 页面上没有卡片时它自然没有回家的落点，拖不回去而已，仍然在地面上走。
    */
   useEffect(() => {
     setPetOut(false)
-  }, [focus?.key, tab])
+  }, [focus?.key])
 
   useEffect(() => {
     if (!toast) return undefined
