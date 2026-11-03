@@ -11,6 +11,7 @@
  */
 import { countRecordedDays } from './growth'
 import { dexKey, emptyCollection } from './collection'
+import { hueFromLegacyColor, isHue } from './hue'
 import { speciesColor } from './museum'
 import { buildItemViews, itemKey, type ItemView } from './itemview'
 import { migrateSkin, type SkinState } from './skin'
@@ -20,6 +21,7 @@ import type {
   CheckInEvent,
   CountdownEvent,
   DayEvent,
+  Hue,
   Species,
   Stage,
 } from './types'
@@ -57,6 +59,39 @@ export function pickSpecies(title: string, cadence: CheckInCadence = 'daily'): S
  * 单条记录
  * ------------------------------------------------------------------ */
 
+/** 只认本地日期 yyyy-mm-dd（prev 是「上一章结束日」，别的格式一律当没有） */
+const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/
+
+type HueFields = { color: number; hue?: Hue; charge?: number; prev?: string }
+
+/**
+ * v3 字段补齐：没有合法 hue 就按旧 color 推一个；charge 收成非负整数秒；
+ * prev 只留合法的 yyyy-mm-dd。
+ *
+ * 这一步是幂等的：已经补过的值不会再变（hue 合法就保留，charge 取整后再取整不变），
+ * 所以迁移跑两次、或对迁移结果再跑一次迁移，结果都相同。
+ */
+function withHue<T extends HueFields>(item: T): T & { hue: Hue } {
+  const next = {
+    ...item,
+    hue: isHue(item.hue) ? item.hue : hueFromLegacyColor(item.color),
+  } as T & { hue: Hue }
+
+  if (typeof item.charge === 'number' && Number.isFinite(item.charge)) {
+    next.charge = Math.max(0, Math.trunc(item.charge))
+  } else if (item.charge !== undefined) {
+    delete next.charge
+  }
+
+  if (typeof item.prev === 'string' && DAY_KEY.test(item.prev)) {
+    next.prev = item.prev
+  } else if (item.prev !== undefined) {
+    delete next.prev
+  }
+
+  return next
+}
+
 function normalizeChapter(input: unknown): Chapter | null {
   if (typeof input !== 'object' || input === null) return null
   const value = input as Partial<Chapter>
@@ -74,17 +109,17 @@ function normalizeChapter(input: unknown): Chapter | null {
 }
 
 export function migrateDayEvent(event: DayEvent): DayEvent {
-  return {
+  return withHue({
     ...event,
     species: event.species ?? 'sprout',
     history: Array.isArray(event.history)
       ? event.history.map(normalizeChapter).filter((item): item is Chapter => item !== null)
       : event.history,
-  }
+  })
 }
 
 export function migrateCheckIn(event: CheckInEvent): CheckInEvent {
-  return {
+  return withHue({
     ...event,
     species: event.species ?? pickSpecies(event.title, event.cadence),
     // days 只保留最近 240 个周期，长期用户按天推算会丢数，所以这里落一个计数器
@@ -95,16 +130,16 @@ export function migrateCheckIn(event: CheckInEvent): CheckInEvent {
     chapters: Array.isArray(event.chapters)
       ? event.chapters.map(normalizeChapter).filter((item): item is Chapter => item !== null)
       : event.chapters,
-  }
+  })
 }
 
 export function migrateCountdown(event: CountdownEvent): CountdownEvent {
-  return {
+  return withHue({
     ...event,
     ackedFor: Array.isArray(event.ackedFor)
       ? event.ackedFor.filter((value): value is number => typeof value === 'number' && Number.isFinite(value))
       : event.ackedFor,
-  }
+  })
 }
 
 /* ------------------------------------------------------------------ *

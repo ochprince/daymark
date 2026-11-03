@@ -1,3 +1,8 @@
+import type { Hue } from './hue'
+
+/** 色相类型随数据模型一起导出，组件只引 types 就能拿到 */
+export type { Hue }
+
 /** 小伙伴物种：每件事对应一只，倒数日用「信信」post */
 export type Species = 'sprout' | 'moon' | 'drop' | 'star' | 'post'
 
@@ -25,6 +30,15 @@ export type DayEvent = {
   history?: Chapter[]
   /** 养成角色物种；老数据缺省按芽芽处理 */
   species?: Species
+  /**
+   * v3 色相（mint / sky / grape / lemon / coral）。
+   * 老数据没有这一项，迁移时按 hueFromLegacyColor(color) 补齐；color 保留做兼容。
+   */
+  hue?: Hue
+  /** 已充能秒数（宠物「充电」累计的时长），老数据缺省当 0 */
+  charge?: number
+  /** 上一章结束日（本地 yyyy-mm-dd）；没翻过篇就是空 */
+  prev?: string
   /** 相片背景（IndexedDB 里的图片 id） */
   photoId?: string
   /** 提醒规则 */
@@ -55,6 +69,8 @@ export type EventDraft = {
   /** 重置那一刻的计时锚点；挑历史起始日时不给，退回那天的 00:00 */
   anchorAt?: number
   color: number
+  /** v3 色相；不填就由调用方按 color 推 */
+  hue?: Hue
   history?: Chapter[]
   species?: Species
   photoId?: string | null
@@ -70,6 +86,10 @@ export type CountdownEvent = {
   startedAt: number
   createdAt: number
   color: number
+  /** v3 色相；老数据由迁移按 color 补齐 */
+  hue?: Hue
+  /** 已充能秒数 */
+  charge?: number
   repeat: Repeat
   /**
    * 来自「节日」列表时记下节日 id：农历节日、复活节、母亲节这类
@@ -96,6 +116,8 @@ export type CountdownDraft = {
   title: string
   startedAt: number
   color: number
+  /** v3 色相；不填就由调用方按 color 推 */
+  hue?: Hue
   repeat: Repeat
   festivalId?: string
   remind?: Reminder
@@ -113,6 +135,12 @@ export type CheckInEvent = {
   title: string
   createdAt: number
   color: number
+  /** v3 色相；老数据由迁移按 color 补齐 */
+  hue?: Hue
+  /** 已充能秒数 */
+  charge?: number
+  /** 上一章结束日（本地 yyyy-mm-dd）；没翻过篇就是空 */
+  prev?: string
   cadence: CheckInCadence
   /** 每天的打卡次数：键是本地日期 yyyy-mm-dd，值是当天点了几下 */
   days: Record<string, number>
@@ -143,6 +171,8 @@ export type CheckInEvent = {
 export type CheckInDraft = {
   title: string
   color: number
+  /** v3 色相；不填就由调用方按 color 推 */
+  hue?: Hue
   cadence: CheckInCadence
   species?: Species
   target?: number | null

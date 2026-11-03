@@ -1,0 +1,72 @@
+/* ==========================================================================
+   Daymark · v3 色相令牌
+   五个色相 × 四套皮肤，每个色相两级：--c（浅，大面积填充）/ --c2（深，描边、文字）。
+   宠物 SVG 的填充全靠这两个变量：渲染宠物的元素必须带 data-hue（或内联 --c/--c2），
+   否则 fill: var(--c) 取不到值会渲染成黑色。
+
+   数值逐字取自 docs/prototype-v3/proto.css 的 --h-X / --h-X-2
+   （jelly 39-48 行、paper 119-128 行、night 201-210 行、pixel 282-291 行），
+   与 src/lib/hue.ts 的 HUE_COLORS 是同一份数值，改了要一起改。
+   --h-mint … --h-coral 本体在 src/skins/tokens.css；这里只负责把它们落到 --c / --c2。
+
+   两种挂法都支持：
+     <html data-skin='night' data-hue='mint'>   根节点直接定色
+     <html data-skin='night'> … <div data-hue='mint'>   事项卡在皮肤作用域内定色
+   夜航用的是原型里专为深色底重新调亮的一组（--c 在 #1c2050 上对比度均 ≥ 5.9），
+   不是把浅色皮肤的值搬过去，深色下不会糊。
+   ========================================================================== */
+
+/* 兜底：还没挂皮肤（分享页预览、首帧）时按软糖取值，避免宠物变黑 */
+[data-hue='mint'] { --c: #8fe3c0; --c2: #2fa77a; }
+[data-hue='sky'] { --c: #a8d8ff; --c2: #3d8fe0; }
+[data-hue='grape'] { --c: #cdb9ff; --c2: #7a5ae0; }
+[data-hue='lemon'] { --c: #ffe07a; --c2: #e0a020; }
+[data-hue='coral'] { --c: #ffb4a2; --c2: #e5664b; }
+
+/* 软糖 · 亮底暖调 */
+[data-skin='jelly'][data-hue='mint'],
+[data-skin='jelly'] [data-hue='mint'] { --c: #8fe3c0; --c2: #2fa77a; }
+[data-skin='jelly'][data-hue='sky'],
+[data-skin='jelly'] [data-hue='sky'] { --c: #a8d8ff; --c2: #3d8fe0; }
+[data-skin='jelly'][data-hue='grape'],
+[data-skin='jelly'] [data-hue='grape'] { --c: #cdb9ff; --c2: #7a5ae0; }
+[data-skin='jelly'][data-hue='lemon'],
+[data-skin='jelly'] [data-hue='lemon'] { --c: #ffe07a; --c2: #e0a020; }
+[data-skin='jelly'][data-hue='coral'],
+[data-skin='jelly'] [data-hue='coral'] { --c: #ffb4a2; --c2: #e5664b; }
+
+/* 纸本 · 低饱和印刷 */
+[data-skin='paper'][data-hue='mint'],
+[data-skin='paper'] [data-hue='mint'] { --c: #dbe9dc; --c2: #4f7d5c; }
+[data-skin='paper'][data-hue='sky'],
+[data-skin='paper'] [data-hue='sky'] { --c: #dbe5ee; --c2: #49698a; }
+[data-skin='paper'][data-hue='grape'],
+[data-skin='paper'] [data-hue='grape'] { --c: #e4dfec; --c2: #66588a; }
+[data-skin='paper'][data-hue='lemon'],
+[data-skin='paper'] [data-hue='lemon'] { --c: #efe5c6; --c2: #94782b; }
+[data-skin='paper'][data-hue='coral'],
+[data-skin='paper'] [data-hue='coral'] { --c: #f0ddd3; --c2: #a35b46; }
+
+/* 夜航 · 深色底，色相整体提亮 */
+[data-skin='night'][data-hue='mint'],
+[data-skin='night'] [data-hue='mint'] { --c: #5ee6b5; --c2: #19a374; }
+[data-skin='night'][data-hue='sky'],
+[data-skin='night'] [data-hue='sky'] { --c: #72c6ff; --c2: #2a78d0; }
+[data-skin='night'][data-hue='grape'],
+[data-skin='night'] [data-hue='grape'] { --c: #ad90ff; --c2: #6a46e0; }
+[data-skin='night'][data-hue='lemon'],
+[data-skin='night'] [data-hue='lemon'] { --c: #ffd862; --c2: #d19316; }
+[data-skin='night'][data-hue='coral'],
+[data-skin='night'] [data-hue='coral'] { --c: #ff9481; --c2: #d44f37; }
+
+/* 像素 · 高饱和色块 */
+[data-skin='pixel'][data-hue='mint'],
+[data-skin='pixel'] [data-hue='mint'] { --c: #86d38f; --c2: #2e8b57; }
+[data-skin='pixel'][data-hue='sky'],
+[data-skin='pixel'] [data-hue='sky'] { --c: #86bfe8; --c2: #2f6ea8; }
+[data-skin='pixel'][data-hue='grape'],
+[data-skin='pixel'] [data-hue='grape'] { --c: #b89ae4; --c2: #6b44a8; }
+[data-skin='pixel'][data-hue='lemon'],
+[data-skin='pixel'] [data-hue='lemon'] { --c: #f5d04a; --c2: #b88a10; }
+[data-skin='pixel'][data-hue='coral'],
+[data-skin='pixel'] [data-hue='coral'] { --c: #f49a7c; --c2: #b04a2c; }
