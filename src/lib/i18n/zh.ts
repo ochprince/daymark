@@ -479,6 +479,10 @@ export const zh = {
   'pet.say.sleep': '嘘……睡了。',
   'pet.say.climb': '我爬上来了。',
   'pet.say.idle': '今天也可以什么都不做。',
+  'pet.say.frenzy': '不行了，我要出去玩！',
+  'pet.say.back': '我回来了。',
+  'pet.say.out': '我从卡片里出来啦！',
+  'pet.say.home': '回家——',
   /* v3 系统表面（小组件 / 灵动岛 / 锁屏 / 闹钟） */
   'sys.todayWalk': '今天 已走',
   'sys.unitDay': '天',

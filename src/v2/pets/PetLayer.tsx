@@ -14,13 +14,89 @@ export const PET_GRAVITY = 2200
  * 宠物能站的平台。
  *
  * 只留底部与显式标记的容器：桌宠是画在所有内容之上的，站到卡片/成长条上
- * 一定会压住它上方那行字（真机量过：站 .growth 压「2026年 · 1个月10天」，
- * 站 .btn 压成长条）。想让它上桌子的地方，给那个容器加 data-pet-platform。
+ * 一定会压住它上方那行字（真机量过：站 .growth 压「2026年 · 1个月10天」，站
+ * .btn 压成长条）。想让它上桌子的地方，给那个容器加 data-pet-platform。
  */
 export const PET_PLATFORM_SELECTORS = [
   '.pet-plat',
   '.tabbar',
   '[data-pet-platform]',
+] as const
+
+/* ================================================================ 回家：拖回卡片原位 */
+
+/** 回家区：卡片里那块空位，横向各收 18% */
+export const HOME_INSET_X = 0.18
+/** 纵向各收 16%：防擦边误触 */
+export const HOME_INSET_Y = 0.16
+/** 回家动画时长 */
+export const HOME_MS = 420
+/** 脚底落在空位高度的 78% 处 */
+export const HOME_FEET = 0.78
+/** 收尾渐隐：走到终点时只剩 15% 不透明，像钻回卡片 */
+export const HOME_FADE = 0.85
+
+/** 卡片原位在层坐标系里的矩形 */
+export type HomeZone = {
+  l: number
+  r: number
+  t: number
+  b: number
+  cx: number
+  cy: number
+  feetY: number
+}
+
+/** 脚底坐标是否落在「往里收过一圈」的回家区里 */
+export function insideHome(zone: HomeZone, x: number, y: number): boolean {
+  const mx = (zone.r - zone.l) * HOME_INSET_X
+  const my = (zone.b - zone.t) * HOME_INSET_Y
+  return x >= zone.l + mx && x <= zone.r - mx && y >= zone.t + my && y <= zone.b - my
+}
+
+/** 回家插值：1-(1-u)³ 缓出 */
+export function homeEase(u: number): number {
+  return 1 - Math.pow(1 - u, 3)
+}
+
+/** 回家途中的透明度：越靠近卡片越淡 */
+export function homeFade(u: number): number {
+  return 1 - u * HOME_FADE
+}
+
+/* ================================================================ 出场：走进去 → 台阶 → 跳下 → 交接 */
+
+/** 走向卡片深处：边走近边变小 */
+export const DEBUT_WALK_MS = 1680
+/** 在台阶上顿一下 */
+export const DEBUT_STEP_MS = 320
+/** 台阶在卡片顶部往下多少 */
+export const DEBUT_STEP_DY = 56
+/** 起跳高度 */
+export const DEBUT_JUMP_H = 96
+
+/** 克隆走出卡片后不再继承色板，这几个自定义属性要原样拷过去，否则整只变黑 */
+const HUE_VARS = [
+  '--c',
+  '--c2',
+  '--cr-line',
+  '--cr-lw',
+  '--leaf',
+  '--gold',
+  '--band',
+  '--foam',
+  '--bubble',
+  '--rb1',
+  '--rb2',
+  '--rb3',
+  '--shell',
+  '--petal',
+  '--pistil',
+  '--spark',
+  '--mouth',
+  '--blush',
+  '--paper',
+  '--gift',
 ] as const
 
 export type PetLayerProps = {
@@ -32,6 +108,19 @@ export type PetLayerProps = {
   size?: number
   /** 初始脚底位置（层内 px）；不给就从上方掉下来 */
   spawn?: { x: number; y: number }
+  /**
+   * 桌宠在外面（true）还是回了卡片里（false）。
+   * 不给就当作一直在外面（宠物实验室用）。
+   */
+  out?: boolean
+  /** 交接上桌 / 回家时的状态回调：外界的 petOut 跟着它走 */
+  onOut?: (out: boolean) => void
+  /** 每次 +1 就播一遍出场（连戳五下走这条路） */
+  debutSeq?: number
+  /** 回家收尾：卡片那边跳一下、把气泡换成「我回来了。」、播一声 */
+  onHomed?: () => void
+  /** 拖着它悬停在卡片原位上：卡片里那块空位亮起来 */
+  onHomeHot?: (hot: boolean) => void
 }
 
 type DragState = {
@@ -48,6 +137,7 @@ type DragState = {
 
 const rand = (a: number, b: number) => a + Math.random() * (b - a)
 const pick = <T,>(list: readonly T[]): T => list[Math.floor(Math.random() * list.length)]
+const waitMs = (ms: number) => new Promise<void>((resolve) => window.setTimeout(resolve, ms))
 const reduced = () =>
   document.documentElement.classList.contains('reduce-motion') ||
   (typeof window.matchMedia === 'function' &&
@@ -55,14 +145,36 @@ const reduced = () =>
 
 /**
  * 宠物层：盖满宿主容器的一层，只有精灵自己接收指针。
- * 平台、重力、落地、random walk、拖拽抛出、点一下撒娇都在这里。
+ * 平台、重力、落地、random walk、拖拽抛出、点一下撒娇都在这里；
+ * 出去（四段接力）与回家（拖回卡片原位）也在这里。
  */
-export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayerProps) {
+export function PetLayer({
+  species,
+  stage,
+  hue = 4,
+  size = 92,
+  spawn,
+  out,
+  onOut,
+  debutSeq = 0,
+  onHomed,
+  onHomeHot,
+}: PetLayerProps) {
   const layerRef = useRef<HTMLDivElement | null>(null)
   const spriteRef = useRef<HTMLDivElement | null>(null)
   const sayRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
   const bubbleSeq = useRef(0)
+  /** 桌宠是否在外面：卡片里那只与这只互斥 */
+  const outRef = useRef<boolean>(out ?? true)
+  const callbacks = useRef({ onOut, onHomed, onHomeHot })
+  callbacks.current = { onOut, onHomed, onHomeHot }
+  const apiRef = useRef<{
+    debut: () => void
+    retire: () => void
+    hot: () => boolean
+    goHome: () => void
+  } | null>(null)
   const [view, setView] = useState<PetState>('fall')
   const [bubble, setBubble] = useState<{ id: number; text: string } | null>(null)
 
@@ -150,6 +262,19 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
     let lastScan = -1e9
     let platforms: Platform[] = []
     let rect = layer.getBoundingClientRect()
+    let alive = true
+    // 出场令牌：用户关掉桌宠 / 重播时 +1，旧动画的每一步都先比这个再往下走
+    let debutTok = 0
+    let debuting = false
+    let homing = false
+    /** 上一次的「悬停在家上」：只在变化时通知 React，省掉每帧一次 setState */
+    let hotOn = false
+    let debutEl: HTMLDivElement | null = null
+    let stepEl: HTMLElement | null = null
+    /** 出场时那张卡片：它被换掉/卸载了，这一段接力就该作废 */
+    let debutWrap: HTMLElement | null = null
+
+    const cardWrap = () => host.querySelector<HTMLElement>('.stage-card .cr-wrap')
 
     const scan = () => {
       rect = layer.getBoundingClientRect()
@@ -185,6 +310,325 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
       sprite.dataset.petMode = s.mode
       sprite.dataset.petPlat = s.plat ?? ''
       if (s.sayUntil > 0) positionBubble()
+    }
+
+    /* ---------------------------------------------------------- 回家 */
+
+    /** 卡片原位换算到层坐标；空位没渲染出来就没有回家区 */
+    const zoneOf = (): HomeZone | null => {
+      const wrap = cardWrap()
+      if (!wrap) return null
+      rect = layer.getBoundingClientRect()
+      const b = wrap.getBoundingClientRect()
+      const l = b.left - rect.left
+      const r = b.right - rect.left
+      const top = b.top - rect.top
+      const bottom = b.bottom - rect.top
+      return {
+        l,
+        r,
+        t: top,
+        b: bottom,
+        cx: (l + r) / 2,
+        cy: (top + bottom) / 2,
+        feetY: top + (bottom - top) * HOME_FEET,
+      }
+    }
+
+    const setHot = (on: boolean) => {
+      const wrap = cardWrap()
+      // 同一帧先亮起来，React 那边的状态随后跟上（重渲染也不会把它擦掉）
+      if (wrap) wrap.classList.toggle('pet-home-hot', on)
+      if (on === hotOn) return
+      hotOn = on
+      callbacks.current.onHomeHot?.(on)
+    }
+
+    /** 拖着它悬停到原位上方：家亮一下，松手就是回去 */
+    const hot = () => {
+      if (!outRef.current || homing) return false
+      const zone = zoneOf()
+      if (!zone) return false
+      const inside = insideHome(zone, s.x, s.y)
+      setHot(inside)
+      return inside
+    }
+
+    const hearts = (n: number) => {
+      for (let i = 0; i < n; i += 1) {
+        const heart = document.createElement('i')
+        heart.className = 'pet-heart'
+        heart.textContent = '♥'
+        heart.style.left = `${(s.x + rand(-24, 24)).toFixed(0)}px`
+        heart.style.top = `${(s.y - size * 0.72).toFixed(0)}px`
+        heart.style.setProperty('--dx', `${rand(-26, 26).toFixed(0)}px`)
+        heart.style.animationDelay = `${i * 80}ms`
+        layer.appendChild(heart)
+        window.setTimeout(() => heart.remove(), 1400 + i * 80)
+      }
+    }
+
+    const finishHome = () => {
+      hearts(4)
+      homing = false
+      s.sayUntil = 0
+      setBubble(null)
+      sprite.style.opacity = ''
+      setMode('stand')
+      outRef.current = false
+      layer.dataset.petOut = '0'
+      setHot(false)
+      // 人回来了：空位重新亮起来（卡片那只重新出现）
+      cardWrap()?.classList.remove('pet-away')
+      // 卡片那侧再播一次 jump / 气泡 / 音效
+      callbacks.current.onOut?.(false)
+      callbacks.current.onHomed?.()
+    }
+
+    /** 松手在卡片中央：420ms 缓出插值过去，同时渐隐 */
+    const goHome = () => {
+      if (!outRef.current || homing) return
+      setHot(false)
+      const zone = zoneOf()
+      const tx = zone ? zone.cx : s.x
+      const ty = zone ? zone.feetY : s.y
+      const fromX = s.x
+      const fromY = s.y
+      homing = true
+      s.plat = null
+      s.vx = 0
+      s.vy = 0
+      setMode('stand')
+      say('pet.say.home', 1400)
+      const t0 = performance.now()
+      const tick = (now: number) => {
+        if (!alive) return
+        const u = Math.min(1, (now - t0) / HOME_MS)
+        const e = homeEase(u)
+        s.x = fromX + (tx - fromX) * e
+        s.y = fromY + (ty - fromY) * e
+        sprite.style.opacity = String(homeFade(u))
+        paint()
+        if (u < 1) {
+          window.requestAnimationFrame(tick)
+          return
+        }
+        finishHome()
+      }
+      window.requestAnimationFrame(tick)
+    }
+
+    /* ---------------------------------------------------------- 出场 */
+
+    const clearDebutDom = () => {
+      debutEl?.remove()
+      debutEl = null
+      stepEl?.remove()
+      stepEl = null
+    }
+
+    /** 克隆带不走卡片的色板：把自定义属性原样抄一份 */
+    const paintHue = (el: HTMLElement) => {
+      const src = cardWrap()?.closest('.stage-card') ?? cardWrap()
+      if (!src) return
+      const cs = getComputedStyle(src)
+      for (const key of HUE_VARS) {
+        const value = cs.getPropertyValue(key).trim()
+        if (value) el.style.setProperty(key, value)
+      }
+    }
+
+    const restoreCardPet = () => {
+      host.querySelectorAll<HTMLElement>('.stage-card .cr-wrap.pet-away').forEach((el) => {
+        el.classList.remove('pet-away')
+      })
+    }
+
+    /** 作废：关掉桌宠、换焦点、重播时旧动画立刻停，卡片里那只马上回来 */
+    const abort = () => {
+      debutTok += 1
+      debuting = false
+      debutWrap = null
+      clearDebutDom()
+      if (!outRef.current) restoreCardPet()
+    }
+
+    /** 第四段：交给物理层——从这一刻起桌面上那只才是真的 */
+    const handoff = (x: number, y: number, vx: number, vy: number) => {
+      clearDebutDom()
+      debutWrap = null
+      s.x = x
+      s.y = y
+      s.vx = vx
+      s.vy = vy
+      s.face = vx >= 0 ? 1 : -1
+      s.plat = null
+      s.ready = true
+      debuting = false
+      outRef.current = true
+      layer.dataset.petOut = '1'
+      setMode('fall')
+      paint()
+      callbacks.current.onOut?.(true)
+    }
+
+    /** 减少动效：不做「走过去 → 台阶 → 跳下」，直接切到「已经在外」 */
+    const skipDebut = () => {
+      restoreCardPet()
+      cardWrap()?.classList.add('pet-away')
+      const floor = platforms.find((p) => p.key === 'floor')
+      handoff(rect.width * 0.5, Math.max(120, (floor ? floor.t : 160) - 80), rand(-40, 40), 0)
+      say('pet.say.out', 2200)
+    }
+
+    const debut = async () => {
+      if (!alive || debuting || outRef.current) return
+      if (reduced()) {
+        skipDebut()
+        return
+      }
+      const tok = ++debutTok
+      debuting = true
+      clearDebutDom()
+      // 卡片可能还在换焦点的那一帧里，等它把 .cr 挂出来
+      let wrap: HTMLElement | null = null
+      for (let i = 0; i < 24; i += 1) {
+        if (tok !== debutTok || !alive) return
+        wrap = cardWrap()
+        if (wrap && wrap.querySelector('.cr')) break
+        wrap = null
+        await waitMs(80)
+      }
+      if (tok !== debutTok || !alive) return
+      if (!wrap) {
+        skipDebut()
+        return
+      }
+      const cr = wrap.querySelector<HTMLElement>('.cr')
+      const card = wrap.closest<HTMLElement>('.stage-card')
+      if (!cr || !card) {
+        skipDebut()
+        return
+      }
+
+      rect = layer.getBoundingClientRect()
+      const br = cr.getBoundingClientRect()
+      const cb = card.getBoundingClientRect()
+      const startX = br.left + br.width / 2 - rect.left
+      const startY = br.bottom - rect.top - 6
+      const midX = cb.left + cb.width / 2 - rect.left
+      const stepY = cb.top - rect.top + DEBUT_STEP_DY
+      const startS = Math.max(0.72, Math.min(1.05, br.width / 158))
+
+      // 卡片里那只先让位，走出去的是它的克隆——任何时刻只看得到一只
+      wrap.classList.add('pet-away')
+      debutWrap = wrap
+
+      debutEl = document.createElement('div')
+      debutEl.className = 'pet-debut'
+      debutEl.innerHTML = `<div class="pet-debut-spin">${cr.outerHTML}</div>`
+      paintHue(debutEl)
+      const cloneCr = debutEl.querySelector<HTMLElement>('.cr')
+      if (cloneCr) {
+        cloneCr.style.width = `${br.width}px`
+        cloneCr.style.height = `${br.height}px`
+      }
+      layer.appendChild(debutEl)
+
+      stepEl = document.createElement('i')
+      stepEl.className = 'pet-debut-step'
+      stepEl.style.left = `${midX.toFixed(1)}px`
+      stepEl.style.top = `${stepY.toFixed(1)}px`
+      layer.appendChild(stepEl)
+      const stepNode = stepEl
+
+      const put = (x: number, y: number, sc: number) => {
+        if (debutEl) {
+          debutEl.style.transform = `translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) scale(${sc.toFixed(3)})`
+        }
+      }
+      put(startX, startY, startS)
+
+      await waitMs(160)
+      if (tok !== debutTok) return
+
+      // 1) 走向卡片深处，越走越小
+      debutEl.classList.add('walk')
+      const walk = debutEl.animate(
+        [
+          { transform: `translate3d(${startX}px, ${startY}px, 0) scale(${startS})` },
+          {
+            transform: `translate3d(${(startX + midX) / 2}px, ${(startY + stepY) / 2 - 6}px, 0) scale(${startS * 0.72})`,
+            offset: 0.55,
+          },
+          { transform: `translate3d(${midX}px, ${stepY}px, 0) scale(${startS * 0.42})` },
+        ],
+        { duration: DEBUT_WALK_MS, easing: 'cubic-bezier(0.35, 0.1, 0.25, 1)', fill: 'forwards' },
+      )
+      window.setTimeout(() => {
+        if (tok === debutTok) stepNode.classList.add('on')
+      }, 1100)
+      await walk.finished.catch(() => {})
+      if (tok !== debutTok) return
+      if (walk.commitStyles) walk.commitStyles()
+      walk.cancel()
+      put(midX, stepY, startS * 0.42)
+
+      // 2) 在台阶上顿一下
+      debutEl.classList.remove('walk')
+      debutEl.classList.add('squash')
+      await waitMs(DEBUT_STEP_MS)
+      if (tok !== debutTok) return
+      debutEl.classList.remove('squash')
+
+      // 3) 从卡片中间跳下，半空换成桌宠精灵
+      const jvy = -Math.sqrt(2 * PET_GRAVITY * DEBUT_JUMP_H)
+      const peakT = Math.abs(jvy) / PET_GRAVITY
+      const peakY = stepY + jvy * peakT + 0.5 * PET_GRAVITY * peakT * peakT
+      debutEl.animate(
+        [
+          { transform: `translate3d(${midX}px, ${stepY}px, 0) scale(${startS * 0.42})`, opacity: 1 },
+          {
+            transform: `translate3d(${midX}px, ${peakY}px, 0) scale(${startS * 0.5})`,
+            opacity: 1,
+            offset: 0.4,
+          },
+          {
+            transform: `translate3d(${midX}px, ${peakY + 20}px, 0) scale(${startS * 0.56})`,
+            opacity: 0,
+          },
+        ],
+        { duration: 420, easing: 'cubic-bezier(0.2, 0.7, 0.3, 1)', fill: 'forwards' },
+      )
+      stepNode.classList.add('gone')
+      await waitMs(250)
+      if (tok !== debutTok) return
+
+      handoff(midX, peakY + 8, rand(-40, 40), 120)
+      hearts(5)
+      say('pet.say.out', 2600)
+    }
+
+    /** 关掉桌宠：不是凭空消失，直接回卡片原位 */
+    const retire = () => {
+      abort()
+      homing = false
+      clearDebutDom()
+      s.sayUntil = 0
+      setBubble(null)
+      setHot(false)
+      sprite.style.opacity = ''
+      restoreCardPet()
+      layer.dataset.petOut = '0'
+    }
+
+    apiRef.current = {
+      debut: () => {
+        void debut()
+      },
+      retire,
+      hot,
+      goHome,
     }
 
     const land = (p: Platform) => {
@@ -279,7 +723,7 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
       const H = rect.height
       const hw = size / 2
 
-      if (s.mode === 'drag') return
+      if (s.mode === 'drag' || homing || debuting) return
 
       if (s.mode === 'fall') {
         const prevY = s.y
@@ -381,6 +825,14 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
       const dt = Math.min(0.05, (now - last) / 1000 || 0.016)
       last = now
 
+      // 接力途中卡片被换掉 / 卸载（换焦点、切页）：这一段立刻作废
+      if (debuting && (!debutWrap || !debutWrap.isConnected)) abort()
+
+      // 它还在卡片里（或者正在走出卡片）：这一层什么都不用画
+      if (!outRef.current && !debuting) return
+
+      layer.dataset.petOut = outRef.current ? '1' : '0'
+
       if (!s.ready) {
         rect = layer.getBoundingClientRect()
         s.x = spawn ? spawn.x : rect.width * 0.62
@@ -404,7 +856,7 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
 
       if (reduced()) {
         // 减动效：只做落地，不主动走跳
-        if (s.mode === 'fall' && s.vy > 0) {
+        if (s.mode === 'fall' && s.vy > 0 && !homing && !debuting) {
           const prevY = s.y
           s.y += Math.max(4, s.vy * dt)
           const hit = landingPlatform(platforms, prevY, s.y, s.x)
@@ -418,12 +870,33 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
     }
 
     raf = requestAnimationFrame(frame)
-    return () => cancelAnimationFrame(raf)
+    return () => {
+      alive = false
+      debutTok += 1
+      cancelAnimationFrame(raf)
+      clearDebutDom()
+      if (hotOn) callbacks.current.onHomeHot?.(false)
+      apiRef.current = null
+    }
   }, [positionBubble, say, setMode, size, spawn])
+
+  // 外面让它「出去」：连戳五下 / 演示时 +1，就播一遍四段接力
+  useEffect(() => {
+    if (debutSeq <= 0) return
+    apiRef.current?.debut()
+  }, [debutSeq])
+
+  // 关掉桌宠（或换焦点、离开今天页）：它回卡片原位，不是凭空消失
+  useEffect(() => {
+    const next = out ?? true
+    const was = outRef.current
+    outRef.current = next
+    if (!next && was) apiRef.current?.retire()
+  }, [out])
 
   const onPointerDown = (e: ReactPointerEvent<HTMLDivElement>) => {
     const layer = layerRef.current
-    if (!layer) return
+    if (!layer || !outRef.current) return
     const rect = layer.getBoundingClientRect()
     const px = e.clientX - rect.left
     const py = e.clientY - rect.top
@@ -463,6 +936,8 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
     s.y = Math.max(size * 0.5, Math.min(rect.height - 4, py + d.dy))
     d.samples.push([performance.now(), px, py])
     if (d.samples.length > 6) d.samples.shift()
+    // 拖到卡片原位上方：家亮起来，告诉用户可以放回去了
+    apiRef.current?.hot()
   }
 
   const onPointerUp = (e: ReactPointerEvent<HTMLDivElement>) => {
@@ -471,6 +946,11 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
     dragRef.current = null
     const s = sim.current
     if (d.moved) {
+      // 松手时还在原位里 → 回家，而不是抛出去
+      if (apiRef.current?.hot()) {
+        apiRef.current.goHome()
+        return
+      }
       const v = throwVelocity(d.samples)
       s.vx = v.vx
       s.vy = v.vy
@@ -485,7 +965,7 @@ export function PetLayer({ species, stage, hue = 4, size = 92, spawn }: PetLayer
   }
 
   return (
-    <div className="pet-layer" ref={layerRef}>
+    <div className="pet-layer" ref={layerRef} data-pet-out={(out ?? true) ? '1' : '0'}>
       <div
         className="pet-sprite"
         ref={spriteRef}

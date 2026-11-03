@@ -181,6 +181,14 @@ export function AppV2() {
   // 每记一次 +1：卡片上炸一次粒子与「+1」
   const [fxCount, setFxCount] = useState(0)
   const [pokeCount, setPokeCount] = useState(0)
+  // 桌宠在外 / 在卡片里：两种互斥状态，卡片那只与桌上那只是同一只
+  const [petOut, setPetOut] = useState(false)
+  // 让它自己走出去（连戳五下 / 演示）：+1 就播一遍出场
+  const [debutSeq, setDebutSeq] = useState(0)
+  // 回家一次 +1：卡片里的它跳一下、气泡换成「我回来了。」
+  const [homeNonce, setHomeNonce] = useState(0)
+  // 拖着桌宠悬停在卡片原位上：那块空位亮起来
+  const [homeHot, setHomeHot] = useState(false)
   const [evolve, setEvolve] = useState<EvolveInfo | null>(null)
   // 徽章排队：一次只弹一个，而且要让进化过场先播完（两层同时盖住会挡住按钮）
   const [badges, setBadges] = useState<BadgeId[]>([])
@@ -209,6 +217,14 @@ export function AppV2() {
   useEffect(() => {
     if (focus) setFocusKey(focus.key)
   }, [focus?.key])
+
+  /**
+   * 换焦点、换页、或者焦点没了（'post' 不养宠物）：桌宠回卡片原位。
+   * 它不会凭空消失——petOut 一收，卡片里那只立刻回到原位。
+   */
+  useEffect(() => {
+    setPetOut(false)
+  }, [focus?.key, tab])
 
   useEffect(() => {
     if (!toast) return undefined
@@ -495,6 +511,11 @@ export function AppV2() {
           stage={focus.stage}
           hue={PET_HUE[focus.species] ?? 4}
           size={92}
+          out={petOut}
+          onOut={setPetOut}
+          debutSeq={debutSeq}
+          onHomed={() => setHomeNonce((n) => n + 1)}
+          onHomeHot={setHomeHot}
         />
       ) : null}
 
@@ -514,6 +535,10 @@ export function AppV2() {
           pokeNonce={pokeCount}
           fxNonce={fxCount}
           fxPlus={fxPlus}
+          petAway={petOut}
+          homeHot={homeHot}
+          homeNonce={homeNonce}
+          onFrenzy={() => setDebutSeq((n) => n + 1)}
           onShift={(dir) => {
             // 横滑换焦点：到头就回绕，只有一件时什么也不做
             if (views.length < 2) return
