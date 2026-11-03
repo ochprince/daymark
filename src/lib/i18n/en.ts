@@ -389,7 +389,7 @@ export const en: Record<MessageKey, Msg> = {
   'profile.confirm': 'Confirm',
 
   /* Monetization */
-  'pro.sub': 'One purchase. No subscription. Works offline.',
+  'pro.sub': 'The core stays free — pay only for more. Works offline.',
   'pro.benefit.items': 'Unlimited things ({n} free)',
   'pro.benefit.skins': 'All four skins',
   'pro.benefit.museum': 'Every chapter and form',
@@ -403,9 +403,9 @@ export const en: Record<MessageKey, Msg> = {
   'pro.limitTitle': 'The free version keeps {n} things',
   'pro.limitBody': 'Nothing you wrote is lost. You just cannot add more.',
   'pro.keepWriting': 'Keep writing',
-  'pro.price': '$0.99',
+  'pro.price': 'from $2.99',
   'pro.title': 'Unlock everything',
-  'pro.body': 'One purchase, yours forever.',
+  'pro.body': 'Yearly or lifetime — either works.',
   'pro.cta': 'Unlock · {price}',
   'pro.restore': 'Restore purchase',
   'pro.freeLimit': 'Free version: up to {n} items',

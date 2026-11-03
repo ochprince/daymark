@@ -389,7 +389,7 @@ export const zh = {
   'profile.confirm': '确定',
 
   /* 货币化（国际版） */
-  'pro.sub': '一次买断，没有订阅，不联网也能用。',
+  'pro.sub': '核心永远免费，要更多再订阅。不联网也能用。',
   'pro.benefit.items': '不限件事（免费版 {n} 件）',
   'pro.benefit.skins': '四套风格包',
   'pro.benefit.museum': '藏馆全部章节与图鉴',
@@ -403,9 +403,9 @@ export const zh = {
   'pro.limitTitle': '免费版只能记 {n} 件事',
   'pro.limitBody': '已经写下的不会消失，只是不能再加新的。',
   'pro.keepWriting': '继续写',
-  'pro.price': '$0.99',
+  'pro.price': '¥18 起',
   'pro.title': '解锁全部',
-  'pro.body': '一次买断，永久可用。',
+  'pro.body': '年费或永久，两种都可以。',
   'pro.cta': '解锁全部 · {price}',
   'pro.restore': '恢复购买',
   'pro.freeLimit': '免费版可以记 {n} 件事',
