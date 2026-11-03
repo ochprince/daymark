@@ -39,6 +39,8 @@ export type StageCardProps = {
   fxPlus?: string
   /** 桌宠在外：卡片里保留原尺寸的空位（.pet-away），角色隐藏、不可点 */
   petAway?: boolean
+  /** 别家那只正在这张卡上串门：家里这只打个招呼 */
+  visited?: boolean
   /** 拖着桌宠悬停在这块空位上：亮起来提示可以放回去 */
   homeHot?: boolean
   /** 每回家一次 +1：卡片里的它重新出现并跳一下、气泡换成「我回来了。」、播一声 */
@@ -118,6 +120,7 @@ export function StageCard({
   fxNonce = 0,
   fxPlus = '+1',
   petAway = false,
+  visited = false,
   homeHot = false,
   homeNonce = 0,
   onFrenzy,
@@ -129,6 +132,14 @@ export function StageCard({
   const [hyped, setHyped] = useState(false)
   /** 偶尔东张西望：一直只有呼吸浮动太单调 */
   const [looking, setLooking] = useState(false)
+  /** 有客人在场：气泡换成招呼 */
+  const [guest, setGuest] = useState(false)
+  useEffect(() => {
+    if (!visited) return undefined
+    setGuest(true)
+    const timer = window.setTimeout(() => setGuest(false), 2800)
+    return () => window.clearTimeout(timer)
+  }, [visited])
   /** 刚回家：气泡换成「我回来了。」 */
   const [back, setBack] = useState(false)
   // 横滑换焦点：跟手位移 + 松手后吸附回弹
@@ -341,7 +352,9 @@ export function StageCard({
 
   const line = hyped
     ? t('pet.say.frenzy')
-    : back
+    : guest
+      ? t('pet.say.visitor')
+      : back
       ? t('pet.say.back')
       : (overrideLine ?? bubbleLine(view))
   const nextStage = nextStageAt(view.growth)

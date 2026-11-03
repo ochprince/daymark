@@ -125,6 +125,8 @@ export type PetLayerProps = {
   focusSeq?: number
   /** 长按一下它（按住不动 0.65 秒）＝ 记一次 */
   onHoldLog?: () => void
+  /** 正在别家串门（这张卡不是它家）：落到卡片上会打个招呼 */
+  visiting?: boolean
   /** 被戳 +1：冒两颗心 */
   pokeSeq?: number
   /** 初始脚底位置（层内 px）；不给就从上方掉下来 */
@@ -183,6 +185,7 @@ export function PetLayer({
   focusSeq = 0,
   pokeSeq = 0,
   onHoldLog,
+  visiting = false,
   onHomed,
   onHomeHot,
 }: PetLayerProps) {
@@ -193,6 +196,8 @@ export function PetLayer({
   const bubbleSeq = useRef(0)
   /** 桌宠是否在外面：卡片里那只与这只互斥 */
   const outRef = useRef<boolean>(out ?? true)
+  const visitingRef = useRef<boolean>(visiting)
+  visitingRef.current = visiting
   const callbacks = useRef({ onOut, onHomed, onHomeHot })
   callbacks.current = { onOut, onHomed, onHomeHot }
   const apiRef = useRef<{
@@ -717,6 +722,7 @@ export function PetLayer({
     const land = (p: Platform) => {
       const hard = s.vy > 760
       bump(p)
+      if (visitingRef.current && p.sel === '.stage-card') say('pet.say.visit', 2200)
       s.plat = p.key
       s.y = p.t + 3
       s.vx = 0

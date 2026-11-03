@@ -28,6 +28,8 @@ export type TodayPageProps = {
   pokeNonce?: number
   /** 桌宠在外：卡片里只留空位 */
   petAway?: boolean
+  /** 别家那只正在这张卡上串门 */
+  visited?: boolean
   /** 拖着它悬停在空位上：亮起来 */
   homeHot?: boolean
   /** 回家一次 +1：卡片里跳一下、换个气泡 */
@@ -63,6 +65,7 @@ export function TodayPage({
   fxNonce = 0,
   fxPlus = '+1',
   petAway = false,
+  visited = false,
   homeHot = false,
   homeNonce = 0,
   onFrenzy,
@@ -152,6 +155,7 @@ export function TodayPage({
         }}
         onToast={onToast}
         petAway={petAway}
+        visited={visited}
         homeHot={homeHot}
         homeNonce={homeNonce}
         onFrenzy={onFrenzy}

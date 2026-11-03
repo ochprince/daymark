@@ -470,6 +470,8 @@ export const en: Record<MessageKey, Msg> = {
   'museum.chapter.next': 'Next ›',
 
   /* Living pets (v3 physics layer) */
+  'pet.say.visit': 'Just visiting!',
+  'pet.say.visitor': 'We have a guest!',
   'pet.say.logged': 'Logged it!',
   'pet.say.milestone': 'Growing up!',
   'pet.say.hello': 'Hm?',

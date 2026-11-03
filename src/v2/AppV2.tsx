@@ -183,8 +183,10 @@ export function AppV2() {
   const [pokeCount, setPokeCount] = useState(0)
   // 桌宠在外 / 在卡片里：两种互斥状态，卡片那只与桌上那只是同一只
   const [petOut, setPetOut] = useState(false)
-  /** 出门那一刻它是谁（换卡片期间保持不变） */
-  const [outPet, setOutPet] = useState<{ species: PetSpecies; stage: PetStage } | null>(null)
+  /** 出门那一刻它是谁（换卡片期间保持不变：颜色、形态、物种都不跟着切卡变） */
+  const [outPet, setOutPet] = useState<{ species: PetSpecies; stage: PetStage; hue: number } | null>(null)
+  /** 它是从哪张卡出去的：只有那张卡的家空着，别的卡家里还有自己的那一只 */
+  const [outFrom, setOutFrom] = useState<string | null>(null)
   // 让它自己走出去（连戳五下 / 演示）：+1 就播一遍出场
   const [debutSeq, setDebutSeq] = useState(0)
   // 回家一次 +1：卡片里的它跳一下、气泡换成「我回来了。」
@@ -241,9 +243,18 @@ export function AppV2() {
     }
     if (!petOut) {
       setOutPet(null)
+      setOutFrom(null)
       return
     }
-    setOutPet((prev) => prev ?? { species: focus.species as PetSpecies, stage: focus.stage as PetStage })
+    setOutPet(
+      (prev) =>
+        prev ?? {
+          species: focus.species as PetSpecies,
+          stage: focus.stage as PetStage,
+          hue: PET_HUE[focus.species as PetSpecies] ?? 4,
+        },
+    )
+    setOutFrom((prev) => prev ?? focus.key)
   }, [focus?.key, focus?.species, focus?.stage, petOut])
 
   useEffect(() => {
@@ -531,7 +542,7 @@ export function AppV2() {
         <PetLayer
           species={(outPet?.species ?? focus.species) as PetSpecies}
           stage={outPet?.stage ?? focus.stage}
-          hue={PET_HUE[focus.species] ?? 4}
+          hue={outPet?.hue ?? PET_HUE[focus.species] ?? 4}
           size={92}
           out={petOut}
           onOut={setPetOut}
@@ -543,6 +554,7 @@ export function AppV2() {
           focusSeq={focusSeq}
           pokeSeq={pokeCount}
           onHoldLog={onLog}
+          visiting={petOut && !!outFrom && outFrom !== focus?.key}
         />
       ) : null}
 
@@ -562,7 +574,8 @@ export function AppV2() {
           pokeNonce={pokeCount}
           fxNonce={fxCount}
           fxPlus={fxPlus}
-          petAway={petOut}
+          petAway={petOut && outFrom === focus?.key}
+          visited={petOut && !!outFrom && outFrom !== focus?.key}
           homeHot={homeHot}
           homeNonce={homeNonce}
           onFrenzy={() => setDebutSeq((n) => n + 1)}

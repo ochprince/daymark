@@ -470,6 +470,8 @@ export const zh = {
   'museum.chapter.next': '下一本 ›',
 
   /* 活的萌宠（v3 物理层） */
+  'pet.say.visit': '我来串门啦！',
+  'pet.say.visitor': '有客人来啦！',
   'pet.say.logged': '记下啦！',
   'pet.say.milestone': '长大啦！',
   'pet.say.hello': '咕？',
