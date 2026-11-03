@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200" style="--c:#8fe3c0;--c2:#2fa77a;--cr-line:#2b2638;--cr-lw:4.5;--leaf:#7bd389;--petal:#fff;--pistil:#ffd45c;--spark:#ffc93c;--shell:#fffdf6;--gold:#ffd45c;--band:#fff;--foam:#fff;--bubble:rgba(255,255,255,.75);--rb1:#ff9c8a;--rb2:#ffe07a;--rb3:#8fe3c0;--mouth:#e5664b;--blush:#ff9c9c;--gift:#ffe07a;--paper:#fff">
+  <defs>
+  <clipPath id="cb0"><path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z"/></clipPath>
+  <radialGradient id="cb0-sh" cx=".32" cy=".24" r=".92"><stop offset=".42" style="stop-color:var(--c2);stop-opacity:0"/><stop offset="1" style="stop-color:var(--c2);stop-opacity:.5"/></radialGradient>
+  <radialGradient id="cb0-bl" cx=".5" cy=".42" r=".58"><stop offset="0" stop-color="#fff" stop-opacity=".6"/><stop offset="1" stop-color="#fff" stop-opacity="0"/></radialGradient>
+  </defs>
+  <g transform="translate(100 186) scale(1) translate(-100 -186)">
+  <g class="cr-body">
+  <path d="M100 80 C99 62 97 48 100 34" fill="none" stroke="var(--cr-line)" stroke-width="7.5" stroke-linecap="round"/>
+  <path d="M100 80 C99 62 97 48 100 34" fill="none" stroke="var(--leaf)" stroke-width="3" stroke-linecap="round"/>
+  <path d="M44 122 C30 126 21 140 25 153 C29 162 42 160 50 149" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <path d="M156 122 C170 126 179 140 175 153 C171 162 158 160 150 149" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <ellipse cx="78" cy="182" rx="13" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round" class="cr-foot cr-foot-l"/>
+  <ellipse cx="122" cy="182" rx="13" ry="8" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round" class="cr-foot cr-foot-r"/>
+  <path d="M100 64 C142 64 166 96 166 130 C166 162 138 182 100 182 C62 182 34 162 34 130 C34 96 58 64 100 64 Z" fill="var(--c)" stroke="var(--cr-line)" stroke-width="var(--cr-lw)" stroke-linejoin="round" stroke-linecap="round"/>
+  <g clip-path="url(#cb0)">
+  <rect x="30" y="60" width="140" height="126" fill="url(#cb0-sh)" class="cr-shade"/>
+  <ellipse cx="100" cy="163" rx="42" ry="22" fill="url(#cb0-bl)" class="cr-belly"/>
+  <path d="M43 146 C52 165 73 176 100 177" fill="none" stroke="#fff" stroke-opacity=".38" stroke-width="4" stroke-linecap="round" class="cr-hl"/>
+  </g>
+  <path d="M53 114 C53 101 60 92 71 88" fill="none" stroke="#fff" stroke-opacity=".88" stroke-width="5.5" stroke-linecap="round" class="cr-hl"/>
+  <circle cx="54" cy="124" r="2.8" fill="#fff" opacity=".85" class="cr-hl"/>
+  <g class="cr-face" data-face="122,20,0,"/>
+  <path d="M99 54 C92 42 80 36 64 39 C70 52 84 59 99 54 Z" fill="var(--leaf)" stroke="var(--cr-line)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M99 54 C84 59 70 52 64 39 C76 47 88 51 99 54 Z" fill="var(--cr-line)" opacity=".12" class="cr-shade"/>
+  <path d="M96 52 C88 47 78 43 70 41" fill="none" stroke="var(--cr-line)" stroke-opacity=".35" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M89 44 C83 40 77 39 72 40" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2" stroke-linecap="round" class="cr-hl"/>
+  <path d="M100 48 C108 34 122 28 138 32 C132 47 116 54 100 48 Z" fill="var(--leaf)" stroke="var(--cr-line)" stroke-width="3" stroke-linejoin="round"/>
+  <path d="M100 48 C116 54 132 47 138 32 C126 41 113 46 100 48 Z" fill="var(--cr-line)" opacity=".12" class="cr-shade"/>
+  <path d="M103 47 C112 41 122 36 131 34" fill="none" stroke="var(--cr-line)" stroke-opacity=".35" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M111 37 C116 34 122 32 128 32" fill="none" stroke="#fff" stroke-opacity=".6" stroke-width="2" stroke-linecap="round" class="cr-hl"/>
+  <g transform="translate(100 22) scale(.85) rotate(-8)" stroke="var(--cr-line)" stroke-width="3.5" stroke-linejoin="round">
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(72)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(144)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(216)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(288)"/>
+  <path d="M0 -7 L0 -13" fill="none" stroke-opacity=".28" stroke-width="1.8" stroke-linecap="round"/>
+  <path d="M0 -7 L0 -13" fill="none" stroke-opacity=".28" stroke-width="1.8" stroke-linecap="round" transform="rotate(72)"/>
+  <path d="M0 -7 L0 -13" fill="none" stroke-opacity=".28" stroke-width="1.8" stroke-linecap="round" transform="rotate(144)"/>
+  <path d="M0 -7 L0 -13" fill="none" stroke-opacity=".28" stroke-width="1.8" stroke-linecap="round" transform="rotate(216)"/>
+  <path d="M0 -7 L0 -13" fill="none" stroke-opacity=".28" stroke-width="1.8" stroke-linecap="round" transform="rotate(288)"/>
+  <circle r="6.5" fill="var(--pistil)"/>
+  <circle cx="-2.2" cy="-2.2" r="1.8" fill="#fff" stroke="none" opacity=".75" class="cr-hl"/>
+  </g>
+  <g transform="translate(62 76) scale(.38) rotate(-20)" stroke="var(--cr-line)" stroke-width="6.6" stroke-linejoin="round">
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(72)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(144)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(216)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(288)"/>
+  <circle r="6.5" fill="var(--pistil)"/>
+  </g>
+  <g transform="translate(139 78) scale(.5) rotate(18)" stroke="var(--cr-line)" stroke-width="5" stroke-linejoin="round">
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(72)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(144)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(216)"/>
+  <path d="M0 -3 C-6 -6 -10 -13 -7 -18 C-5 -21 -1.5 -21 0 -18 C1.5 -21 5 -21 7 -18 C10 -13 6 -6 0 -3 Z" fill="var(--petal)" transform="rotate(288)"/>
+  <circle r="6.5" fill="var(--pistil)"/>
+  <circle cx="-2.2" cy="-2.2" r="1.8" fill="#fff" stroke="none" opacity=".75" class="cr-hl"/>
+  </g>
+  <path d="M36 42 C37 49 39 51 46 52 C39 53 37 55 36 62 C35 55 33 53 26 52 C33 51 35 49 36 42 Z" fill="var(--spark)" class="cr-spark"/>
+  <circle cx="50" cy="38" r="2.2" fill="var(--spark)" class="cr-spark"/>
+  <path d="M166 37 C166.7 42 168 43.3 173 44 C168 44.7 166.7 46 166 51 C165.3 46 164 44.7 159 44 C164 43.3 165.3 42 166 37 Z" fill="var(--spark)" class="cr-spark"/>
+  <circle cx="176" cy="60" r="2" fill="var(--spark)" class="cr-spark"/>
+  </g></g></svg>
