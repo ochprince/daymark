@@ -36,7 +36,7 @@
 /* 备忘：一块能换行的文字，不是单行输入框 */
 .cnote-memo {
   width: 100%;
-  min-height: 68px;
+  min-height: 0;
   box-sizing: border-box;
   margin: 0;
   padding: 12px 14px;

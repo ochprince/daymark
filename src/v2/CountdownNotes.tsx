@@ -57,6 +57,7 @@ export function CountdownNotes({ memo, todo, onMemo, onTodo }: CountdownNotesPro
     const el = memoRef.current
     if (!el) return
     el.style.height = 'auto'
+    // 空着的时候就一行高，别在页面上留一块白板
     el.style.height = `${el.scrollHeight}px`
   }, [draft])
 
@@ -93,7 +94,7 @@ export function CountdownNotes({ memo, todo, onMemo, onTodo }: CountdownNotesPro
         id={memoFieldId}
         ref={memoRef}
         className="cnote-memo"
-        rows={2}
+        rows={1}
         maxLength={MEMO_TEXT_MAX}
         placeholder={t('notes.memo.ph')}
         value={draft}
