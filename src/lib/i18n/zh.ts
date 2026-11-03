@@ -194,6 +194,23 @@ export const zh = {
   'add.period.daily': '每天 {n} 次',
   'add.period.weekly': '每周 {n} 次',
 
+  /* 首启引导（三步：欢迎 → 选一只小家伙 → 起名字） */
+  'welcome.skip': '先看看',
+  'welcome.back': '上一步',
+  'welcome.1.title': '先带一只小家伙回家',
+  'welcome.1.body': 'Daymark 一次只看一件事。你记下的每件小事，都会长成一只陪着你、慢慢长大的小家伙。',
+  'welcome.1.cta': '带一颗蛋回家',
+  'welcome.2.title': '挑一只小家伙',
+  'welcome.2.body': '它们现在都还是一颗蛋。选一个你最想看着长大的。',
+  'welcome.2.cta': '就它了',
+  'welcome.pick.sprout': '住在光里，慢慢冒芽',
+  'welcome.pick.moon': '夜里也陪着你',
+  'welcome.pick.star': '跑得快，也等得久',
+  'welcome.3.title': '给它起个名字',
+  'welcome.3.body': '写下一件想坚持的小事，这也是它的名字。每天记一下，它就长大一点。',
+  'welcome.3.placeholder': '早睡 / 每天喝水 / 出门走走',
+  'welcome.3.cta': '带它回家',
+
   /* 孵化 */
   'hatch.title': '孵化',
   'hatch.tap': '轻点三下，叫醒它',

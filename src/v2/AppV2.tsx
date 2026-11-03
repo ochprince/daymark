@@ -8,7 +8,7 @@ import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import { bubbleLine } from '../lib/lines'
 import { patchCheckIn, removeCheckIn, tapCheckIn, untapCheckIn } from '../lib/checkins'
-import { markSaid, patchCountdown, removeCountdown } from '../lib/countdowns'
+import { markSaid, patchCountdown, removeCountdown, unsayDone } from '../lib/countdowns'
 import { patchEvent, removeEvent } from '../lib/storage'
 import { anchorOf, todayStart } from '../lib/days'
 import { dayKey, parseDayKey } from '../lib/daykey'
@@ -38,6 +38,8 @@ import type { EvolveInfo } from './EvolveOverlay'
 import { BadgePopup } from './BadgePopup'
 import { HatchOverlay } from './HatchOverlay'
 import { BookFlight } from './BookFlight'
+import { WelcomeFlow } from './WelcomeFlow'
+import type { WelcomeResult } from './WelcomeFlow'
 import type { HatchInfo } from './HatchOverlay'
 import {
   dexKey,
@@ -67,6 +69,25 @@ function hasHatched(): boolean {
     return window.localStorage.getItem(HATCHED_KEY) === '1'
   } catch {
     return true
+  }
+}
+
+/** 看过首启引导没有：看过（或跳过）就不再拦着 */
+const WELCOME_KEY = 'daymark.welcome.v1'
+
+function hasSeenWelcome(): boolean {
+  try {
+    return window.localStorage.getItem(WELCOME_KEY) === '1'
+  } catch {
+    return true
+  }
+}
+
+function markWelcomeSeen(): void {
+  try {
+    window.localStorage.setItem(WELCOME_KEY, '1')
+  } catch {
+    /* 写不进去就下次再引导，不影响使用 */
   }
 }
 
@@ -171,6 +192,9 @@ export function AppV2() {
   const [hatch, setHatch] = useState<HatchInfo | null>(null)
   const [flight, setFlight] = useState<{ from: DOMRect; to: DOMRect; color: number } | null>(null)
   const [backupPending, setBackupPending] = useState<{ file: BackupFile; summary: BackupSummary } | null>(null)
+  // 首启引导：一件东西都没有、也没看过，就先走三步。
+  // 只在挂载这一刻判断一次——之后新建/删除都不会再把它请回来。
+  const [welcome, setWelcome] = useState(() => views.length === 0 && !hasSeenWelcome())
 
   const notify = useCallback((text: string, action?: { label: string; run: () => void }) => {
     setToast({ text, action })
@@ -258,8 +282,15 @@ export function AppV2() {
 
   const onSayDone = useCallback(() => {
     if (!focus || focus.kind !== 'countdown') return
-    markSaid(focus.id, focus.next)
-    notify(t('action.said'))
+    // 点完这一次就可能翻到下一次发生，撤销要用点下去那一刻的值
+    const id = focus.id
+    const occurrence = focus.next
+    markSaid(id, occurrence)
+    // 说错了能收回：把 ackedFor / history 里这一次摘掉，卡片回到「就是今天」
+    notify(t('action.said'), {
+      label: t('common.undo'),
+      run: () => unsayDone(id, occurrence),
+    })
   }, [focus])
 
   const onPoke = useCallback(() => {
@@ -614,6 +645,21 @@ export function AppV2() {
           to={flight.to}
           color={flight.color}
           onDone={() => setFlight(null)}
+        />
+      ) : null}
+
+      {welcome ? (
+        <WelcomeFlow
+          onSkip={() => {
+            markWelcomeSeen()
+            setWelcome(false)
+          }}
+          onDone={(result: WelcomeResult) => {
+            // 第一件事建好就直接进孵化过场，不再让用户自己点一次
+            markWelcomeSeen()
+            setWelcome(false)
+            setHatch(result)
+          }}
         />
       ) : null}
 

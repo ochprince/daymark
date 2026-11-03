@@ -59,6 +59,28 @@ export function markSaid(id: string, occurrence: number): void {
   countdowns.update(id, { ackedFor, history })
 }
 
+/**
+ * 撤销「说过了」：markSaid 的反向操作。
+ * 把这一次发生从 ackedFor 里摘掉，并收回它写进 history 的那条（若还留着话，跟着一起收）。
+ * 撤销之后，今天到期的倒数日会重新回到「就是今天」的状态。
+ */
+export function unsayDone(id: string, occurrence: number): void {
+  const current = countdowns.getAll().find((item) => item.id === id)
+  if (!current) return
+  const ackedFor = current.ackedFor ?? []
+  if (!ackedFor.includes(occurrence)) return
+  // markSaid 是插在表头的，撤销就摘掉最上面那条同一天的历史（若有）
+  const history = [...(current.history ?? [])]
+  const index = history.findIndex((entry) => entry.at === occurrence)
+  if (index >= 0) history.splice(index, 1)
+  const nextAcked = ackedFor.filter((at) => at !== occurrence)
+  // 收空了就把字段一起摘掉：撤销后的记录和点「说过了」之前一模一样（连 JSON 都一样）
+  countdowns.update(id, {
+    ackedFor: nextAcked.length > 0 ? nextAcked : undefined,
+    history: history.length > 0 ? history : undefined,
+  })
+}
+
 /** 直接改一条记录的任意字段（备忘、待办、相片这类不在表单草稿里的字段走这里） */
 export function patchCountdown(id: string, patch: Partial<Omit<CountdownEvent, 'id' | 'createdAt'>>): void {
   countdowns.update(id, patch)

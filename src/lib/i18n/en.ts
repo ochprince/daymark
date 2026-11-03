@@ -194,6 +194,23 @@ export const en: Record<MessageKey, Msg> = {
   'add.period.daily': '{n}× a day',
   'add.period.weekly': '{n}× a week',
 
+  /* First-run welcome (three steps: hello → pick a little one → name it) */
+  'welcome.skip': 'Just browsing',
+  'welcome.back': 'Back',
+  'welcome.1.title': 'Bring a little one home',
+  'welcome.1.body': 'Daymark shows one thing at a time. Every little thing you keep grows into a companion that stays with you.',
+  'welcome.1.cta': 'Bring an egg home',
+  'welcome.2.title': 'Pick a little one',
+  'welcome.2.body': 'They’re all still eggs for now. Choose the one you want to watch grow.',
+  'welcome.2.cta': 'This one',
+  'welcome.pick.sprout': 'Lives in the light, sprouts slowly',
+  'welcome.pick.moon': 'Stays up with you at night',
+  'welcome.pick.star': 'Runs fast, waits long',
+  'welcome.3.title': 'Give it a name',
+  'welcome.3.body': 'Write down one small thing you want to keep. That’s its name too — note it each day and it grows a little.',
+  'welcome.3.placeholder': 'Sleep early / Drink water / Go for a walk',
+  'welcome.3.cta': 'Take it home',
+
   /* Hatch */
   'hatch.title': 'Hatch',
   'hatch.tap': 'Tap three times to wake it',
