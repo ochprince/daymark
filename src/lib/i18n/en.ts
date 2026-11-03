@@ -449,6 +449,11 @@ export const en: Record<MessageKey, Msg> = {
   'photo.loading': 'Processing…',
   /* Countdown: one-line note + to-do list */
   'profile.notes': 'Notes & to-dos',
+  'note.title': 'A little note',
+  'note.open': 'There is a note',
+  'note.count': 'Note no. {n}',
+  'note.keep': 'Keep it',
+  'note.saved': 'Kept in the museum',
   'notes.memo': 'Note',
   'notes.memo.ph': 'One line is enough…',
   'notes.todo': 'To-do',

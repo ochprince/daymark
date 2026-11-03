@@ -21,6 +21,9 @@ export type StageCardProps = {
   /** 记录完成（习惯类蓄满 / 倒数日「说过了」） */
   onLog: () => void
   onPoke: () => void
+  /** 小伙伴手里有一张折起的纸条，点了才展开 */
+  noteReady?: boolean
+  onOpenNote?: () => void
   onProfile: () => void
   /** 记录之后临时换一句气泡 */
   overrideLine?: string | null
@@ -109,6 +112,8 @@ export function StageCard({
   view,
   onLog,
   onPoke,
+  noteReady,
+  onOpenNote,
   onProfile,
   overrideLine,
   pokeNonce = 0,
@@ -395,7 +400,21 @@ export function StageCard({
       </div>
 
       <div className="sc-hero">
-        <div className="bubble">{line}</div>
+        {/* 它出门了，卡片里就不该还留着它刚才说的话 */}
+        {petAway ? null : <div className="bubble">{line}</div>}
+        {noteReady && !petAway ? (
+          <button
+            className="sc-note"
+            type="button"
+            onClick={(event) => {
+              event.stopPropagation()
+              onOpenNote?.()
+            }}
+            aria-label={t('note.open')}
+          >
+            <span className="sc-note-paper" aria-hidden="true" />
+          </button>
+        ) : null}
         <div
           className={`cr-wrap ${sleeping ? 'sleep' : ''} ${jumping ? 'jump' : ''} ${
             hyped ? 'hyped' : ''

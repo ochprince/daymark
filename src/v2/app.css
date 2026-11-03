@@ -35,6 +35,10 @@ body {
   z-index: 0;
   pointer-events: none;
   background-image: var(--texture);
+  /* 尺寸口令不接上，dots / grid 会退化成铺满整屏的一条大渐变，
+   * 看起来就是「纹理没做」。 */
+  background-size: var(--texture-size, auto);
+  background-repeat: repeat;
 }
 
 .today,

@@ -42,6 +42,8 @@ import { WelcomeFlow } from './WelcomeFlow'
 import type { WelcomeResult } from './WelcomeFlow'
 import type { HatchInfo } from './HatchOverlay'
 import {
+  addNote,
+  collectionStore,
   dexKey,
   evaluateBadges,
   getCollection,
@@ -51,6 +53,7 @@ import {
   unlockDex,
 } from '../lib/collection'
 import type { BadgeId } from '../lib/collection'
+import { bumpWeek, nextNoteText, shouldOfferNote } from '../lib/notes'
 import type { ItemView } from '../lib/itemview'
 import './app.css'
 import { PetLayer, type PetStage } from './pets/PetLayer'
@@ -182,7 +185,10 @@ export function AppV2() {
   const [fxCount, setFxCount] = useState(0)
   const [pokeCount, setPokeCount] = useState(0)
   // 桌宠在外 / 在卡片里：两种互斥状态，卡片那只与桌上那只是同一只
-  const [petOut, setPetOut] = useState(false)
+  const [petOut, setPetOut] = useState(
+    // ?out=1：开发时直接把桌宠放到外面，方便看「出门之后」的界面
+    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('out'),
+  )
   /** 出门那一刻它是谁（换卡片期间保持不变：颜色、形态、物种都不跟着切卡变） */
   const [outPet, setOutPet] = useState<{ species: PetArtSpecies; stage: PetStage; hue: number } | null>(null)
   /** 它是从哪张卡出去的：只有那张卡的家空着，别的卡家里还有自己的那一只 */
@@ -204,6 +210,23 @@ export function AppV2() {
 
   const { views, focus } = useV2Data(now)
   const collection = useSyncExternalStore(subscribeCollection, getCollection)
+  /** 小纸条：进前台按 §6.9 判一次，满足条件时小伙伴手里多一张折起的纸条 */
+  const [noteReady, setNoteReady] = useState(false)
+  const [noteOpen, setNoteOpen] = useState<{ text: string; n: number } | null>(null)
+  useEffect(() => {
+    const check = () => {
+      // 开发时 ?note=1 直接给一张，方便验证
+      const force = new URLSearchParams(window.location.search).has('note')
+      if (force || shouldOfferNote(getCollection(), Date.now())) setNoteReady(true)
+    }
+    const onVis = () => {
+      if (document.visibilityState === 'visible') check()
+    }
+    check()
+    document.addEventListener('visibilitychange', onVis)
+    return () => document.removeEventListener('visibilitychange', onVis)
+  }, [])
+
   const prefs = useSyncExternalStore(subscribePrefs, getPrefs)
   const locale = useSyncExternalStore(subscribeLocale, getLocale)
   const pro = useSyncExternalStore(subscribeEntitlement, () => isPro())
@@ -334,6 +357,24 @@ export function AppV2() {
       },
     })
   }, [focus])
+
+  const openNote = useCallback(() => {
+    const state = getCollection()
+    setNoteOpen({ text: nextNoteText(state), n: state.notes.length + 1 })
+    setNoteReady(false)
+  }, [])
+
+  const keepNote = useCallback(() => {
+    setNoteOpen((open) => {
+      if (!open) return null
+      const now = Date.now()
+      const from = focus ? t(`creature.${focus.species}` as MessageKey) : t('creature.sprout')
+      addNote({ id: `note-${now}`, text: open.text, from, at: now })
+      collectionStore.patch({ notesThisWeek: bumpWeek(getCollection().notesThisWeek, now) })
+      notify(t('note.saved'))
+      return null
+    })
+  }, [focus, notify])
 
   const onPoke = useCallback(() => {
     if (!focus) return
@@ -556,6 +597,8 @@ export function AppV2() {
           onAdd={openAdd}
           onLog={onLog}
           onPoke={onPoke}
+          noteReady={noteReady}
+          onOpenNote={openNote}
           onProfile={() => setProfileOpen(true)}
           overrideLine={override}
           pokeNonce={pokeCount}
@@ -759,6 +802,23 @@ export function AppV2() {
           badge={badges[0]}
           onClose={() => setBadges((queue) => queue.slice(1))}
         />
+      ) : null}
+
+      {noteOpen ? (
+        <div className="ov note-ov" style={{ zIndex: 58 }}>
+          <div className="dim" onClick={() => setNoteOpen(null)} aria-hidden="true" />
+          <div className="note-card" role="dialog" aria-modal="true" aria-label={t('note.title')}>
+            <span className="note-card-t">{t('note.title')}</span>
+            <p className="note-card-body">{noteOpen.text}</p>
+            <span className="note-card-sign">
+              —— {focus ? t(`creature.${focus.species}` as MessageKey) : t('creature.sprout')} ·{' '}
+              {t('note.count', { n: noteOpen.n })}
+            </span>
+            <button className="btn" type="button" onClick={keepNote}>
+              {t('note.keep')}
+            </button>
+          </div>
+        </div>
       ) : null}
 
       {toast ? (

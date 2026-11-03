@@ -15,6 +15,9 @@ export type TodayPageProps = {
   onAdd: () => void
   onLog: () => void
   onPoke: () => void
+  /** 小伙伴手里有没有一张折起的纸条 */
+  noteReady?: boolean
+  onOpenNote?: () => void
   onProfile: () => void
   /** 横滑换焦点 */
   onShift: (dir: 1 | -1) => void
@@ -55,6 +58,8 @@ export function TodayPage({
   onAdd,
   onLog,
   onPoke,
+  noteReady,
+  onOpenNote,
   onProfile,
   overrideLine,
   pokeNonce,
@@ -141,6 +146,8 @@ export function TodayPage({
         view={focus}
         onLog={onLog}
         onPoke={onPoke}
+        noteReady={noteReady}
+        onOpenNote={onOpenNote}
         onProfile={onProfile}
         overrideLine={overrideLine}
         pokeNonce={pokeNonce}
