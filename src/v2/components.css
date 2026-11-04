@@ -954,3 +954,44 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .cr-wrap .cr.playing,
   .cr-wrap .cr.nuzzle { animation: none; }
 }
+
+
+/* 新建第一步底部：「从节日里挑一个」 */
+.add-fest {
+  width: 100%;
+  margin-top: 10px;
+  padding: 12px;
+  border: var(--bw, 2px) dashed var(--hair, rgba(43, 38, 56, 0.28));
+  border-radius: 18px;
+  background: transparent;
+  color: var(--ink2);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 700;
+  text-align: center;
+}
+.add-fest:active { transform: translateY(1px); }
+
+/* 节日面板 */
+.fest-sheet { max-height: calc(100% - 56px); overflow-y: auto; }
+.fest-group { margin-top: 14px; }
+.fest-group-t { margin: 0 0 8px 2px; font-size: 13px; font-weight: 700; color: var(--ink2); }
+.fest-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.fest-chip {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 10px 6px;
+  border: var(--bw, 2px) solid var(--line);
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--ink);
+  font: inherit;
+  text-align: center;
+}
+.fest-chip b { font-size: 13.5px; font-weight: 700; }
+.fest-chip span { font-size: 11px; color: var(--ink3); }
+.fest-chip:active:not(:disabled) { transform: translateY(1px); }
+.fest-chip.is-on { opacity: 0.45; }
+.fest-chip:disabled { cursor: default; }
+[data-skin='pixel'] .fest-chip { border-radius: 0; }

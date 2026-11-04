@@ -182,6 +182,10 @@ export const zh = {
   'dress.language': '语言',
 
   /* 新建 */
+  'festival.title': '挑一个节日',
+  'festival.added': '已经有了',
+  'festival.today': '就是今天',
+  'festival.days': '还有 {n} 天',
   'add.title': '想记点什么',
   'add.step1': '选一类',
   'add.step2': '起个名字',

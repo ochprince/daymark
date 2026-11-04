@@ -182,6 +182,10 @@ export const en: Record<MessageKey, Msg> = {
   'dress.language': 'Language',
 
   /* Add flow */
+  'festival.title': 'Pick a festival',
+  'festival.added': 'Already added',
+  'festival.today': 'Today',
+  'festival.days': '{n} days away',
   'add.title': 'What do you want to keep?',
   'add.step1': 'Pick a kind',
   'add.step2': 'Give it a name',

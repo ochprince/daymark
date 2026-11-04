@@ -11,6 +11,7 @@ import { t } from '../lib/i18n'
 import type { CreatureSpecies } from '../components/Creature'
 import type { ItemKind } from '../lib/types'
 import { IconClose } from './icons'
+import { FestivalSheet } from './FestivalSheet'
 
 export type AddSheetProps = {
   onClose: () => void
@@ -26,6 +27,8 @@ const NAME_PLACEHOLDER: Record<ItemKind, string> = {
 
 export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
   const [kind, setKind] = useState<ItemKind | null>(null)
+  /** 节日面板：从「新建」第一步直接进去，挑完就把这个节日加成倒数日 */
+  const [festivals, setFestivals] = useState(false)
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(() => {
     const d = new Date()
@@ -109,6 +112,9 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
                 </span>
               </button>
             ))}
+            <button className="add-fest" type="button" onClick={() => setFestivals(true)}>
+              {t('add.fromFestival')}
+            </button>
           </div>
         ) : (
           <>
@@ -134,6 +140,16 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
           </>
         )}
       </div>
+
+      {festivals ? (
+        <FestivalSheet
+          onClose={() => setFestivals(false)}
+          onCreated={(name) => {
+            setFestivals(false)
+            onCreated(name)
+          }}
+        />
+      ) : null}
     </div>
   )
 }
