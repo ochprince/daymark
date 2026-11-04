@@ -126,3 +126,133 @@ export function throwVelocity(samples: readonly PointerSample[], max = 1300): { 
     vy: clamp((b[2] - a[2]) / dt, -max, max),
   }
 }
+
+/**
+ * 有目标的跳：给定起点和要落的平台，倒算初速度。
+ *
+ * 做法是先定一个比起点和目标都高的「顶点」，再由顶点算下落到目标顶面要多久，
+ * 总时长 T = 上升 + 下降，水平速度就是位移 / T。
+ * 这样无论目标在上还是在下、隔了几级台阶，只要顶点够高、水平速度不离谱，
+ * 抛物线的顶点就能盖过中间那些平台，不会被半路截住。
+ */
+export type JumpPlan = { vx: number; vy: number; tx: number }
+
+export function planJump(
+  from: { x: number; y: number },
+  target: Platform,
+  opts: { gravity: number; maxVx?: number; clearance?: number; minClearance?: number },
+): JumpPlan | null {
+  const g = opts.gravity
+  const maxVx = opts.maxVx ?? 420
+  const clearance = opts.clearance ?? 56
+  const minClearance = opts.minClearance ?? 22
+  const top = target.t + 3
+  const lo = target.l + 10
+  const hi = target.r - 10
+  if (hi <= lo) return null
+
+  // 落点在目标平台中间偏一点，别每次都跳正中心
+  const tx = clamp(lo + (hi - lo) * (0.35 + Math.random() * 0.3), lo, hi)
+  const apex = Math.min(from.y, top) - (clearance + Math.random() * minClearance)
+  const rise = from.y - apex
+  if (rise <= 0) return null
+  const vy = -Math.sqrt(2 * g * rise)
+  const tUp = -vy / g
+  const drop = top - apex
+  if (drop <= 0) return null
+  const tDown = Math.sqrt((2 * drop) / g)
+  const T = tUp + tDown
+  if (!Number.isFinite(T) || T <= 0) return null
+  const vx = (tx - from.x) / T
+  if (Math.abs(vx) > maxVx) return null
+  return { vx, vy, tx }
+}
+
+/**
+ * 按抛物线路子往前推，看第一个落在哪个平台。
+ * 用来验证「这一跳真的能到目标」，而不是被中间那级台阶半路接住。
+ */
+export function simulateJump(
+  from: { x: number; y: number },
+  vx: number,
+  vy: number,
+  platforms: readonly Platform[],
+  opts: { gravity: number; bounds?: { left: number; right: number }; dt?: number; limit?: number },
+): Platform | null {
+  const g = opts.gravity
+  const dt = opts.dt ?? 1 / 120
+  const limit = opts.limit ?? 4
+  const left = opts.bounds?.left ?? -Infinity
+  const right = opts.bounds?.right ?? Infinity
+  let x = from.x
+  let y = from.y
+  let cvx = vx
+  let cvy = vy
+  for (let t = 0; t < limit; t += dt) {
+    const prevY = y
+    cvy += g * dt
+    x += cvx * dt
+    y += cvy * dt
+    // 撞墙就反弹，跟物理层的处理一致，免得算出来的落点跟实际不符
+    if (x < left) {
+      x = left
+      cvx = -cvx * 0.5
+    } else if (x > right) {
+      x = right
+      cvx = -cvx * 0.5
+    }
+    if (cvy <= 0) continue
+    const hit = landingPlatform(platforms, prevY, y, x)
+    if (hit) return hit
+  }
+  return null
+}
+
+/**
+ * 往下跳：麻烦在于起点就站在源平台上，落下来的瞬间如果人还在源平台上方，
+ * 会被「自己的台阶」先接住——所以水平速度必须先够越出源平台的边，
+ * 再保证按这个速度飞到目标高度时，横坐标刚好落在目标平台里。
+ *
+ * 越出边所需的速度和「落在哪」是一对互相牵制的条件，这里用顶点高度 c 做一维搜索：
+ * c 越大，滞空越久，同样的横移会带得更远。
+ */
+export function planJumpDown(
+  from: { x: number; y: number },
+  source: Platform,
+  target: Platform,
+  opts: { gravity: number; maxVx?: number },
+): JumpPlan | null {
+  const g = opts.gravity
+  const maxVx = opts.maxVx ?? 420
+  const top = target.t + 3
+  if (top <= from.y + 8) return null
+  const lo = target.l + 10
+  const hi = target.r - 10
+  if (hi <= lo) return null
+
+  // 两个方向都试：往哪边越出自己的台阶更顺手就走哪边
+  for (const dir of [1, -1] as const) {
+    const edge = dir > 0 ? source.r : source.l
+    const need = (edge - from.x) * dir
+    for (let c = 20; c <= 220; c += 5) {
+      const apexY = from.y - c
+      const drop = top - apexY
+      if (drop <= 0) continue
+      const tUp = Math.sqrt((2 * c) / g)
+      const tDown = Math.sqrt((2 * drop) / g)
+      const T = tUp + tDown
+      if (!Number.isFinite(T) || T <= 0) continue
+      // 落回源平台顶面之前必须已经越过它的边
+      const vxMin = ((need + 14) / (2 * tUp)) * 1.12
+      // 按这个速度飞 T 秒后，横坐标要落在目标平台里
+      const a = (lo - from.x) / T
+      const b = (hi - from.x) / T
+      const loVx = Math.max(vxMin, dir > 0 ? a : -b)
+      const hiVx = Math.min(maxVx, dir > 0 ? b : -a)
+      if (hiVx <= loVx) continue
+      const vx = (loVx + hiVx) / 2
+      return { vx, vy: -Math.sqrt(2 * g * c), tx: from.x + vx * T }
+    }
+  }
+  return null
+}

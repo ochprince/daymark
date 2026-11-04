@@ -5,7 +5,15 @@ import type { MessageKey } from '../../lib/i18n'
 import { Pet } from './Pet'
 import type { PetStage, PetState } from './art'
 import type { PetArtSpecies } from './petArt'
-import { landingPlatform, placeBubble, throwVelocity, type Platform } from './geometry'
+import {
+  landingPlatform,
+  placeBubble,
+  planJump,
+  planJumpDown,
+  simulateJump,
+  throwVelocity,
+  type Platform,
+} from './geometry'
 export type { PetStage } from './art'
 import '../pets.css'
 
@@ -144,9 +152,9 @@ export type PetLayerProps = {
   out?: boolean
   /** 交接上桌 / 回家时的状态回调：外界的 petOut 跟着它走 */
   onOut?: (out: boolean) => void
-  /** 每次 +1 就播一遍出场（连戳五下走这条路） */
+  /** 每次 +1 就播一遍出场（连戳三下走这条路） */
   debutSeq?: number
-  /** 串门时连戳五下：让两只一起玩（不送主人出门） */
+  /** 串门时连戳三下：让两只一起玩（不送主人出门） */
   playSeq?: number
   /** 回家收尾：卡片那边跳一下、把气泡换成「我回来了。」、播一声 */
   onHomed?: () => void
@@ -819,22 +827,35 @@ export function PetLayer({
       if (p.sel === '.c-memo') say('pet.say.memo', 2000)
     }
 
-    const jumpTo = (q: Platform) => {
-      const lo = Math.max(q.l + 14, s.x - 190)
-      const hi = Math.min(q.r - 14, s.x + 190)
-      if (hi <= lo) return false
-      const tx = rand(lo, hi)
-      const ty = q.t + 3
-      const T = 0.52 + Math.abs(tx - s.x) * 0.0007 + Math.max(0, s.y - ty) * 0.0009
-      const vx = (tx - s.x) / T
-      const vy = (ty - s.y) / T - 0.5 * PET_GRAVITY * T
-      if (Math.abs(vy) > 1500) return false
-      s.vx = vx
-      s.vy = vy
-      s.face = vx >= 0 ? 1 : -1
-      s.plat = null
-      setMode('fall')
-      return true
+    /**
+     * 有目标的跳：上下都行、允许跨几级台阶。
+     * 先按目标平台倒算初速度，再用同一套抛物线仿真验一遍——
+     * 中间要是被别的平台半路接住，就换一个落点重算，仍然不行就放弃这一跳。
+     */
+    const jumpToPlatform = (q: Platform, from: Platform) => {
+      const down = q.t > s.y + 8
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        const plan = down
+          ? planJumpDown({ x: s.x, y: s.y }, from, q, { gravity: PET_GRAVITY, maxVx: 420 })
+          : planJump({ x: s.x, y: s.y }, q, { gravity: PET_GRAVITY, maxVx: 420 })
+        if (!plan) continue
+        const hit = simulateJump(
+          { x: s.x, y: s.y },
+          plan.vx,
+          plan.vy,
+          platforms,
+          { gravity: PET_GRAVITY, bounds: { left: size * 0.35, right: rect.width - size * 0.35 } },
+        )
+        if (!hit || hit.key !== q.key) continue
+        s.vx = plan.vx
+        s.vy = plan.vy
+        s.tx = plan.tx
+        s.face = plan.vx >= 0 ? 1 : -1
+        s.plat = null
+        setMode('fall')
+        return true
+      }
+      return false
     }
 
     const think = () => {
@@ -854,22 +875,35 @@ export function PetLayer({
       add(3, () => setMode('stand', rand(1.8, 3.6)))
       // 随机往下跳：挑一个更低的平台跳过去；没有更低的就朝最近的一侧跳下边缘。
       // 之前只有向上跳（hop 给负速度），看久了像是在原地弹。
-      add(3.5, () => {
-        const below = platforms.filter(
-          (q) => q.key !== p.key && q.t > s.y + 24 && q.r - q.l > 40,
+      // 有目标的跳：上下都算，隔几级台阶也能跳过去（先倒算速度，再仿真确认）
+      add(4.5, () => {
+        const reach = rect.height * 0.9
+        const cands = platforms.filter(
+          (q) => q.key !== p.key && q.r - q.l > 60 && Math.abs(q.t - s.y) < reach,
         )
-        const target = below.length ? pick(below) : null
-        const tx = target
-          ? rand(target.l + 12, Math.max(target.l + 13, target.r - 12))
-          : s.x < rect.width / 2
-            ? rand(rect.width * 0.55, rect.width * 0.9)
-            : rand(rect.width * 0.1, rect.width * 0.45)
-        s.face = tx >= s.x ? 1 : -1
-        // 正数 = 向下；水平速度让它真的朝目标落，而不是垂直砸下去
-        s.vx = Math.max(-240, Math.min(240, (tx - s.x) * 0.85))
-        s.vy = rand(180, 340)
+        if (!cands.length) {
+          setMode('stand', rand(0.6, 1.2))
+          return
+        }
+        // 挑个方向：一半向上、一半向下，剩下的随机
+        const up = cands.filter((q) => q.t < s.y - 10)
+        const down = cands.filter((q) => q.t > s.y + 10)
+        const roll = Math.random()
+        const pool = roll < 0.45 && up.length ? up : roll < 0.85 && down.length ? down : cands
+        for (let i = 0; i < 4; i += 1) {
+          const target = pick(pool)
+          if (jumpToPlatform(target, p)) return
+        }
+        setMode('stand', rand(0.5, 1))
+      })
+      // 目标就在自己脚下（跳不过去）：走到边上直接掉下去，落到下面那一层
+      add(1.6, () => {
+        const dir = s.x - p.l <= p.r - s.x ? -1 : 1
+        s.x = dir < 0 ? p.l + 5 : p.r - 5
+        s.vx = dir * rand(26, 64)
+        s.vy = rand(30, 70)
         s.plat = null
-        s.tx = tx
+        s.face = dir
         setMode('fall')
       })
       add(4, () => {
@@ -882,16 +916,6 @@ export function PetLayer({
         setMode('sleep', rand(4, 8))
         say('pet.say.sleep', 2000)
       })
-      add(1.6, () => {
-        const cands = platforms.filter(
-          (q) => q.key !== p.key && q.r - q.l > 70 && Math.abs(q.t - s.y) < 340,
-        )
-        if (!cands.length) {
-          setMode('stand', 1)
-          return
-        }
-        if (!jumpTo(pick(cands))) setMode('stand', 1)
-      })
       add(p.l <= 24 || p.r >= rect.width - 24 ? 1 : 0, () => {
         s.wall = p.l <= 24 && (p.r < rect.width - 24 || Math.random() < 0.5) ? -1 : 1
         s.tx = s.wall < 0 ? (size / 2) * 0.75 : rect.width - (size / 2) * 0.75
@@ -900,25 +924,24 @@ export function PetLayer({
         setMode('walk')
       })
 
-      // 跳：一次跳多高不固定。多数是小跳，偶尔来一下大的，最高半屏。
-      // 高度用平方分布抽，所以「矮的多、高的少」，看起来才不像机械弹跳。
+      // 没目标的小跳：就是原地蹦跶，高度随机的「小」高度，不负责跨平台
       const hop = (maxH: number, vx = 0) => {
-        const k = rand(0.18, 1) ** 2
-        const h = Math.min(maxH, 26 + k * (maxH - 26))
+        const k = rand(0, 1) ** 1.6
+        const h = 14 + k * (maxH - 14)
         s.plat = null
         s.vy = -Math.sqrt(2 * PET_GRAVITY * h)
         s.vx = vx
         setMode('fall')
       }
-      add(6, () => hop(rect.height * 0.5))
-      add(2.5, () => hop(rect.height * 0.28, rand(-90, 90)))
-      // 蹦两下：先矮后高，像是自己玩得开心
-      add(1.6, () => {
-        hop(70)
+      add(4, () => hop(52))
+      add(1.4, () => hop(66, rand(-26, 26)))
+      // 连着蹦两下，像自己玩得开心
+      add(1.2, () => {
+        hop(40)
         window.setTimeout(() => {
           if (!outRef.current || s.mode === 'drag') return
-          hop(140)
-        }, 460)
+          hop(52)
+        }, 420)
       })
       add(1.2, () => setMode('cheer', rand(0.6, 1.1)))
       add(0.9, () => {
@@ -1114,13 +1137,13 @@ export function PetLayer({
     if (pokeSeq > 0) apiRef.current?.react('poke')
   }, [pokeSeq])
 
-  // 外面让它「出去」：连戳五下 / 演示时 +1，就播一遍四段接力
+  // 外面让它「出去」：连戳三下 / 演示时 +1，就播一遍四段接力
   useEffect(() => {
     if (debutSeq <= 0) return
     apiRef.current?.debut()
   }, [debutSeq])
 
-  // 串门时连戳五下：两只凑到一起玩，主人不出门
+  // 串门时连戳三下：两只凑到一起玩，主人不出门
   useEffect(() => {
     if (playSeq <= 0) return
     apiRef.current?.play()

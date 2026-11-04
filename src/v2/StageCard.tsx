@@ -21,7 +21,7 @@ export type StageCardProps = {
   /** 记录完成（习惯类蓄满 / 倒数日「说过了」） */
   onLog: () => void
   onPoke: () => void
-  /** 这张卡里有客人：连戳五下是喊两只一起玩 */
+  /** 这张卡里有客人：连戳三下是喊两只一起玩 */
   visitor?: boolean
   /** 小伙伴手里有一张折起的纸条，点了才展开 */
   noteReady?: boolean
@@ -51,14 +51,14 @@ export type StageCardProps = {
   homeHot?: boolean
   /** 每回家一次 +1：卡片里的它重新出现并跳一下、气泡换成「我回来了。」、播一声 */
   homeNonce?: number
-  /** 连戳五下（每下间隔 < 0.9s）：它兴奋乱跳，然后自己走出卡片 */
+  /** 连戳三下（每下间隔 < 0.9s）：它兴奋乱跳，然后自己走出卡片 */
   onFrenzy?: () => void
 }
 
 /** 连戳判定：每下间隔小于这个才算「同一串」，慢摸不触发 */
 export const POKE_STREAK_GAP = 900
 /** 连戳几下它才出门 */
-export const POKE_STREAK_N = 5
+export const POKE_STREAK_N = 3
 /** 兴奋乱跳多久之后才真的走出去 */
 const FRENZY_MS = 760
 
@@ -137,7 +137,7 @@ export function StageCard({
   const [charging, setCharging] = useState(false)
   const [jumping, setJumping] = useState(false)
   const [party, setParty] = useState(false)
-  /** 连戳五下：兴奋乱跳中 */
+  /** 连戳三下：兴奋乱跳中 */
   const [hyped, setHyped] = useState(false)
   /** 偶尔东张西望：一直只有呼吸浮动太单调 */
   const [looking, setLooking] = useState(false)
@@ -261,50 +261,9 @@ export function StageCard({
     return () => window.clearInterval(timer)
   }, [petAway, sleeping])
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target
-  /** 按住拖拽把萌宠拉出家：已经触发过出门，这一次横滑就别再算滑卡 */
-  const outFired = useRef(false)
 
   function startHold(event?: ReactPointerEvent<HTMLElement>) {
     pressAt.current = performance.now()
-    // 手指一挪开就算滑动，不是长按。
-    // 只靠 startDrag 里那一下不够：横滑判定要等方向确认，慢一点的滑动
-    // 会在确认之前就把 500ms 蓄满，于是滑卡的同时记了一笔，卡片中间冒出「+1」。
-    //
-    // 反过来，「按住再往外拖」是把它拉出家：先按住 240ms 再说，
-    // 直接一划仍然是滑卡，不会误触发。
-    // 这段要在 canHold 之前挂上——没有记账目标的卡片（倒数日）也能把它拉出去。
-    const fromX = event?.clientX ?? 0
-    const fromY = event?.clientY ?? 0
-    let armed = false
-    const arming = window.setTimeout(() => {
-      armed = true
-    }, 240)
-    const watch = (moveEvent: PointerEvent) => {
-      const dist = Math.hypot(moveEvent.clientX - fromX, moveEvent.clientY - fromY)
-      if (armed && dist > 16 && onFrenzy) {
-        window.clearTimeout(arming)
-        stopWatch()
-        cancelHold(true)
-        pressAt.current = 0 // 别让松手那一下再被当成「摸摸」
-        outFired.current = true
-        playSfx('tap')
-        // 有客人在时它是「两只一起玩」，不会把主人也送出同一个精灵
-        onFrenzy()
-        return
-      }
-      if (dist > 12) {
-        window.clearTimeout(arming)
-        stopWatch()
-        cancelHold(true)
-      }
-    }
-    const stopWatch = () => {
-      window.clearTimeout(arming)
-      window.removeEventListener('pointermove', watch)
-    }
-    window.addEventListener('pointermove', watch)
-    watchers.current.add(stopWatch)
-
     if (!canHold) return
     if (habitDone) {
       onToast?.(t('hold.already'))
@@ -317,6 +276,21 @@ export function StageCard({
       setCharging(false)
       onLog()
     }, HOLD_MS)
+
+    // 手指一挪开就算滑动，不是长按。
+    // 只靠 startDrag 里那一下不够：横滑判定要等方向确认，慢一点的滑动
+    // 会在确认之前就把 500ms 蓄满，于是滑卡的同时记了一笔，卡片中间冒出「+1」。
+    const fromX = event?.clientX ?? 0
+    const fromY = event?.clientY ?? 0
+    const watch = (moveEvent: PointerEvent) => {
+      if (Math.hypot(moveEvent.clientX - fromX, moveEvent.clientY - fromY) > 12) {
+        stopWatch()
+        cancelHold(true)
+      }
+    }
+    const stopWatch = () => window.removeEventListener('pointermove', watch)
+    window.addEventListener('pointermove', watch)
+    watchers.current.add(stopWatch)
   }
 
   /** silent：横滑取消蓄力时不该弹「再按久一点」 */
@@ -336,7 +310,8 @@ export function StageCard({
 
   // 轻点摸摸：和原型一致——短按（<250ms）且没拖动，就是在摸它
   function tapPoke() {
-    if (performance.now() - pressAt.current > 250) return
+    // pressAt 没被记上（比如按下那一帧被别的手势接走）时按轻点算，别把这次点击吞掉
+    if (pressAt.current && performance.now() - pressAt.current > 250) return
     if (dragRef.current?.active) return
     // 手里捏着纸条时，先给你看纸条：这比再摸一下有意思，也省得去戳那个小图标
     if (noteReady && !petAway) {
@@ -350,7 +325,7 @@ export function StageCard({
     streak.current.n = now - streak.current.t < POKE_STREAK_GAP ? streak.current.n + 1 : 1
     streak.current.t = now
     if (streak.current.n < POKE_STREAK_N) return
-    // 第五下：兴奋乱跳 + 喊一声，760ms 后自己走一遍出场
+    // 第三下：兴奋乱跳 + 喊一声，760ms 后自己走一遍出场
     streak.current.n = 0
     if (!onFrenzy) return
     setHyped(true)
@@ -377,9 +352,7 @@ export function StageCard({
     let active = false
     let dx = 0
 
-    outFired.current = false
     const move = (moveEvent: PointerEvent) => {
-      if (outFired.current) return
       const stepX = moveEvent.clientX - startX
       const stepY = moveEvent.clientY - startY
       if (!active) {

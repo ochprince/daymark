@@ -207,9 +207,9 @@ export function AppV2() {
     const saved = getPetOut()
     return saved.out ? saved.from : null
   })
-  // 让它自己走出去（连戳五下 / 演示）：+1 就播一遍出场
+  // 让它自己走出去（连戳三下 / 演示）：+1 就播一遍出场
   const [debutSeq, setDebutSeq] = useState(0)
-  /** 串门时连戳五下：两只一起玩（不送主人出门） */
+  /** 串门时连戳三下：两只一起玩（不送主人出门） */
   const [playSeq, setPlaySeq] = useState(0)
   // 回家一次 +1：卡片里的它跳一下、气泡换成「我回来了。」
   const [homeNonce, setHomeNonce] = useState(0)
@@ -327,7 +327,7 @@ export function AppV2() {
       setOutPet({ species: 'sprout', stage: 2, hue: 4 })
       setOutFrom('__guest__')
       setPetOut(true)
-      // ?visit=1&play=1：再自动喊一次「一起玩」，省得手点五下
+      // ?visit=1&play=1：再自动喊一次「一起玩」，省得手点三下
       if (new URLSearchParams(window.location.search).has('play')) {
         window.setTimeout(() => setPlaySeq((n) => n + 1), 1200)
       }
@@ -672,7 +672,7 @@ export function AppV2() {
           visitor={petOut && !!outFrom && outFrom !== focus?.key}
           homeNonce={homeNonce}
           onFrenzy={() => {
-            // 有客人在场：连戳五下是「喊它俩一起玩」，不是把主人也送出门
+            // 有客人在场：连戳三下是「喊它俩一起玩」，不是把主人也送出门
             if (frenzyKind(!!(petOut && outFrom && outFrom !== focus?.key)) === 'play') {
               setPlaySeq((n) => n + 1)
             } else {
