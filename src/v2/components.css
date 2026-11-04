@@ -732,8 +732,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .bdg small { font-size: 11.5px; color: var(--ink3); line-height: 1.35; margin-top: 2px; }
 .bdg.off .badge { opacity: 0.35; filter: grayscale(1); }
 .bdg.new { animation: glow 1.6s ease-in-out 3; }
-.slips { columns: 2; column-gap: 10px; margin: 8px 16px; padding-top: 10px; }
-.slip { break-inside: avoid; display: inline-block; width: 100%; margin-top: 8px; margin-bottom: 10px; padding: 14px 14px 10px; background: var(--paper); border: var(--bw) solid var(--line); border-radius: 4px; font-family: var(--font-cute); font-size: 15px; line-height: 1.55; color: #2b2638; position: relative; box-shadow: var(--pop-sm); }
+/*
+ * 原本用 columns: 2 做瀑布流。WebKit（iOS Safari）在多栏布局里遇到带 transform
+ * 的子元素会画不出来或画到栏外——第二张纸条正好命中 :nth-child(3n+2) 的 rotate，
+ * 于是「看不见但点得到」，Chrome 里怎么都复现不出来。
+ * 换成 grid 两列，transform 老老实实生效。
+ */
+.slips { display: grid; grid-template-columns: 1fr 1fr; align-items: start; gap: 0 10px; margin: 8px 16px; padding-top: 10px; }
+.slip { display: block; width: 100%; margin-top: 8px; margin-bottom: 10px; padding: 14px 14px 10px; background: var(--paper); border: var(--bw) solid var(--line); border-radius: 4px; font-family: var(--font-cute); font-size: 15px; line-height: 1.55; color: #2b2638; position: relative; box-shadow: var(--pop-sm); }
 /* 纸本的卡片跟纸面几乎同色，边框只有 10% 黑，远看就是「一块空白、却能点」 */
 [data-skin='paper'] .slip {
   border-color: rgba(34, 32, 28, 0.26);
@@ -1183,7 +1189,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   align-items: baseline;
   font-size: 11.5px;
   font-weight: 700;
-  color: var(--ink3);
+  color: var(--ink2);
 }
 
 .c-memo-c { font-family: var(--font-num); }
@@ -1193,7 +1199,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
   font-size: 13px;
   font-weight: 600;
   line-height: 1.42;
-  color: var(--ink2);
+  /* 卡片上这块比档案里的一档浅，浅皮肤上像没墨了，压到 --ink 跟档案一致 */
+  color: var(--ink);
   /* 备忘长了就截两行，卡片高度不能被它撑开 */
   display: -webkit-box;
   -webkit-line-clamp: 2;
@@ -1218,7 +1225,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
   border-radius: 99px;
   border: var(--bw) solid var(--line);
   background: var(--surface);
-  color: var(--ink2);
+  color: var(--ink);
   font: inherit;
   font-size: 12.5px;
   font-weight: 600;
