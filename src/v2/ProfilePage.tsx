@@ -110,7 +110,9 @@ export function ProfilePage({
       : view.kind === 'countdown'
         ? view.days === 0
           ? t('stage.countdown.today')
-          : t('stage.countdown.days', { n: view.days })
+          : view.days < 0
+            ? t('stage.countdown.past', { n: Math.abs(view.days) })
+            : t('stage.countdown.days', { n: view.days })
         : t('growth.total', { n: view.growth })
 
   const chapters = useMemo(() => {

@@ -33,6 +33,8 @@ export function bubbleLine(view: ItemView, ctx: LineContext = {}): string {
 
   if (view.kind === 'countdown') {
     const d = view.days
+    // 过了那天还没「说过了」时 d 是负数，得先拦下来，否则会说出「只剩 -1 天」
+    if (d < 0) return t('stage.countdown.past', { n: Math.abs(d) })
     if (d === 0) return t('line.countdown.today')
     if (d <= 3) return t('line.countdown.soon', { n: d })
     if (d <= 7) return t('line.countdown.week')
