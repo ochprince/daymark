@@ -166,6 +166,10 @@ export const en: Record<MessageKey, Msg> = {
   'museum.badges.empty': 'No badges yet.',
   'museum.notes.empty': 'No notes yet.',
   'museum.notes.mine': 'You wrote it',
+  'museum.notes.del': 'Tear this note',
+  'museum.notes.del.sure': 'Tear it?',
+  'museum.notes.gone': 'Torn',
+  'museum.notes.goneSys': 'Torn — it will come back some day',
 
   /* Style */
   'dress.title': 'Style',

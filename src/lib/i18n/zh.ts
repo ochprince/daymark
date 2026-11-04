@@ -166,6 +166,10 @@ export const zh = {
   'museum.badges.empty': '还没有徽章。',
   'museum.notes.empty': '还没有小纸条。',
   'museum.notes.mine': '你自己写的',
+  'museum.notes.del': '撕掉这张',
+  'museum.notes.del.sure': '撕掉？',
+  'museum.notes.gone': '撕掉了',
+  'museum.notes.goneSys': '撕掉了，这张过些天还会再来',
 
   /* 装扮 */
   'dress.title': '装扮',

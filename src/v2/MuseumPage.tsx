@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import type { CSSProperties } from 'react'
 import { Badge, Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
-import { BADGES } from '../lib/collection'
+import { BADGES, removeNote } from '../lib/collection'
 import type { CollectionState } from '../lib/collection'
 import { formatDate } from '../lib/days'
 import { t } from '../lib/i18n'
@@ -31,11 +31,36 @@ export type MuseumPageProps = {
   /** 买断版能翻开全部章节；免费版只给最近几本 */
   pro: boolean
   onUpgrade: () => void
+  onNotify: (message: string) => void
 }
 
-export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProps) {
-  const [pane, setPane] = useState<Pane>('chapters')
+export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: MuseumPageProps) {
+  const [pane, setPane] = useState<Pane>('notes')
   const [opened, setOpened] = useState<ShelfBook | null>(null)
+  /**
+   * 撕纸条：自己写的那张撕了就没了，点第一下只是变成「撕掉？」，
+   * 过 2.6 秒自己收回去。小伙伴给的那张撕了还会再来，一下就走。
+   */
+  const [sureId, setSureId] = useState<string | null>(null)
+  const sureTimer = useRef<number | null>(null)
+  function askDelete(id: string) {
+    if (sureTimer.current) window.clearTimeout(sureTimer.current)
+    setSureId(id)
+    sureTimer.current = window.setTimeout(() => setSureId(null), 2600)
+  }
+  function deleteNote(id: string, mine: boolean) {
+    if (mine && sureId !== id) {
+      askDelete(id)
+      return
+    }
+    if (sureTimer.current) window.clearTimeout(sureTimer.current)
+    setSureId(null)
+    removeNote(id)
+    onNotify(t(mine ? 'museum.notes.gone' : 'museum.notes.goneSys'))
+  }
+  useEffect(() => () => {
+    if (sureTimer.current) window.clearTimeout(sureTimer.current)
+  }, [])
   // 翻书方向：翻的时候给 currentTarget 挂 flip-l / flip-r，0.5s 后自动落位
   const [flip, setFlip] = useState<'l' | 'r' | null>(null)
   // 一件事一本书：翻过的章夹在书里，点开才铺出来
@@ -72,11 +97,12 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
     window.setTimeout(() => setFlip(null), 520)
   }
 
+  // 顺序按用户要的：纸条 → 徽章 → 图鉴 → 章节
   const panes: Array<[Pane, MessageKey]> = [
-    ['chapters', 'museum.tab.chapters'],
-    ['dex', 'museum.tab.dex'],
-    ['badges', 'museum.tab.badges'],
     ['notes', 'museum.tab.notes'],
+    ['badges', 'museum.tab.badges'],
+    ['dex', 'museum.tab.dex'],
+    ['chapters', 'museum.tab.chapters'],
   ]
 
   return (
@@ -155,14 +181,25 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
           {collection.notes.length === 0 ? (
             <p className="shelf-cap">{t('museum.notes.empty')}</p>
           ) : (
-            collection.notes.map((note) => (
-              <div className="slip" key={note.id}>
-                {note.text}
-                <small>
-                  —— {note.mine ? t('museum.notes.mine') : note.from} · {formatDate(note.at)}
-                </small>
-              </div>
-            ))
+            collection.notes.map((note) => {
+              const sure = sureId === note.id
+              return (
+                <div className="slip" key={note.id}>
+                  {note.text}
+                  <small>
+                    —— {note.mine ? t('museum.notes.mine') : note.from} · {formatDate(note.at)}
+                  </small>
+                  <button
+                    type="button"
+                    className={sure ? 'slip-del is-sure' : 'slip-del'}
+                    aria-label={t('museum.notes.del')}
+                    onClick={() => deleteNote(note.id, note.mine === true)}
+                  >
+                    {sure ? t('museum.notes.del.sure') : '×'}
+                  </button>
+                </div>
+              )
+            })
           )}
           {/* 自己写的那几张不算在「还有 N 张在路上」里，那是小伙伴要给你的 */}
           <div className="slip locked">

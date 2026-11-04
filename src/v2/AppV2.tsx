@@ -697,6 +697,7 @@ export function AppV2() {
           collection={collection}
           pro={pro}
           onUpgrade={() => setPaywall('upgrade')}
+          onNotify={notify}
         />
       ) : null}
 

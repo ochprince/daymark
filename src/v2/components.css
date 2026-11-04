@@ -701,6 +701,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .slip::before { content: ''; position: absolute; top: -8px; left: 50%; width: 46px; height: 16px; margin-left: -23px; background: color-mix(in oklab, var(--h-lemon) 70%, transparent); transform: rotate(-3deg); }
 .slip.locked { background: transparent; border-style: dashed; color: var(--ink3); text-align: center; font-family: var(--font-ui); font-size: 13px; box-shadow: none; white-space: normal; }
 .slip.locked::before { display: none; }
+/* 撕纸条：小圆点按在纸角，点第一下（自己写的那张）变成「撕掉？」 */
+.slip-del {
+  position: absolute; top: -7px; right: -6px; width: 22px; height: 22px; padding: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  border-radius: 999px; border: var(--bw) solid var(--line); background: var(--surface);
+  color: var(--ink3); font-size: 14px; line-height: 1; box-shadow: var(--pop-sm);
+  transition: transform 0.16s ease, background 0.16s ease, color 0.16s ease;
+}
+.slip-del::before { content: ''; position: absolute; inset: -11px; border-radius: 999px; } /* 22px 的点太小，热区补到 44 */
+.slip-del:active { transform: scale(0.88); }
+.slip-del.is-sure {
+  width: auto; padding: 0 9px; font-size: 11.5px; font-weight: 800;
+  color: #fff; background: #d1495b; border-color: #d1495b;
+}
 
 /* 章节（书页） */
 .bookpage { background: var(--paper); color: #2b2638; border: var(--bw) solid var(--line); border-radius: 8px 22px 22px 8px; padding: 22px 22px 18px; box-shadow: var(--pop), inset 12px 0 0 rgba(0, 0, 0, 0.04); position: relative; }
