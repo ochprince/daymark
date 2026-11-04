@@ -921,10 +921,10 @@ export function PetLayer({
         setMode('walk')
       })
       add(2, () => setMode('sit', rand(2.2, 4.2)))
-      // 睡觉：加了各种跳跃之后，这个权重被稀释得只剩 2.7%，看一天也遇不上一次。
-      // 现在 2.4 / 总数 ≈ 9%，大约十次决定里有一次趴下睡，出门在外也能碰到。
-      // 刚被叫醒的四五十秒里不睡：醒了立刻又趴下，看着像没醒。
-      add(performance.now() < noSleepUntil.current ? 0 : 2.4, () => {
+      // 睡觉：权重按用户的意见调回 0.7（≈2.7%，偶尔才碰到一次）。
+      // 之前为了「一天也遇不上一次」提到 2.4，结果它在卡片上趴着的时间太多，
+      // 看着像卡住了。刚被叫醒的四五十秒里仍然不睡：醒了立刻又趴下，像没醒。
+      add(performance.now() < noSleepUntil.current ? 0 : 0.7, () => {
         setMode('sleep', rand(5, 10))
         say('pet.say.sleep', 2000)
       })
