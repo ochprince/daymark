@@ -620,6 +620,13 @@ export function AppV2() {
           noteReady={noteReady}
           onOpenNote={openNote}
           onProfile={() => setProfileOpen(true)}
+          onToggleTodo={(index) => {
+            // 卡片上直接勾待办：不用进档案页
+            const todos = focus?.kind === 'countdown' ? (focus.event.todo ?? []) : []
+            if (focus?.kind !== 'countdown' || !todos[index]) return
+            const next = todos.map((item, i) => (i === index ? { ...item, done: !item.done } : item))
+            patchCountdown(focus.id, { todo: next })
+          }}
           overrideLine={override}
           pokeNonce={pokeCount}
           fxNonce={fxCount}

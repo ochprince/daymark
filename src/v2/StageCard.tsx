@@ -41,6 +41,8 @@ export type StageCardProps = {
   fxNonce?: number
   /** 「+1」上的字，多单位习惯是「+1 杯」 */
   fxPlus?: string
+  /** 卡片上直接勾待办（只有倒数日有） */
+  onToggleTodo?: (index: number) => void
   /** 桌宠在外：卡片里保留原尺寸的空位（.pet-away），角色隐藏、不可点 */
   petAway?: boolean
   /** 别家那只正在这张卡上串门：家里这只打个招呼 */
@@ -118,6 +120,7 @@ export function StageCard({
   noteReady,
   onOpenNote,
   onProfile,
+  onToggleTodo,
   overrideLine,
   pokeNonce = 0,
   onShift,
@@ -151,6 +154,8 @@ export function StageCard({
   // 横滑换焦点：跟手位移 + 松手后吸附回弹
   const [drag, setDrag] = useState<{ dx: number; active: boolean } | null>(null)
   const dragRef = useRef<{ x: number; y: number; dx: number; active: boolean } | null>(null)
+  /** 蓄力期间挂的 pointermove 监听，取消/结束时统一摘掉 */
+  const watchers = useRef<Set<() => void>>(new Set())
   const pressAt = useRef(0)
   const timer = useRef<number | null>(null)
 
@@ -257,7 +262,7 @@ export function StageCard({
   }, [petAway, sleeping])
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target
 
-  function startHold() {
+  function startHold(event?: ReactPointerEvent<HTMLElement>) {
     pressAt.current = performance.now()
     if (!canHold) return
     if (habitDone) {
@@ -271,9 +276,27 @@ export function StageCard({
       setCharging(false)
       onLog()
     }, HOLD_MS)
+
+    // 手指一挪开就算滑动，不是长按。
+    // 只靠 startDrag 里那一下不够：横滑判定要等方向确认，慢一点的滑动
+    // 会在确认之前就把 500ms 蓄满，于是滑卡的同时记了一笔，卡片中间冒出「+1」。
+    const fromX = event?.clientX ?? 0
+    const fromY = event?.clientY ?? 0
+    const watch = (moveEvent: PointerEvent) => {
+      if (Math.hypot(moveEvent.clientX - fromX, moveEvent.clientY - fromY) > 12) {
+        stopWatch()
+        cancelHold(true)
+      }
+    }
+    const stopWatch = () => window.removeEventListener('pointermove', watch)
+    window.addEventListener('pointermove', watch)
+    watchers.current.add(stopWatch)
   }
 
-  function cancelHold() {
+  /** silent：横滑取消蓄力时不该弹「再按久一点」 */
+  function cancelHold(silent = false) {
+    watchers.current.forEach((stop) => stop())
+    watchers.current.clear()
     const wasCharging = timer.current !== null
     if (timer.current !== null) {
       window.clearTimeout(timer.current)
@@ -282,7 +305,7 @@ export function StageCard({
     setCharging(false)
     // 按了一会儿但没蓄满：告诉用户差在哪。
     // 短按（<250ms）是「摸摸」，不该弹这句，否则每次摸它都被骂一次
-    if (wasCharging && performance.now() - pressAt.current > 250) onToast?.(t('hold.tooShort'))
+    if (!silent && wasCharging && performance.now() - pressAt.current > 250) onToast?.(t('hold.tooShort'))
   }
 
   // 轻点摸摸：和原型一致——短按（<250ms）且没拖动，就是在摸它
@@ -335,7 +358,7 @@ export function StageCard({
         // 先判方向：竖着划是别的手势，不抢
         if (Math.abs(stepX) < 10 || Math.abs(stepX) <= Math.abs(stepY)) return
         active = true
-        cancelHold() // 一开始横滑，就不再算蓄力
+        cancelHold(true) // 一开始横滑，就不再算蓄力（也别弹「再按久一点」）
       }
       dx = stepX
       setDrag({ dx, active: true })
@@ -419,8 +442,8 @@ export function StageCard({
             cancelHold()
             tapPoke()
           }}
-          onPointerLeave={cancelHold}
-          onPointerCancel={cancelHold}
+          onPointerLeave={() => cancelHold()}
+          onPointerCancel={() => cancelHold()}
           role={canHold && !petAway ? 'button' : undefined}
           aria-label={
             canHold && !petAway ? t(sleeping ? 'action.holdWake' : 'action.hold') : undefined
@@ -486,7 +509,7 @@ export function StageCard({
         <NumberBlock view={view} />
       </div>
       <div className="sc-slot sc-slot-extra">
-        <ExtraBlock view={view} rest={rest} nextName={nextName} />
+        <ExtraBlock view={view} rest={rest} nextName={nextName} onToggleTodo={onToggleTodo} onProfile={onProfile} />
       </div>
 
       </PhotoBackdrop>
@@ -564,9 +587,15 @@ function NumberBlock({ view }: { view: ItemView }) {
   )
 }
 
-type ExtraProps = { view: ItemView; rest: number; nextName: string }
+type ExtraProps = {
+  view: ItemView
+  rest: number
+  nextName: string
+  onToggleTodo?: (index: number) => void
+  onProfile: () => void
+}
 
-function ExtraBlock({ view, rest, nextName }: ExtraProps) {
+function ExtraBlock({ view, rest, nextName, onToggleTodo, onProfile }: ExtraProps) {
   const cups =
     view.kind === 'habit' && view.target !== null && view.target > 1 && view.cadence === 'daily'
       ? Array.from({ length: view.target }, (_, index) => (
@@ -581,6 +610,46 @@ function ExtraBlock({ view, rest, nextName }: ExtraProps) {
       : view.stage >= 4
         ? t('growth.maxed')
         : t('growth.next', { n: rest, name: nextName })
+
+  // 倒数日：备忘和待办直接摆在卡片上（原型的 .memo 块），勾一勾不用进档案
+  if (view.kind === 'countdown') {
+    const todos = view.event.todo ?? []
+    const memo = (view.event.memo ?? '').trim()
+    if (!memo && todos.length === 0) return null
+    const done = todos.filter((item) => item.done).length
+    const shown = todos.slice(0, 2)
+    return (
+      <div className="c-memo" onClick={onProfile}>
+        <div className="c-memo-h">
+          <span>{t('notes.memo')}</span>
+          {todos.length > 0 ? (
+            <span className="c-memo-c">
+              {done}/{todos.length}
+            </span>
+          ) : null}
+        </div>
+        {memo ? <p className="c-memo-p">{memo}</p> : null}
+        {shown.length > 0 ? (
+          <div className="c-memo-todo">
+            {shown.map((item, index) => (
+              <button
+                key={index}
+                type="button"
+                className={item.done ? 'on' : ''}
+                onClick={(event) => {
+                  event.stopPropagation()
+                  onToggleTodo?.(index)
+                }}
+              >
+                {item.done ? '✓' : '○'} {item.text}
+              </button>
+            ))}
+            {todos.length > shown.length ? <i>+{todos.length - shown.length}</i> : null}
+          </div>
+        ) : null}
+      </div>
+    )
+  }
 
   return (
     <>

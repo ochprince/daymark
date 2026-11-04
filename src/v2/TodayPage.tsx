@@ -21,6 +21,8 @@ export type TodayPageProps = {
   noteReady?: boolean
   onOpenNote?: () => void
   onProfile: () => void
+  /** 卡片上勾待办 */
+  onToggleTodo?: (index: number) => void
   /** 横滑换焦点 */
   onShift: (dir: 1 | -1) => void
   /** 卡片内的轻提示 */
@@ -64,6 +66,7 @@ export function TodayPage({
   noteReady,
   onOpenNote,
   onProfile,
+  onToggleTodo,
   overrideLine,
   pokeNonce,
   onShift,
@@ -153,6 +156,7 @@ export function TodayPage({
         noteReady={noteReady}
         onOpenNote={onOpenNote}
         onProfile={onProfile}
+        onToggleTodo={onToggleTodo}
         overrideLine={overrideLine}
         pokeNonce={pokeNonce}
         fxNonce={fxNonce}
