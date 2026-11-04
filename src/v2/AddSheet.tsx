@@ -8,6 +8,7 @@ import { pickSpecies } from '../lib/migrate'
 import { setFocusKey } from '../lib/focus'
 import { itemKey } from '../lib/itemview'
 import { t } from '../lib/i18n'
+import { getLocale, INTL_LOCALE } from '../lib/i18n/locale'
 import type { CreatureSpecies } from '../components/Creature'
 import type { ItemKind } from '../lib/types'
 import { IconClose } from './icons'
@@ -19,21 +20,33 @@ export type AddSheetProps = {
   onHatched?: (info: { species: CreatureSpecies; color: number; name: string }) => void
 }
 
+// 占位符前面加「比如」，否则深色主题下灰字容易被当成已经填好的内容
 const NAME_PLACEHOLDER: Record<ItemKind, string> = {
-  since: '戒烟 / 在一起',
-  habit: '喝水 / 跑步',
-  countdown: '妈妈的生日 / 出发旅行',
+  since: '比如：戒烟、在一起',
+  habit: '比如：喝水、跑步',
+  countdown: '比如：妈妈的生日、出发旅行',
 }
 
 export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
   const [kind, setKind] = useState<ItemKind | null>(null)
   /** 节日面板：从「新建」第一步直接进去，挑完就把这个节日加成倒数日 */
   const [festivals, setFestivals] = useState(false)
+  /** 倒数日是否每年重来一次；用户自己点过就不再自动改 */
+  const [yearly, setYearly] = useState(false)
+  const [yearlyTouched, setYearlyTouched] = useState(false)
   const [title, setTitle] = useState('')
   const [date, setDate] = useState(() => {
     const d = new Date()
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
   })
+
+  /** 名字里写着「生日」、或者挑的是过去的日期，默认就该每年一次 */
+  function autoYearly(nextTitle: string, nextDate: string) {
+    if (yearlyTouched) return
+    const at = parseDate(nextDate, Date.now())
+    const isPast = startOfDay(at) < todayStart(Date.now())
+    setYearly(isPast || /生日|生诞|诞辰/.test(nextTitle))
+  }
 
   function create() {
     const name = title.trim()
@@ -63,14 +76,13 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
       setFocusKey(itemKey('habit', event.id))
     } else {
       const startedAt = parseDate(date, now)
-      const past = startOfDay(startedAt) < todayStart(now)
       const event = addCountdown({
         title: name,
         startedAt,
         color: speciesColor('post'),
-        repeat: past ? 'yearly' : 'none',
+        repeat: yearly ? 'yearly' : 'none',
       })
-      if (past) updateCountdown(event.id, { repeat: 'yearly' })
+      if (yearly) updateCountdown(event.id, { repeat: 'yearly' })
       born = { species: 'star', color: event.color, name }
       setFocusKey(itemKey('countdown', event.id))
     }
@@ -118,21 +130,70 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
           </div>
         ) : (
           <>
-            <input
-              className="input"
-              value={title}
-              autoFocus
-              placeholder={NAME_PLACEHOLDER[kind]}
-              onChange={(event) => setTitle(event.target.value.slice(0, 40))}
-            />
-            {kind !== 'habit' ? (
+            <label className="field">
+              <span className="field-t">{t('add.name')}</span>
               <input
                 className="input"
-                type="date"
-                value={date}
-                onChange={(event) => setDate(event.target.value)}
-                aria-label={t('add.startNow')}
+                value={title}
+                autoFocus
+                placeholder={NAME_PLACEHOLDER[kind]}
+              onChange={(event) => {
+                const next = event.target.value.slice(0, 40)
+                setTitle(next)
+                if (kind === 'countdown') autoYearly(next, date)
+                }}
               />
+            </label>
+            {kind !== 'habit' ? (
+              <label className="field">
+                <span className="field-t">
+                  {kind === 'countdown' ? t('add.date') : t('add.startNow')}
+                </span>
+                {/* 原生日期框在 iOS 上会按系统语言显示成 11/04/2026，中文界面下容易读错，
+                    所以自己排一行「2026年11月4日」，原生控件铺在上面透明接管点击。 */}
+                <span className="date-box">
+                  <span className="date-val">{formatDay(date)}</span>
+                  <span className="date-ico" aria-hidden="true">
+                    ▾
+                  </span>
+                  <input
+                    className="date-native"
+                    type="date"
+                    value={date}
+                    onChange={(event) => {
+                      setDate(event.target.value)
+                      if (kind === 'countdown') autoYearly(title, event.target.value)
+                    }}
+                  />
+                </span>
+              </label>
+            ) : null}
+            {kind === 'countdown' ? (
+              <div className="field">
+                <span className="field-t">{t('add.repeat')}</span>
+                <div className="chips">
+                  <button
+                    type="button"
+                    className={yearly ? 'chip' : 'chip is-on'}
+                    onClick={() => {
+                      setYearly(false)
+                      setYearlyTouched(true)
+                    }}
+                  >
+                    {yearly ? t('add.once') : `✓ ${t('add.once')}`}
+                  </button>
+                  <button
+                    type="button"
+                    className={yearly ? 'chip is-on' : 'chip'}
+                    onClick={() => {
+                      setYearly(true)
+                      setYearlyTouched(true)
+                    }}
+                  >
+                    {yearly ? `✓ ${t('add.yearly')}` : t('add.yearly')}
+                  </button>
+                </div>
+              </div>
             ) : null}
             <button className="btn block" type="button" onClick={create} disabled={!title.trim()}>
               {t('common.done')}
@@ -152,6 +213,18 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
       ) : null}
     </div>
   )
+}
+
+/** 2026-11-04 → 中文「2026年11月4日」，英文「Nov 4, 2026」 */
+function formatDay(value: string): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value)
+  if (!match) return value
+  const date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]))
+  return new Intl.DateTimeFormat(INTL_LOCALE[getLocale()], {
+    year: 'numeric',
+    month: getLocale() === 'zh' ? 'long' : 'short',
+    day: 'numeric',
+  }).format(date)
 }
 
 function parseDate(value: string, fallback: number): number {
