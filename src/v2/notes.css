@@ -276,19 +276,36 @@
   background: none;
   cursor: pointer;
   animation: noteBob 2.6s ease-in-out infinite;
-  z-index: 3;
+  /* 卡片上的贴纸、气泡都在 1–4 层：纸条要在最上面，不能被谁盖住 */
+  z-index: 8;
 }
 
 .sc-note-paper {
-  width: 20px;
-  height: 24px;
+  width: 22px;
+  height: 26px;
   border: 2px solid var(--cr-line, #2b2638);
-  border-radius: 3px 8px 3px 3px;
+  border-radius: 3px 9px 3px 3px;
   background: linear-gradient(160deg, #fffdf6, #f1e9d8);
   transform: rotate(-10deg);
   box-shadow: 0 3px 8px rgba(43, 38, 56, 0.22), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
   position: relative;
 }
+/*
+ * 纸本和夜航里它跟前一张纸「糊在一起」看不见（还能点开，更让人困惑）：
+ * 纸本的卡片本来就是米白纸，夜航的卡片也压了一层光。
+ * 这两套皮肤下把纸条压深一点、描边加重、加一圈外发光，保证一眼能看见。
+ */
+[data-skin='paper'] .sc-note-paper {
+  background: linear-gradient(160deg, #fff6df, #f0dcae);
+  box-shadow: 0 3px 8px rgba(43, 38, 56, 0.28), 0 0 0 1px rgba(43, 38, 56, 0.18),
+    0 1px 0 rgba(255, 255, 255, 0.85) inset;
+}
+[data-skin='night'] .sc-note-paper {
+  background: linear-gradient(160deg, #fffaf0, #ffe7b0);
+  box-shadow: 0 0 0 1.5px rgba(8, 9, 12, 0.55), 0 4px 14px rgba(0, 0, 0, 0.55);
+}
+[data-skin='paper'] .sc-note-paper::after,
+[data-skin='night'] .sc-note-paper::after { background: inherit; }
 
 /* 折角 */
 .sc-note-paper::after {
