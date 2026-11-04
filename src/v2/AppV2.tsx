@@ -168,8 +168,17 @@ function useApplySkin() {
     root.dataset.accent = typeof skin.accent === 'number' ? String(skin.accent) : 'auto'
     root.dataset.num = resolveNum(pack, skin.num)
     root.dataset.texture = resolveTexture(pack, skin.texture)
+    /**
+     * 底层令牌（--bg / --surface …）还是按 data-theme 分的。
+     * 它必须跟着**真正挂上去的皮肤**走，不能跟着系统：
+     * 关掉「跟随系统」之后，系统切深色，data-skin 还是软糖，
+     * 但 data-theme 跟着系统翻黑，屏幕底色就整块暗下去了。
+     */
+    const dark = pack === 'night'
+    root.dataset.theme = dark ? 'dark' : 'light'
+    root.style.colorScheme = dark ? 'dark' : 'light'
     // 原生状态栏跟着皮肤走：'dark' 是深底浅字，'light' 是浅底深字
-    setStatusBarTheme(pack === 'night' ? 'dark' : 'light')
+    setStatusBarTheme(dark ? 'dark' : 'light')
   }, [skin, pack])
   // skin 是用户存的偏好；applied 是真正挂在根节点上、画在屏幕上的那套
   return { skin, applied: pack }

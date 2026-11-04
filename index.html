@@ -20,23 +20,39 @@
     <meta name="format-detection" content="telephone=no" />
     <meta name="color-scheme" content="dark light" />
     <script>
-      /* 主题在首帧之前落定，避免闪白/闪黑 */
+      /*
+       * 首帧之前把底色定下来，避免闪白。
+       *
+       * 这里**不能**再看系统的深浅色：主题是「皮肤」的一部分（data-skin），
+       * 系统深浅只在用户自己打开「跟随系统」时才参与。
+       * 之前的写法是读旧的 daymark.theme.v2（没有就默认 system），
+       * 于是关着跟随系统的人，一换系统深色，页面底色也跟着黑掉——
+       * 皮肤明明没变，界面却整体变暗，就是这个 data-theme 在背后翻。
+       */
       (function () {
         var root = document.documentElement
+        var pack = 'jelly'
         try {
-          var stored = localStorage.getItem('daymark.theme.v2')
-          var mode = stored === 'system' || stored === 'light' || stored === 'dark' ? stored : 'system'
-          var system = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark'
-          var theme = mode === 'system' ? system : mode
-          root.dataset.theme = theme
-          root.dataset.themeMode = mode
-          root.style.colorScheme = theme
-          var meta = document.querySelector('meta[name="theme-color"]')
-          if (meta) meta.setAttribute('content', theme === 'light' ? '#F7F5F2' : '#08090C')
+          var raw = localStorage.getItem('daymark.skin.v1')
+          if (raw) {
+            var skin = JSON.parse(raw)
+            if (skin && typeof skin.pack === 'string') pack = skin.pack
+            if (
+              skin &&
+              skin.followSystem === true &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches
+            ) {
+              pack = 'night'
+            }
+          }
         } catch (error) {
-          root.dataset.theme = 'dark'
-          root.dataset.themeMode = 'system'
+          /* 读坏了就当软糖 */
         }
+        var theme = pack === 'night' ? 'dark' : 'light'
+        root.dataset.theme = theme
+        root.style.colorScheme = theme
+        var meta = document.querySelector('meta[name="theme-color"]')
+        if (meta) meta.setAttribute('content', theme === 'light' ? '#F7F5F2' : '#08090C')
       })()
     </script>
   </head>
