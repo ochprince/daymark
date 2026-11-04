@@ -37,6 +37,8 @@ export const PET_PLATFORM_SELECTORS = [
   '.c-memo',
   // 装扮页那张大预览卡（软糖 / 纸本）：站上去，别站进里面那张缩小的卡
   '.g-item',
+  // 藏馆里摊开的纸条：站到纸上沿，低头看一眼
+  '.slip',
   '.tabbar',
   '.pill-switch',
   '.icon-btn',
@@ -351,6 +353,8 @@ export function PetLayer({
           if (seen.has(el) || layer.contains(el)) return
           // 装扮页的预览是「缩小的真实卡片」，它自己不该被桌宠踩，也不该抢它的手势
           if (el.closest('.mini')) return
+          // 「还有 N 张在路上」那种虚线占位不是纸，踩不住
+          if (el.classList.contains('locked')) return
           seen.add(el)
           const b = el.getBoundingClientRect()
           if (b.width < 36 || b.height < 6) return
@@ -834,6 +838,8 @@ export function PetLayer({
       }
       // 踩到备忘与待办上：它低头看一眼，顺口念一句
       if (p.sel === '.c-memo') say('pet.say.memo', 2000)
+      // 踩到藏馆里摊开的纸条上：像趴在一张真的纸上
+      if (p.sel === '.slip') say('pet.say.slip', 2200)
     }
 
     /**
@@ -898,10 +904,15 @@ export function PetLayer({
         const up = cands.filter((q) => q.t < s.y - 10)
         const down = cands.filter((q) => q.t > s.y + 10)
         const roll = Math.random()
-        const pool = roll < 0.45 && up.length ? up : roll < 0.85 && down.length ? down : cands
-        for (let i = 0; i < 4; i += 1) {
-          const target = pick(pool)
-          if (jumpToPlatform(target, p)) return
+        const base = roll < 0.45 && up.length ? up : roll < 0.85 && down.length ? down : cands
+        /*
+         * 藏馆里摊开的纸条是它最该去的地方，但正常抽签它只是十几个平台里的一个，
+         * 一整天也未必轮到一次。这里给它三份权重，其余平台不变。
+         */
+        const slips = base.filter((q) => q.sel === '.slip')
+        const pool = slips.length ? [...base, ...slips, ...slips] : base
+        for (let i = 0; i < 6; i += 1) {
+          if (jumpToPlatform(pick(pool), p)) return
         }
         setMode('stand', rand(0.5, 1))
       })

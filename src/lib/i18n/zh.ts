@@ -504,6 +504,7 @@ export const zh = {
   'pet.say.visit': '我来串门啦！',
   'pet.say.visitor': '有客人来啦！',
   'pet.say.memo': '记着呢。',
+  'pet.say.slip': '这张纸好软。',
   'pet.say.wake': '唔……我醒着呢。',
   'pet.say.play': '一起玩！',
   'pet.say.playHost': '来呀，一起玩！',

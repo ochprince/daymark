@@ -504,6 +504,7 @@ export const en: Record<MessageKey, Msg> = {
   'pet.say.visit': 'Just visiting!',
   'pet.say.visitor': 'We have a guest!',
   'pet.say.memo': 'Noted.',
+  'pet.say.slip': 'This paper is so soft.',
   'pet.say.wake': "Mm... I'm up.",
   'pet.say.play': 'Let us play!',
   'pet.say.playHost': 'Come play with me!',
