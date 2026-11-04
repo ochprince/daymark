@@ -80,7 +80,7 @@ export const en: Record<MessageKey, Msg> = {
   'stage.habit.weekTarget': '{n} / {target} this week',
   'stage.habit.monthTarget': '{n} / {target} this month',
   'stage.countdown.days': '{n} days to go',
-  'stage.countdown.today': 'It’s today',
+  'stage.countdown.today': 'It\'s today',
   'stage.countdown.past': '{n} days ago',
 
   /* Actions */
@@ -129,7 +129,7 @@ export const en: Record<MessageKey, Msg> = {
   'dress.applied': 'In use',
   'dress.custom': 'Customize',
   'dress.customHint': 'Applies to this style only',
-  'dress.followSystemHint': 'Follows your phone’s light / dark mode',
+  'dress.followSystemHint': 'Follows your phone\'s light / dark mode',
   'dress.accent.auto': 'Follow style',
   'dress.sampleTitle': 'One thing',
   'dress.hue.0': 'Lemon',
@@ -204,7 +204,7 @@ export const en: Record<MessageKey, Msg> = {
   'add.note.desc': 'Something to keep for yourself',
   'add.note.done': 'Done',
   'add.note.placeholder': 'e.g. Almost gave up today, but finished it.',
-  'add.name.placeholder': 'e.g. Quit smoking, Water, Mom’s birthday',
+  'add.name.placeholder': 'e.g. Quit smoking, Water, Mom\'s birthday',
   'add.startNow': 'Starting now',
   'add.startPast': 'Starting in the past',
   'add.repeat': 'Repeat',
@@ -219,21 +219,21 @@ export const en: Record<MessageKey, Msg> = {
   'welcome.1.body': 'Daymark shows one thing at a time. Every little thing you keep grows into a companion that stays with you.',
   'welcome.1.cta': 'Bring an egg home',
   'welcome.2.title': 'Pick a little one',
-  'welcome.2.body': 'They’re all still eggs for now. Choose the one you want to watch grow.',
+  'welcome.2.body': 'They\'re all still eggs for now. Choose the one you want to watch grow.',
   'welcome.2.cta': 'This one',
   'welcome.pick.sprout': 'Lives in the light, sprouts slowly',
   'welcome.pick.moon': 'Stays up with you at night',
   'welcome.pick.star': 'Runs fast, waits long',
   'welcome.3.title': 'Give it a name',
-  'welcome.3.body': 'Write down one small thing you want to keep. That’s its name too — note it each day and it grows a little.',
+  'welcome.3.body': 'Write down one small thing you want to keep. That\'s its name too — note it each day and it grows a little.',
   'welcome.3.placeholder': 'Sleep early / Drink water / Go for a walk',
   'welcome.3.cta': 'Take it home',
 
   /* Hatch */
   'hatch.title': 'Hatch',
   'hatch.tap': 'Tap three times to wake it',
-  'hatch.hello': 'Hi, I’m {name}!',
-  'hatch.start': 'Let’s begin',
+  'hatch.hello': 'Hi, I\'m {name}!',
+  'hatch.start': 'Let\'s begin',
 
   /* Creature names */
   'creature.sprout': 'Sprout',
