@@ -27,6 +27,8 @@ export const PET_PLATFORM_SELECTORS = [
   '.stage-card',
   // 备忘与待办整块也能踩：踩在它上沿，顺带抖一下
   '.c-memo',
+  // 装扮页那张大预览卡（软糖 / 纸本）：站上去，别站进里面那张缩小的卡
+  '.g-item',
   '.tabbar',
   '.pill-switch',
   '.icon-btn',
