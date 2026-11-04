@@ -256,9 +256,18 @@ export function needsStageTransition(state: CollectionState, itemKey: string, st
   return typeof seen !== 'number' || seen < stage
 }
 
+/**
+ * 收一张纸条。
+ *
+ * 写之前先把磁盘上的最新状态读回来再合并：内存里的缓存可能是旧的
+ * （另一个标签页刚写过，或者手机在后台待久了没收到 storage 事件），
+ * 直接拿缓存覆盖，会把别人刚收下的那张纸条写没。
+ */
 export function addNote(note: Note): void {
+  collectionStore.reload()
   const state = collectionStore.get()
-  collectionStore.patch({ notes: [note, ...state.notes].slice(0, 500) })
+  const rest = state.notes.filter((item) => item.id !== note.id)
+  collectionStore.patch({ notes: [note, ...rest].slice(0, 500) })
 }
 
 /* ------------------------------------------------------------------ *
