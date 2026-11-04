@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, type CSSProperties } from 'react'
 import { Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
 import { addCheckIn } from '../lib/checkins'
@@ -6,6 +6,7 @@ import { setFocusKey } from '../lib/focus'
 import { itemKey } from '../lib/itemview'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
+import { petHueVars } from './pets/petArt'
 import './welcome.css'
 
 export type WelcomeResult = {
@@ -38,6 +39,18 @@ const PICKS: readonly Pick[] = [
 ]
 
 const STEPS = 3
+
+/**
+ * 宠物填充靠 --c / --c2。素材根上的这两个变量会被剥掉，
+ * 外层不写的话 fill 落空，整只就会被画成黑色。
+ */
+function petColor(index: number): CSSProperties {
+  const vars = petHueVars(index)
+  return {
+    '--c': `var(--h-${index}, ${vars['--c']})`,
+    '--c2': `var(--h-${index}-2, ${vars['--c2']})`,
+  } as CSSProperties
+}
 
 /**
  * 首次见面：欢迎 → 选一只小家伙 → 起名字 → 直接孵化。
@@ -76,7 +89,7 @@ export function WelcomeFlow({ onSkip, onDone }: WelcomeFlowProps) {
 
   return (
     <div className="wf" role="dialog" aria-modal="true" aria-label={t('welcome.1.title')}>
-      <div className="wf-glow" aria-hidden="true" style={{ '--c': `var(--h-${pick.color})` } as React.CSSProperties} />
+      <div className="wf-glow" aria-hidden="true" style={{ '--c': `var(--h-${pick.color})` } as CSSProperties} />
 
       <div className="wf-top">
         {step > 0 ? (
@@ -104,7 +117,7 @@ export function WelcomeFlow({ onSkip, onDone }: WelcomeFlowProps) {
 
       {step === 0 ? (
         <div className="wf-body" key="step-1">
-          <div className="wf-egg">
+          <div className="wf-egg" style={petColor(pick.color)}>
             <Creature stage="egg" size={150} extra={{ crack: 0 }} />
           </div>
           <h2>{t('welcome.1.title')}</h2>
@@ -130,7 +143,7 @@ export function WelcomeFlow({ onSkip, onDone }: WelcomeFlowProps) {
                   type="button"
                   className={on ? 'wf-pick is-on' : 'wf-pick'}
                   aria-pressed={on}
-                  style={{ '--c': `var(--h-${option.color})` } as React.CSSProperties}
+                  style={petColor(option.color)}
                   onClick={() => setPick(option)}
                 >
                   <span className="wf-pick-art">
@@ -159,7 +172,7 @@ export function WelcomeFlow({ onSkip, onDone }: WelcomeFlowProps) {
             finish()
           }}
         >
-          <div className="wf-preview" style={{ '--c': `var(--h-${pick.color})` } as React.CSSProperties}>
+          <div className="wf-preview" style={petColor(pick.color)}>
             <Creature species={pick.species} stage={0} size={118} mood="happy" />
           </div>
           <h2>{t('welcome.3.title')}</h2>

@@ -3,8 +3,16 @@ import { t } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
 import { Creature } from '../components/Creature'
 import { IconDown, IconPlus } from './icons'
+import { petHueVars } from './pets/petArt'
 import { StageCard } from './StageCard'
-import { useState } from 'react'
+import { useState, type CSSProperties } from 'react'
+
+/** 空态蛋没有事项色相，用芽芽的青瓷；不写 --c 的话蛋体会被画成黑色 */
+const emptyEggVars = petHueVars(4)
+const emptyEggColor = {
+  '--c': `var(--h-4, ${emptyEggVars['--c']})`,
+  '--c2': `var(--h-4-2, ${emptyEggVars['--c2']})`,
+} as CSSProperties
 
 export type TodayPageProps = {
   views: ItemView[]
@@ -96,7 +104,7 @@ export function TodayPage({
           </div>
         </header>
         <div className="empty">
-          <div className="empty-egg">
+          <div className="empty-egg" style={emptyEggColor}>
             <Creature stage="egg" size={150} extra={{ crack: 1 }} />
           </div>
           <h2>{t('stage.empty.title')}</h2>
