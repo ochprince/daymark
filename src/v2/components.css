@@ -732,6 +732,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .gallery::-webkit-scrollbar { display: none; }
 .g-item { flex: none; scroll-snap-align: center; width: 200px; text-align: center; transition: transform 0.3s, opacity 0.3s; opacity: 0.55; transform: scale(0.92); border: 0; background: transparent; padding: 0; }
 .g-item.is-on { opacity: 1; transform: none; }
+.mini *,
+.mini { pointer-events: none !important; }
 .mini { width: 200px; height: 356px; border-radius: 30px; overflow: hidden; position: relative; background: var(--bg); color: var(--ink); font-family: var(--font-ui); border: 3px solid #1c1b20; pointer-events: none; text-align: left; }
 .mini::before { content: ''; position: absolute; inset: 0; background: var(--texture); background-size: var(--texture-size, auto); }
 [data-skin='night'].mini { background: radial-gradient(120% 70% at 50% 0%, #2a2d78 0%, var(--bg) 60%); }

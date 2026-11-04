@@ -318,7 +318,10 @@ export function PetLayer({
     /** 出场时那张卡片：它被换掉/卸载了，这一段接力就该作废 */
     let debutWrap: HTMLElement | null = null
 
-    const cardWrap = () => host.querySelector<HTMLElement>('.stage-card .cr-wrap')
+    const cardWrap = () =>
+      Array.from(host.querySelectorAll<HTMLElement>('.stage-card .cr-wrap')).find(
+        (el) => !el.closest('.mini'),
+      ) ?? null
 
     const scan = () => {
       rect = layer.getBoundingClientRect()
@@ -327,6 +330,8 @@ export function PetLayer({
       for (const sel of PET_PLATFORM_SELECTORS) {
         host.querySelectorAll<HTMLElement>(sel).forEach((el, index) => {
           if (seen.has(el) || layer.contains(el)) return
+          // 装扮页的预览是「缩小的真实卡片」，它自己不该被桌宠踩，也不该抢它的手势
+          if (el.closest('.mini')) return
           seen.add(el)
           const b = el.getBoundingClientRect()
           if (b.width < 36 || b.height < 6) return
