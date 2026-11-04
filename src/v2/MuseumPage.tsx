@@ -143,11 +143,12 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
         <p>{t('museum.sub')}</p>
       </header>
 
+      {/* 四个数字跟下面的 tab 一一对应：纸条 / 徽章 / 图鉴 / 章节 */}
       <div className="m-stats">
-        <Stat value={String(books.length)} label={t('museum.stat.books')} />
-        <Stat value={`${dexCount(collection)}`} sub={`/${DEX_TOTAL}`} label={t('museum.stat.dex')} />
-        <Stat value={String(badgeCount(collection))} label={t('museum.stat.badges')} />
         <Stat value={String(collection.notes.length)} label={t('museum.stat.notes')} />
+        <Stat value={String(badgeCount(collection))} label={t('museum.stat.badges')} />
+        <Stat value={`${dexCount(collection)}`} sub={`/${DEX_TOTAL}`} label={t('museum.stat.dex')} />
+        <Stat value={String(books.length)} label={t('museum.stat.books')} />
       </div>
 
       <div className="seg m-tabs" role="tablist">
