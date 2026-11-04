@@ -58,6 +58,7 @@ import type { ItemView } from '../lib/itemview'
 import './app.css'
 import { PetLayer, type PetStage } from './pets/PetLayer'
 import { frenzyKind } from './pets/frenzy'
+import { getPetOut, savePetOut } from '../lib/petout'
 import type { PetArtSpecies } from './pets/petArt'
 
 type Sheet = 'switcher' | 'add' | null
@@ -187,13 +188,25 @@ export function AppV2() {
   const [pokeCount, setPokeCount] = useState(0)
   // 桌宠在外 / 在卡片里：两种互斥状态，卡片那只与桌上那只是同一只
   const [petOut, setPetOut] = useState(
-    // ?out=1：开发时直接把桌宠放到外面，方便看「出门之后」的界面
-    () => typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('out'),
+    // ?out=1：开发时直接把桌宠放到外面，方便看「出门之后」的界面。
+    // 平时看上次存下来的：它出门了就是出门了，刷新一下不该被塞回卡片。
+    () =>
+      (typeof window !== 'undefined' && new URLSearchParams(window.location.search).has('out')) ||
+      (typeof window !== 'undefined' && getPetOut().out),
   )
   /** 出门那一刻它是谁（换卡片期间保持不变：颜色、形态、物种都不跟着切卡变） */
-  const [outPet, setOutPet] = useState<{ species: PetArtSpecies; stage: PetStage; hue: number } | null>(null)
+  const [outPet, setOutPet] = useState<{ species: PetArtSpecies; stage: PetStage; hue: number } | null>(
+    () => {
+      const saved = getPetOut()
+      if (!saved.out || !saved.species || saved.stage === null || saved.hue === null) return null
+      return { species: saved.species as PetArtSpecies, stage: saved.stage as PetStage, hue: saved.hue }
+    },
+  )
   /** 它是从哪张卡出去的：只有那张卡的家空着，别的卡家里还有自己的那一只 */
-  const [outFrom, setOutFrom] = useState<string | null>(null)
+  const [outFrom, setOutFrom] = useState<string | null>(() => {
+    const saved = getPetOut()
+    return saved.out ? saved.from : null
+  })
   // 让它自己走出去（连戳五下 / 演示）：+1 就播一遍出场
   const [debutSeq, setDebutSeq] = useState(0)
   /** 串门时连戳五下：两只一起玩（不送主人出门） */
@@ -283,6 +296,28 @@ export function AppV2() {
     )
     setOutFrom((prev) => prev ?? focus.key)
   }, [focus?.key, focus?.species, focus?.stage, petOut])
+
+  /**
+   * 上次出门那张卡被删了：回来的落点不存在了。
+   * 不处理的话，卡片里会同时出现「它自己」和「在外面那只」，看像分身。
+   */
+  useEffect(() => {
+    if (!petOut || !outFrom || outFrom === '__guest__') return
+    if (!views.some((v) => v.key === outFrom)) setOutFrom(focus?.key ?? null)
+  }, [petOut, outFrom, views, focus?.key])
+
+  // 它在外面的这件事要过夜：写回本地存储，下次打开还在外面（身份一起存）
+  useEffect(() => {
+    // 串门那位是调试出来的客人，不是自己的宠物，不记
+    if (outFrom === '__guest__') return
+    savePetOut({
+      out: petOut,
+      from: outFrom,
+      species: outPet?.species ?? null,
+      stage: outPet?.stage ?? null,
+      hue: outPet?.hue ?? null,
+    })
+  }, [petOut, outFrom, outPet])
 
   // ?visit=1：开发时直接让「已经有一只是来串门的」，方便调两只一起玩的那段。
   // 放在同步 effect 之后跑，否则会被上面那轮 setOutFrom(null) 抹掉。

@@ -900,6 +900,32 @@ export function PetLayer({
         setMode('walk')
       })
 
+      // 跳：一次跳多高不固定。多数是小跳，偶尔来一下大的，最高半屏。
+      // 高度用平方分布抽，所以「矮的多、高的少」，看起来才不像机械弹跳。
+      const hop = (maxH: number, vx = 0) => {
+        const k = rand(0.18, 1) ** 2
+        const h = Math.min(maxH, 26 + k * (maxH - 26))
+        s.plat = null
+        s.vy = -Math.sqrt(2 * PET_GRAVITY * h)
+        s.vx = vx
+        setMode('fall')
+      }
+      add(6, () => hop(rect.height * 0.5))
+      add(2.5, () => hop(rect.height * 0.28, rand(-90, 90)))
+      // 蹦两下：先矮后高，像是自己玩得开心
+      add(1.6, () => {
+        hop(70)
+        window.setTimeout(() => {
+          if (!outRef.current || s.mode === 'drag') return
+          hop(140)
+        }, 460)
+      })
+      add(1.2, () => setMode('cheer', rand(0.6, 1.1)))
+      add(0.9, () => {
+        s.face = -s.face
+        setMode('stand', rand(0.5, 1))
+      })
+
       const total = options.reduce((sum, o) => sum + o.w, 0)
       let r = rand(0, total)
       for (const o of options) {

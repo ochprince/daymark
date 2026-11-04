@@ -261,9 +261,50 @@ export function StageCard({
     return () => window.clearInterval(timer)
   }, [petAway, sleeping])
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target
+  /** 按住拖拽把萌宠拉出家：已经触发过出门，这一次横滑就别再算滑卡 */
+  const outFired = useRef(false)
 
   function startHold(event?: ReactPointerEvent<HTMLElement>) {
     pressAt.current = performance.now()
+    // 手指一挪开就算滑动，不是长按。
+    // 只靠 startDrag 里那一下不够：横滑判定要等方向确认，慢一点的滑动
+    // 会在确认之前就把 500ms 蓄满，于是滑卡的同时记了一笔，卡片中间冒出「+1」。
+    //
+    // 反过来，「按住再往外拖」是把它拉出家：先按住 240ms 再说，
+    // 直接一划仍然是滑卡，不会误触发。
+    // 这段要在 canHold 之前挂上——没有记账目标的卡片（倒数日）也能把它拉出去。
+    const fromX = event?.clientX ?? 0
+    const fromY = event?.clientY ?? 0
+    let armed = false
+    const arming = window.setTimeout(() => {
+      armed = true
+    }, 240)
+    const watch = (moveEvent: PointerEvent) => {
+      const dist = Math.hypot(moveEvent.clientX - fromX, moveEvent.clientY - fromY)
+      if (armed && dist > 16 && onFrenzy) {
+        window.clearTimeout(arming)
+        stopWatch()
+        cancelHold(true)
+        pressAt.current = 0 // 别让松手那一下再被当成「摸摸」
+        outFired.current = true
+        playSfx('tap')
+        // 有客人在时它是「两只一起玩」，不会把主人也送出同一个精灵
+        onFrenzy()
+        return
+      }
+      if (dist > 12) {
+        window.clearTimeout(arming)
+        stopWatch()
+        cancelHold(true)
+      }
+    }
+    const stopWatch = () => {
+      window.clearTimeout(arming)
+      window.removeEventListener('pointermove', watch)
+    }
+    window.addEventListener('pointermove', watch)
+    watchers.current.add(stopWatch)
+
     if (!canHold) return
     if (habitDone) {
       onToast?.(t('hold.already'))
@@ -276,21 +317,6 @@ export function StageCard({
       setCharging(false)
       onLog()
     }, HOLD_MS)
-
-    // 手指一挪开就算滑动，不是长按。
-    // 只靠 startDrag 里那一下不够：横滑判定要等方向确认，慢一点的滑动
-    // 会在确认之前就把 500ms 蓄满，于是滑卡的同时记了一笔，卡片中间冒出「+1」。
-    const fromX = event?.clientX ?? 0
-    const fromY = event?.clientY ?? 0
-    const watch = (moveEvent: PointerEvent) => {
-      if (Math.hypot(moveEvent.clientX - fromX, moveEvent.clientY - fromY) > 12) {
-        stopWatch()
-        cancelHold(true)
-      }
-    }
-    const stopWatch = () => window.removeEventListener('pointermove', watch)
-    window.addEventListener('pointermove', watch)
-    watchers.current.add(stopWatch)
   }
 
   /** silent：横滑取消蓄力时不该弹「再按久一点」 */
@@ -351,7 +377,9 @@ export function StageCard({
     let active = false
     let dx = 0
 
+    outFired.current = false
     const move = (moveEvent: PointerEvent) => {
+      if (outFired.current) return
       const stepX = moveEvent.clientX - startX
       const stepY = moveEvent.clientY - startY
       if (!active) {
