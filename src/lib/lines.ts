@@ -33,13 +33,16 @@ export function bubbleLine(view: ItemView, ctx: LineContext = {}): string {
 
   if (view.kind === 'countdown') {
     const d = view.days
-    // 过了那天还没「说过了」时 d 是负数，得先拦下来，否则会说出「只剩 -1 天」
-    if (d < 0) return t('stage.countdown.past', { n: Math.abs(d) })
+    /*
+     * 过了那天还没「说过了」时 d 是负数。
+     * 这儿不能再吐「已经过去 N 天」——那是卡片正中间的大数字，
+     * 气泡里再念一遍，屏幕上就有两行一模一样的话，看着像渲染出错。
+     */
+    if (d < 0) return t('line.countdown.past')
     if (d === 0) return t('line.countdown.today')
     if (d <= 3) return t('line.countdown.soon', { n: d })
     if (d <= 7) return t('line.countdown.week')
-    if (d > 7) return t('line.countdown.far', { n: d })
-    return t('stage.countdown.past', { n: Math.abs(d) })
+    return t('line.countdown.far', { n: d })
   }
 
   // 习惯

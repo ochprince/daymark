@@ -281,6 +281,7 @@ export const zh = {
   'line.countdown.week': '还有一周，刚好来得及慢慢准备。',
   'line.countdown.soon': '只剩 {n} 天了，东西都准备好了吗？',
   'line.countdown.today': '就是今天！',
+  'line.countdown.past': '那天已经过了，我陪你记着。',
   'line.poke.1': '嗯？',
   'line.poke.2': '好啦好啦，我在呢。',
   'line.poke.3': '今天也辛苦你了。',

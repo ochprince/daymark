@@ -281,6 +281,7 @@ export const en: Record<MessageKey, Msg> = {
   'line.countdown.week': 'One week to go — just enough time to prepare slowly.',
   'line.countdown.soon': 'Only {n} days left. Is everything ready?',
   'line.countdown.today': 'It is today!',
+  'line.countdown.past': 'That day has passed — I am still keeping it with you.',
   'line.poke.1': 'Hm?',
   'line.poke.2': 'Okay, okay — I am here.',
   'line.poke.3': 'You worked hard today too.',
