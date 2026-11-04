@@ -138,10 +138,19 @@ function normalizeTimestampMap(input: unknown): Record<string, number> {
 function normalizeNotes(input: unknown): Note[] {
   if (!Array.isArray(input)) return []
   const result: Note[] = []
+  const seen = new Set<string>()
   for (const item of input) {
     if (!isRecord(item)) continue
     if (typeof item.id !== 'string' || typeof item.text !== 'string') continue
     if (typeof item.at !== 'number' || !Number.isFinite(item.at)) continue
+    /*
+     * 同一个 id 出现两次会让 React 只渲染一张，可上面的数字是数组长度——
+     * 就会出现「写着 2 张纸条，摊开只有 1 张」，点也点不出第二张来。
+     * 空文字的纸条同理：占着数，画出来是张白纸。
+     */
+    if (seen.has(item.id)) continue
+    if (!item.text.trim()) continue
+    seen.add(item.id)
     result.push({
       id: item.id,
       text: item.text,

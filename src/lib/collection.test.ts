@@ -100,6 +100,22 @@ test('已解锁的不再重复给', () => {
   assert.deepEqual(evaluateBadges({ itemCount: 1, maxGrowth: 0, hasChapter: false }, state), [])
 })
 
+test('藏馆里的纸条按 id 去重，空文字的不算一张', () => {
+  const state = normalizeCollection({
+    notes: [
+      { id: 'a', text: '同一张被写了两次', from: '', at: 3, mine: true },
+      { id: 'a', text: '同一张被写了两次', from: '', at: 3, mine: true },
+      { id: 'b', text: '   ', from: '芽芽', at: 2 },
+      { id: 'c', text: '正常的', from: '芽芽', at: 1 },
+    ],
+  })
+  // 数字和摊开的卡片得对得上：重号只留一张，空文字不留
+  assert.deepEqual(
+    state.notes.map((note) => note.id),
+    ['a', 'c'],
+  )
+})
+
 test('徽章目录本身没重复 id，且都有文案键', () => {
   const ids = BADGES.map((badge) => badge.id)
   assert.equal(new Set(ids).size, ids.length)
