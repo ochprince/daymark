@@ -223,44 +223,13 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cr-wrap { position: relative; width: 176px; height: 176px; display: grid; place-items: center; touch-action: none; cursor: pointer; }
 .cr-wrap .cr {
   position: relative; z-index: 2; overflow: visible;
-  /* 原来 3.2s 一直在浮，看久了像在抽搐：放慢到 5.6s，并且偶尔换成「东张西望」 */
-  animation: bob 8.5s ease-in-out infinite;
+  /* 一直轻轻的上下浮，6 秒一个来回 */
+  animation: bob 6s ease-in-out infinite;
   transform-origin: 50% 92%;
 }
 .cr-wrap .cr.look { animation: look-around 1.6s ease-in-out; }
-/* 在家这只的小动作：在里面走来走去 / 忽大忽小 / 歪头，各 2.4s，演完回 bob */
-.cr-wrap .cr.walk-l { animation: cr-walk-l 2.4s ease-in-out; }
-.cr-wrap .cr.walk-r { animation: cr-walk-r 2.4s ease-in-out; }
-.cr-wrap .cr.grow { animation: cr-grow 2.4s var(--ease-pop, ease); }
+/* 在家这只的小动作：只剩歪头（走来走去和忽大忽小用户已否决），2.4s，演完回 bob */
 .cr-wrap .cr.tilt { animation: cr-tilt 2.4s ease-in-out; }
-@keyframes cr-walk-l {
-  0% { transform: translateX(0) translateY(0); }
-  10% { transform: translateX(-4px) translateY(-3px); }
-  28% { transform: translateX(-16px) translateY(0); }
-  40% { transform: translateX(-22px) translateY(-3px); }
-  58% { transform: translateX(-30px) translateY(0); }
-  74% { transform: translateX(-30px) translateY(0) scale(1.02, 0.98); }
-  88% { transform: translateX(-14px) translateY(-2px); }
-  100% { transform: translateX(0) translateY(0); }
-}
-@keyframes cr-walk-r {
-  0% { transform: translateX(0) translateY(0); }
-  10% { transform: translateX(4px) translateY(-3px); }
-  28% { transform: translateX(16px) translateY(0); }
-  40% { transform: translateX(22px) translateY(-3px); }
-  58% { transform: translateX(30px) translateY(0); }
-  74% { transform: translateX(30px) translateY(0) scale(1.02, 0.98); }
-  88% { transform: translateX(14px) translateY(-2px); }
-  100% { transform: translateX(0) translateY(0); }
-}
-@keyframes cr-grow {
-  0% { transform: scale(1, 1); }
-  18% { transform: scale(1.1, 1.12); }
-  42% { transform: scale(1.06, 1.08); }
-  62% { transform: scale(0.95, 0.93); }
-  80% { transform: scale(1.02, 1.03); }
-  100% { transform: scale(1, 1); }
-}
 @keyframes cr-tilt {
   0% { transform: rotate(0deg); }
   22% { transform: rotate(-7deg) translateY(-2px); }
@@ -268,7 +237,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
   72% { transform: rotate(-3deg); }
   100% { transform: rotate(0deg); }
 }
-.cr-wrap.sleep .cr { animation: breathe 3.6s ease-in-out infinite; }
+.cr-wrap.sleep .cr,
+/* 打盹：只是被哄睡了，不算「很久没来」，所以不复用 .sleep 那套状态 */
+.cr-wrap.nap .cr { animation: breathe 3.6s ease-in-out infinite; }
 .ground { position: absolute; bottom: 4px; left: 50%; width: 120px; height: 18px; margin-left: -60px; border-radius: 50%; background: var(--c2); opacity: 0.18; z-index: 1; animation: shadow 3.2s ease-in-out infinite; }
 [data-skin='pixel'] .ground { border-radius: 0; height: 8px; bottom: 10px; }
 .charge-ring { position: absolute; inset: -6px; z-index: 0; }

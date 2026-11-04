@@ -880,7 +880,18 @@ export function PetLayer({
         return
       }
       if (reduced()) {
-        setMode('stand', 5)
+        /*
+         * 减动效不等于一动不动：用户反馈开了「减弱动态效果」之后它像被冻住了。
+         * 这里不给跳、不给爬墙，只让它慢慢挪一小段，或者站着换个姿势。
+         */
+        if (Math.random() < 0.45) {
+          setMode('stand', rand(2.5, 4.5))
+        } else {
+          const step = (Math.random() < 0.5 ? -1 : 1) * rand(24, 64)
+          s.tx = Math.min(p.r - 12, Math.max(p.l + 12, s.x + step))
+          s.face = s.tx >= s.x ? 1 : -1
+          setMode('walk')
+        }
         return
       }
       const options: { w: number; run: () => void }[] = []
@@ -1121,12 +1132,35 @@ export function PetLayer({
       }
 
       if (reduced()) {
-        // 减动效：只做落地，不主动走跳
-        if (s.mode === 'fall' && s.vy > 0 && !homing && !debuting) {
+        // 减动效：不跳不爬，但会慢慢挪、会换姿势——彻底冻住会让人以为它坏了
+        if (s.mode === 'fall' && !homing && !debuting) {
+          /*
+           * 原来这里要求 vy > 0，可是刚出场时 vy 就是 0，于是它卡在 fall 里
+           * 一动不动——用户开减动效后看到的就是这个。现在只往下掉、落谁算谁。
+           */
           const prevY = s.y
-          s.y += Math.max(4, s.vy * dt)
+          s.vy = Math.max(s.vy + PET_GRAVITY * dt, 4)
+          s.y += s.vy * dt
           const hit = landingPlatform(platforms, prevY, s.y, s.x)
           if (hit) land(hit)
+          else if (s.y > rect.height + 40) {
+            s.y = 120
+            s.vy = 0
+            setMode('stand', 1.5)
+          }
+        } else if (s.mode === 'walk' && !homing && !debuting) {
+          const dir = s.tx >= s.x ? 1 : -1
+          s.face = dir
+          s.x += dir * 16 * dt
+          if ((dir > 0 && s.x >= s.tx) || (dir < 0 && s.x <= s.tx)) {
+            s.x = s.tx
+            setMode('stand', rand(1.5, 3))
+          }
+          const here = platOf()
+          if (here) s.y = here.t + 3
+        } else if (!homing && !debuting) {
+          s.timer -= dt
+          if (s.timer <= 0) think()
         }
       } else {
         step(dt)

@@ -256,11 +256,16 @@ export function StageCard({
   const canHold = view.kind === 'habit'
   const sleeping = view.mood === 'sleep'
   /**
-   * 在家这只的小动作：走来走去、忽大忽小、歪头。
-   * 之前它只有 15 秒一次的「东张西望」，其余时间只在原地微微浮，
-   * 看久了像张贴纸。这里每 4–9 秒挑一个动作演一遍。
+   * 在家这只的小动作。走来走去和忽大忽小用户看过后否决了（在卡片里挪动像是要跑出去，
+   * 缩放又像在抽搐），只留歪头，其余时间就是 6 秒一个来回的上下浮。
    */
-  const [idle, setIdle] = useState<'' | 'walk-l' | 'walk-r' | 'grow' | 'tilt'>('')
+  const [idle, setIdle] = useState<'' | 'tilt'>('')
+  /**
+   * 打盹：跟「很久没来所以睡着了」不是一回事。
+   * 真睡（view.mood === 'sleep'）要 3 天没打卡才出现，用户几乎见不到；
+   * 这里每隔一会儿就找个地方眯三四秒，是它自己的小习惯。
+   */
+  const [napping, setNapping] = useState(false)
   const reducedMotion = () =>
     document.documentElement.classList.contains('reduce-motion') ||
     (typeof window.matchMedia === 'function' &&
@@ -268,15 +273,21 @@ export function StageCard({
   useEffect(() => {
     if (petAway || sleeping || reducedMotion()) {
       setIdle('')
+      setNapping(false)
       return undefined
     }
     let step: number = 0
     let stop: number = 0
-    const ACTIONS = ['walk-l', 'walk-r', 'grow', 'tilt'] as const
     const schedule = () => {
       step = window.setTimeout(() => {
-        setIdle(ACTIONS[Math.floor(Math.random() * ACTIONS.length)])
-        stop = window.setTimeout(() => setIdle(''), 2400)
+        // 四分之一的空档用来打盹，剩下歪一下头
+        if (Math.random() < 0.25) {
+          setNapping(true)
+          stop = window.setTimeout(() => setNapping(false), 3600 + Math.random() * 2600)
+        } else {
+          setIdle('tilt')
+          stop = window.setTimeout(() => setIdle(''), 2400)
+        }
         schedule()
       }, 4200 + Math.random() * 4600)
     }
@@ -285,6 +296,7 @@ export function StageCard({
       window.clearTimeout(step)
       window.clearTimeout(stop)
       setIdle('')
+      setNapping(false)
     }
   }, [petAway, sleeping])
   useEffect(() => {
@@ -471,7 +483,9 @@ export function StageCard({
         {/* 它出门了，卡片里就不该还留着它刚才说的话 */}
         {petAway ? null : <div className="bubble">{line}</div>}
         <div
-          className={`cr-wrap ${sleeping ? 'sleep' : ''} ${jumping ? 'jump' : ''} ${
+          className={`cr-wrap ${sleeping ? 'sleep' : ''} ${napping ? 'nap' : ''} ${
+            jumping ? 'jump' : ''
+          } ${
             hyped ? 'hyped' : ''
           }${petAway ? ' pet-away' : ''}${petAway && homeHot ? ' pet-home-hot' : ''}`}
           onPointerDown={startHold}
@@ -531,7 +545,7 @@ export function StageCard({
             </button>
           ) : null}
           <div className="ground" />
-          {sleeping ? (
+          {sleeping || napping ? (
             <div className="zzz" aria-hidden="true">
               <span>z</span>
               <span>z</span>

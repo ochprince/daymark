@@ -600,8 +600,14 @@
 
 /* ---------- 减动效：全部静止 ---------- */
 
+/*
+ * 减动效：不再蹦跳、不再摆手，但不能一动不动——
+ * 用户开过这个开关之后，外面那只像是坏了。留一个 6 秒 3px 的呼吸。
+ */
 @media (prefers-reduced-motion: reduce) {
-  .pet-art,
+  .pet-art {
+    animation: pz-quiet 6s ease-in-out infinite !important;
+  }
   .pet-art .pet-foot,
   .pet-art .pet-arm,
   .pet-zzz text,
@@ -613,15 +619,21 @@
   }
 }
 html.reduce-motion .pet-art,
+.reduce-motion .pet-art {
+  animation: pz-quiet 6s ease-in-out infinite !important;
+}
 html.reduce-motion .pet-art .pet-foot,
 html.reduce-motion .pet-art .pet-arm,
 html.reduce-motion .pet-zzz text,
 html.reduce-motion .pet-say,
-.reduce-motion .pet-art,
 .reduce-motion .pet-art .pet-foot,
 .reduce-motion .pet-art .pet-arm,
 .reduce-motion .pet-say {
   animation: none !important;
+}
+@keyframes pz-quiet {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
 }
 html.reduce-motion .pet-say,
 .reduce-motion .pet-say {
