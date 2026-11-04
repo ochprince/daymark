@@ -364,7 +364,12 @@
   border: 2px solid var(--line, #2b2638);
   border-radius: 18px;
   background: linear-gradient(170deg, #fffdf6, #f6efe0);
-  color: var(--ink, #2b2638);
+  /*
+   * 这张卡片永远是米白的纸，所以字色也必须钉死成墨色。
+   * 用 var(--ink) 的话，夜航皮肤里 --ink 是近白色（#f3efff），
+   * 白字印在米白纸上——整张纸条是空的，只剩三个按钮浮着。
+   */
+  color: #2b2638;
   box-shadow: 0 18px 40px rgba(43, 38, 56, 0.22);
   transform: rotate(-1.2deg);
   animation: noteIn 0.32s cubic-bezier(0.2, 0.9, 0.3, 1.15);
@@ -378,7 +383,7 @@
   font-size: 13px;
   font-weight: 700;
   letter-spacing: 0.08em;
-  color: var(--ink3, #9a91a8);
+  color: #8d84a0;
 }
 
 .note-card-body {
@@ -389,12 +394,12 @@
   line-height: 1.85;
   letter-spacing: 0.01em;
   font-family: var(--font-ui, inherit);
-  color: var(--ink, #2b2638);
+  color: #2b2638;
 }
 
 .note-card-sign {
   font-size: 13px;
-  color: var(--ink2, #5e566e);
+  color: #5e566e;
   text-align: right;
 }
 
@@ -428,7 +433,7 @@
   border: 0;
   border-radius: 50%;
   background: transparent;
-  color: var(--ink3, #9a91a8);
+  color: #8d84a0;
   font-size: 20px;
   line-height: 1;
   cursor: pointer;
