@@ -39,6 +39,16 @@ test('下一张 = 已收张数那一位', () => {
   assert.equal(nextNoteText({ notes: [{ at: 0 }] }), NOTE_POOL[1])
 })
 
+test('自己写的小纸条不占文案序号，也不挡住系统发下一张', () => {
+  const mine = { at: NOW, mine: true }
+  assert.equal(nextNoteText({ notes: [mine] }), NOTE_POOL[0])
+  assert.equal(nextNoteText({ notes: [mine, { at: NOW - 10 }] }), NOTE_POOL[1])
+  // 刚写过自己的纸条，也不该让系统三天内不说话
+  assert.equal(shouldOfferNote({ notes: [mine] }, NOW, () => 0), true)
+  // 系统刚发过一张，照样要等满三天
+  assert.equal(shouldOfferNote({ notes: [{ at: NOW - 1000 }] }, NOW, () => 0), false)
+})
+
 test('本周计数：同周累加，跨周归零重算', () => {
   const week = weekIndex(NOW)
   assert.deepEqual(bumpWeek({ week, count: 1 }, NOW), { week, count: 2 })

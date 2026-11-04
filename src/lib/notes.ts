@@ -39,7 +39,7 @@ export function weekIndex(now: number): number {
 }
 
 export type NoteGate = {
-  notes: readonly { at: number }[]
+  notes: readonly { at: number; mine?: boolean }[]
   notesThisWeek?: { week: number; count: number }
 }
 
@@ -48,7 +48,8 @@ export type NoteGate = {
  * random 传 0–1 的随机数，便于测试。
  */
 export function shouldOfferNote(state: NoteGate, now: number, random = Math.random): boolean {
-  const last = state.notes[0]?.at
+  // 自己写的那张不算「系统刚发过一张」：不然写完纸条，三天内小伙伴都不吭声了
+  const last = state.notes.find((note) => note.mine !== true)?.at
   if (typeof last === 'number' && now - last < 3 * DAY) return false
 
   const week = weekIndex(now)
@@ -66,9 +67,9 @@ export function noteTextAt(index: number): string {
   return NOTE_POOL[at]
 }
 
-/** 下一张纸条：第 (已收张数 + 1) 张 */
-export function nextNoteText(state: { notes: readonly unknown[] }): string {
-  return noteTextAt(state.notes.length)
+/** 下一张纸条：第 (系统已收张数 + 1) 张。自己写的那几张不占文案序号 */
+export function nextNoteText(state: { notes: readonly { at: number; mine?: boolean }[] }): string {
+  return noteTextAt(state.notes.filter((note) => note.mine !== true).length)
 }
 
 /** 收下这张之后，本周计数怎么变 */

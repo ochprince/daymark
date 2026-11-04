@@ -165,6 +165,7 @@ export const zh = {
   'museum.dex.empty': '还没遇到小伙伴。',
   'museum.badges.empty': '还没有徽章。',
   'museum.notes.empty': '还没有小纸条。',
+  'museum.notes.mine': '你自己写的',
 
   /* 装扮 */
   'dress.title': '装扮',
@@ -195,6 +196,10 @@ export const zh = {
   'add.yearly': '每年',
   'add.step3': '选一只小伙伴',
   'add.fromFestival': '从节日里挑一个',
+  'add.note': '写张小纸条',
+  'add.note.desc': '一句想留给自己的话',
+  'add.note.done': '写好了',
+  'add.note.placeholder': '比如：今天差点放弃，但还是做完了。',
   'add.name.placeholder': '比如：戒烟、喝水、妈妈的生日',
   'add.startNow': '从现在开始',
   'add.startPast': '从过去某一天',

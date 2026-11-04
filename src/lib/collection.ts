@@ -57,6 +57,8 @@ export type Note = {
   /** 署名：当时焦点小伙伴的名字 */
   from: string
   at: number
+  /** 用户自己在「新建 → 小纸条」里写的：自动进藏馆，不参与系统发纸条的节奏 */
+  mine?: boolean
 }
 
 export type CollectionState = {
@@ -145,6 +147,7 @@ function normalizeNotes(input: unknown): Note[] {
       text: item.text,
       from: typeof item.from === 'string' ? item.from : '',
       at: item.at,
+      mine: item.mine === true,
     })
   }
   return result.sort((a, b) => b.at - a.at)

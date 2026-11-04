@@ -4,6 +4,7 @@ import { addCheckIn } from '../lib/checkins'
 import { speciesColor } from '../lib/museum'
 import { addCountdown, updateCountdown } from '../lib/countdowns'
 import { addEvent } from '../lib/storage'
+import { addNote } from '../lib/collection'
 import { pickSpecies } from '../lib/migrate'
 import { setFocusKey } from '../lib/focus'
 import { itemKey } from '../lib/itemview'
@@ -29,6 +30,9 @@ const NAME_PLACEHOLDER: Record<ItemKind, string> = {
 
 export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
   const [kind, setKind] = useState<ItemKind | null>(null)
+  /** 写张小纸条：自己写的默认就进藏馆，不像系统那张还要点一下才收 */
+  const [writing, setWriting] = useState(false)
+  const [noteText, setNoteText] = useState('')
   /** 节日面板：从「新建」第一步直接进去，挑完就把这个节日加成倒数日 */
   const [festivals, setFestivals] = useState(false)
   /** 倒数日是否每年重来一次；用户自己点过就不再自动改 */
@@ -46,6 +50,15 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
     const at = parseDate(nextDate, Date.now())
     const isPast = startOfDay(at) < todayStart(Date.now())
     setYearly(isPast || /生日|生诞|诞辰/.test(nextTitle))
+  }
+
+  /** 自己写的纸条：直接收进藏馆（系统那张是「点了才收」） */
+  function saveNote() {
+    const text = noteText.trim()
+    if (!text) return
+    const now = Date.now()
+    addNote({ id: `note-${now}`, text, from: '', at: now, mine: true })
+    onCreated(t('note.saved'))
   }
 
   function create() {
@@ -98,17 +111,35 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
         className="sheet"
         role="dialog"
         aria-modal="true"
-        aria-label={kind === null ? t('add.title') : t('add.step2')}
+        aria-label={writing ? t('note.title') : kind === null ? t('add.title') : t('add.step2')}
       >
         <div className="grab" />
         <div className="sheet-h">
-          <h3>{kind === null ? t('add.title') : t('add.step2')}</h3>
+          <h3>{writing ? t('note.title') : kind === null ? t('add.title') : t('add.step2')}</h3>
           <button className="icon-btn" type="button" onClick={onClose} aria-label={t('common.close')}>
             <IconClose />
           </button>
         </div>
 
-        {kind === null ? (
+        {writing ? (
+          <>
+            <label className="field">
+              <span className="field-t">{t('add.note')}</span>
+              <textarea
+                className="input note-write"
+                value={noteText}
+                autoFocus
+                rows={4}
+                maxLength={120}
+                placeholder={t('add.note.placeholder')}
+                onChange={(event) => setNoteText(event.target.value.slice(0, 120))}
+              />
+            </label>
+            <button className="btn block" type="button" onClick={saveNote} disabled={!noteText.trim()}>
+              {t('add.note.done')}
+            </button>
+          </>
+        ) : kind === null ? (
           <div className="add-kinds">
             {(['since', 'habit', 'countdown'] as ItemKind[]).map((option) => (
               <button key={option} type="button" className="add-kind" onClick={() => setKind(option)}>
@@ -124,6 +155,10 @@ export function AddSheet({ onClose, onCreated, onHatched }: AddSheetProps) {
                 </span>
               </button>
             ))}
+            <button className="add-kind" type="button" onClick={() => setWriting(true)}>
+              <b>{t('add.note')}</b>
+              <span>{t('add.note.desc')}</span>
+            </button>
             <button className="add-fest" type="button" onClick={() => setFestivals(true)}>
               {t('add.fromFestival')}
             </button>

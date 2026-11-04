@@ -456,6 +456,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 }
 [data-skin='paper'] .input { border-color: var(--hair); }
 [data-skin='pixel'] .input { border-radius: 0; }
+/* 写小纸条：多行，别用单行输入框那套固定高和 18px 粗体 */
+.note-write {
+  height: auto; min-height: 116px; padding: 14px 16px; resize: none;
+  font-family: var(--font-ui); font-size: 16.5px; font-weight: 600; line-height: 1.72;
+}
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .stepper { display: flex; align-items: center; gap: 12px; }
 .stepper b { font-family: var(--font-num); font-size: 26px; min-width: 40px; text-align: center; }

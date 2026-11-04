@@ -165,6 +165,7 @@ export const en: Record<MessageKey, Msg> = {
   'museum.dex.empty': 'No creatures met yet.',
   'museum.badges.empty': 'No badges yet.',
   'museum.notes.empty': 'No notes yet.',
+  'museum.notes.mine': 'You wrote it',
 
   /* Style */
   'dress.title': 'Style',
@@ -195,6 +196,10 @@ export const en: Record<MessageKey, Msg> = {
   'add.yearly': 'Every year',
   'add.step3': 'Pick a companion',
   'add.fromFestival': 'Pick a holiday',
+  'add.note': 'Write a note',
+  'add.note.desc': 'Something to keep for yourself',
+  'add.note.done': 'Done',
+  'add.note.placeholder': 'e.g. Almost gave up today, but finished it.',
   'add.name.placeholder': 'e.g. Quit smoking, Water, Mom’s birthday',
   'add.startNow': 'Starting now',
   'add.startPast': 'Starting in the past',

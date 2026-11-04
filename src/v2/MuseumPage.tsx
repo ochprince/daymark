@@ -159,12 +159,17 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
               <div className="slip" key={note.id}>
                 {note.text}
                 <small>
-                  —— {note.from} · {formatDate(note.at)}
+                  —— {note.mine ? t('museum.notes.mine') : note.from} · {formatDate(note.at)}
                 </small>
               </div>
             ))
           )}
-          <div className="slip locked">{t('museum.notes.locked', { n: Math.max(0, 45 - collection.notes.length) })}</div>
+          {/* 自己写的那几张不算在「还有 N 张在路上」里，那是小伙伴要给你的 */}
+          <div className="slip locked">
+            {t('museum.notes.locked', {
+              n: Math.max(0, 45 - collection.notes.filter((note) => note.mine !== true).length),
+            })}
+          </div>
         </div>
       ) : null}
 
