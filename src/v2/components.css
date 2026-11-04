@@ -376,6 +376,25 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .has-photo .bubble { background: rgba(255, 255, 255, 0.92); color: #2b2638; border-color: transparent; }
 .has-photo .bubble::after { display: none; }
 .has-photo .sc-more { color: #fff; }
+/*
+ * 照片卡片把 --ink 系列整套改成白色，可备忘框的底色还是皮肤的浅 surface，
+ * 于是白字印在米白框上——整块备忘看不见。这里把框改成深色玻璃。
+ */
+.has-photo .c-memo {
+  background: rgba(14, 12, 24, 0.56);
+  border-color: rgba(255, 255, 255, 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.has-photo .c-memo-todo button {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: rgba(255, 255, 255, 0.34);
+  color: #fff;
+}
+.has-photo .c-memo-todo button.on {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
 .has-photo .ground { background: #000; opacity: 0.3; }
 
 /* 打卡反馈 */
