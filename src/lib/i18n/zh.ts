@@ -487,6 +487,7 @@ export const zh = {
   /* 活的萌宠（v3 物理层） */
   'pet.say.visit': '我来串门啦！',
   'pet.say.visitor': '有客人来啦！',
+  'pet.say.memo': '记着呢。',
   'pet.say.play': '一起玩！',
   'pet.say.playHost': '来呀，一起玩！',
   'pet.say.logged': '记下啦！',

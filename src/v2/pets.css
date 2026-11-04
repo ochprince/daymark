@@ -810,4 +810,15 @@ html.reduce-motion .pet-heart,
   32% { transform: translateY(3px) scaleY(0.965); }
   64% { transform: translateY(-1px) scaleY(1.01); }
 }
+/* 底栏是被踩的那个 tab 抖：幅度比别处大一点，并且抖的时候亮出一层底色。
+   不亮底色的话，没选中的 tab 本身就是透明的，看上去只有文字在动。 */
+.tabbar button.pet-bump {
+  animation: pet-bump-tab 0.38s cubic-bezier(0.34, 1.56, 0.64, 1);
+  background: color-mix(in oklab, var(--accent) 18%, transparent);
+}
+@keyframes pet-bump-tab {
+  0%, 100% { transform: translateY(0) scale(1, 1); }
+  28% { transform: translateY(4px) scale(1.02, 0.94); }
+  62% { transform: translateY(-2px) scale(0.99, 1.02); }
+}
 .reduce-motion .pet-bump { animation: none !important; }

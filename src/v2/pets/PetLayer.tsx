@@ -25,6 +25,8 @@ export const PET_PLATFORM_SELECTORS = [
   '.growth',
   '.sc-actions .btn',
   '.stage-card',
+  // 备忘与待办整块也能踩：踩在它上沿，顺带抖一下
+  '.c-memo',
   '.tabbar',
   '.pill-switch',
   '.icon-btn',
@@ -806,6 +808,8 @@ export function PetLayer({
       } else {
         setMode('stand', rand(0.7, 1.8))
       }
+      // 踩到备忘与待办上：它低头看一眼，顺口念一句
+      if (p.sel === '.c-memo') say('pet.say.memo', 2000)
     }
 
     const jumpTo = (q: Platform) => {
