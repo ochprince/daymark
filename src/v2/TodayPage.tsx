@@ -42,6 +42,8 @@ export type TodayPageProps = {
   homeNonce?: number
   /** 连戳五下：让它自己出去 */
   onFrenzy?: () => void
+  /** 倒数日就是今天：放到外面的徽章判定 */
+  onCountdownToday?: () => void
 }
 
 function greet(now: number): string {
@@ -78,6 +80,7 @@ export function TodayPage({
   homeHot = false,
   homeNonce = 0,
   onFrenzy,
+  onCountdownToday,
 }: TodayPageProps) {
   // 换焦点时新卡片从哪边滑进来：+1 从右边，-1 从左边
   const [shiftDir, setShiftDir] = useState<1 | -1>(1)
@@ -171,6 +174,7 @@ export function TodayPage({
         homeHot={homeHot}
         homeNonce={homeNonce}
         onFrenzy={onFrenzy}
+        onCountdownToday={onCountdownToday}
       />
 
       <div className="focus-dots">

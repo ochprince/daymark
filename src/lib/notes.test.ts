@@ -7,24 +7,23 @@ const DAY = 86_400_000
 const NOW = new Date(2026, 10, 3, 10, 0, 0).getTime()
 
 test('间隔不足三天不给纸条', () => {
-  assert.equal(shouldOfferNote({ notes: [{ at: NOW - 2 * DAY }] }, NOW, () => 0), false)
-  assert.equal(shouldOfferNote({ notes: [{ at: NOW - 3 * DAY }] }, NOW, () => 0), true)
+  assert.equal(shouldOfferNote({ notes: [{ at: NOW - 2 * DAY }] }, NOW), false)
+  assert.equal(shouldOfferNote({ notes: [{ at: NOW - 3 * DAY }] }, NOW), true)
 })
 
-test('随机没命中也不给', () => {
-  assert.equal(shouldOfferNote({ notes: [] }, NOW, () => 0.31), false)
-  assert.equal(shouldOfferNote({ notes: [] }, NOW, () => 0.29), true)
+test('没有额外限制时，够三天就给（不再掷骰子）', () => {
+  assert.equal(shouldOfferNote({ notes: [] }, NOW), true)
 })
 
 test('这周已经出了两张就停', () => {
   const week = weekIndex(NOW)
-  assert.equal(shouldOfferNote({ notes: [], notesThisWeek: { week, count: 2 } }, NOW, () => 0), false)
-  assert.equal(shouldOfferNote({ notes: [], notesThisWeek: { week, count: 1 } }, NOW, () => 0), true)
+  assert.equal(shouldOfferNote({ notes: [], notesThisWeek: { week, count: 2 } }, NOW), false)
+  assert.equal(shouldOfferNote({ notes: [], notesThisWeek: { week, count: 1 } }, NOW), true)
 })
 
 test('上周的计数不算进本周', () => {
   const week = weekIndex(NOW)
-  assert.equal(shouldOfferNote({ notes: [], notesThisWeek: { week: week - 1, count: 2 } }, NOW, () => 0), true)
+  assert.equal(shouldOfferNote({ notes: [], notesThisWeek: { week: week - 1, count: 2 } }, NOW), true)
 })
 
 test('文案按张数往后取，取完循环', () => {
@@ -44,9 +43,9 @@ test('自己写的小纸条不占文案序号，也不挡住系统发下一张',
   assert.equal(nextNoteText({ notes: [mine] }), NOTE_POOL[0])
   assert.equal(nextNoteText({ notes: [mine, { at: NOW - 10 }] }), NOTE_POOL[1])
   // 刚写过自己的纸条，也不该让系统三天内不说话
-  assert.equal(shouldOfferNote({ notes: [mine] }, NOW, () => 0), true)
+  assert.equal(shouldOfferNote({ notes: [mine] }, NOW), true)
   // 系统刚发过一张，照样要等满三天
-  assert.equal(shouldOfferNote({ notes: [{ at: NOW - 1000 }] }, NOW, () => 0), false)
+  assert.equal(shouldOfferNote({ notes: [{ at: NOW - 1000 }] }, NOW), false)
 })
 
 test('本周计数：同周累加，跨周归零重算', () => {

@@ -53,6 +53,8 @@ export type StageCardProps = {
   homeNonce?: number
   /** 连戳三下（每下间隔 < 0.9s）：它兴奋乱跳，然后自己走出卡片 */
   onFrenzy?: () => void
+  /** 倒数日就是今天：当天第一次打开时放彩纸，这里告诉外面「陪它走到了」 */
+  onCountdownToday?: () => void
 }
 
 /** 连戳判定：每下间隔小于这个才算「同一串」，慢摸不触发 */
@@ -133,6 +135,7 @@ export function StageCard({
   homeHot = false,
   homeNonce = 0,
   onFrenzy,
+  onCountdownToday,
 }: StageCardProps) {
   const [charging, setCharging] = useState(false)
   const [jumping, setJumping] = useState(false)
@@ -184,6 +187,7 @@ export function StageCard({
     }
     if (partyFiredToday(view.key)) return undefined
     markParty(view.key)
+    onCountdownToday?.()
     setParty(true)
     const stop = window.setTimeout(() => setParty(false), 6200)
     return () => window.clearTimeout(stop)
@@ -251,6 +255,38 @@ export function StageCard({
 
   const canHold = view.kind === 'habit'
   const sleeping = view.mood === 'sleep'
+  /**
+   * 在家这只的小动作：走来走去、忽大忽小、歪头。
+   * 之前它只有 15 秒一次的「东张西望」，其余时间只在原地微微浮，
+   * 看久了像张贴纸。这里每 4–9 秒挑一个动作演一遍。
+   */
+  const [idle, setIdle] = useState<'' | 'walk-l' | 'walk-r' | 'grow' | 'tilt'>('')
+  const reducedMotion = () =>
+    document.documentElement.classList.contains('reduce-motion') ||
+    (typeof window.matchMedia === 'function' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches)
+  useEffect(() => {
+    if (petAway || sleeping || reducedMotion()) {
+      setIdle('')
+      return undefined
+    }
+    let step: number = 0
+    let stop: number = 0
+    const ACTIONS = ['walk-l', 'walk-r', 'grow', 'tilt'] as const
+    const schedule = () => {
+      step = window.setTimeout(() => {
+        setIdle(ACTIONS[Math.floor(Math.random() * ACTIONS.length)])
+        stop = window.setTimeout(() => setIdle(''), 2400)
+        schedule()
+      }, 4200 + Math.random() * 4600)
+    }
+    schedule()
+    return () => {
+      window.clearTimeout(step)
+      window.clearTimeout(stop)
+      setIdle('')
+    }
+  }, [petAway, sleeping])
   useEffect(() => {
     if (petAway || sleeping) return undefined
     let on = false
@@ -455,7 +491,7 @@ export function StageCard({
             <circle className="bar" cx="100" cy="100" r="92.6" />
           </svg>
           <Creature
-            className={looking ? 'cr look' : 'cr'}
+            className={`cr ${looking ? 'look ' : ''}${idle}`}
             species={view.species}
             stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
             mood={party ? 'wow' : view.mood}

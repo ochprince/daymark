@@ -160,6 +160,8 @@ export type PetLayerProps = {
   onHomed?: () => void
   /** 拖着它悬停在卡片原位上：卡片里那块空位亮起来 */
   onHomeHot?: (hot: boolean) => void
+  /** 点醒一只正在睡觉的它（徽章「回来了」靠这个） */
+  onWake?: () => void
 }
 
 type DragState = {
@@ -205,6 +207,7 @@ export function PetLayer({
   visiting = false,
   onHomed,
   onHomeHot,
+  onWake,
 }: PetLayerProps) {
   const layerRef = useRef<HTMLDivElement | null>(null)
   const spriteRef = useRef<HTMLDivElement | null>(null)
@@ -227,6 +230,12 @@ export function PetLayer({
     react: (kind: 'log' | 'focus' | 'poke' | 'milestone') => void
   } | null>(null)
   const [view, setView] = useState<PetState>('fall')
+  /**
+   * 刚被叫醒的冷却期。
+   * 不设这个的话，醒来后下一次 think 可能立刻又挑到「睡」——
+   * 权重是随机的，踩中的时候看起来就是「醒了马上又睡」，很怪。
+   */
+  const noSleepUntil = useRef(0)
   const [bubble, setBubble] = useState<{ id: number; text: string } | null>(null)
 
   const sim = useRef({
@@ -912,8 +921,11 @@ export function PetLayer({
         setMode('walk')
       })
       add(2, () => setMode('sit', rand(2.2, 4.2)))
-      add(0.7, () => {
-        setMode('sleep', rand(4, 8))
+      // 睡觉：加了各种跳跃之后，这个权重被稀释得只剩 2.7%，看一天也遇不上一次。
+      // 现在 2.4 / 总数 ≈ 9%，大约十次决定里有一次趴下睡，出门在外也能碰到。
+      // 刚被叫醒的四五十秒里不睡：醒了立刻又趴下，看着像没醒。
+      add(performance.now() < noSleepUntil.current ? 0 : 2.4, () => {
+        setMode('sleep', rand(5, 10))
         say('pet.say.sleep', 2000)
       })
       add(p.l <= 24 || p.r >= rect.width - 24 ? 1 : 0, () => {
@@ -1227,13 +1239,28 @@ export function PetLayer({
       onHoldLog?.()
       say('pet.say.logged', 2000)
     } else if (performance.now() - d.t < 450) {
-      setMode('cheer', 0.9)
-      say(pick(['pet.say.poke', 'pet.say.hello', 'pet.say.cheer'] as const), 2200)
+      // 睡着的时候点它 = 叫醒：先迷糊一下，再蹦起来
+      if (s.mode === 'sleep') {
+        setMode('cheer', 1.1)
+        say('pet.say.wake', 2200)
+        // 醒来之后至少 45 秒内不再睡
+        noSleepUntil.current = performance.now() + rand(45000, 75000)
+        onWake?.()
+      } else {
+        setMode('cheer', 0.9)
+        say(pick(['pet.say.poke', 'pet.say.hello', 'pet.say.cheer'] as const), 2200)
+      }
     }
   }
 
   return (
-    <div className="pet-layer" ref={layerRef} data-pet-out={(out ?? true) ? '1' : '0'}>
+    <div
+      className="pet-layer"
+      ref={layerRef}
+      data-pet-out={(out ?? true) ? '1' : '0'}
+      /* 调试用：现在在干嘛（sleep / walk / sit / cheer …） */
+      data-mode={view}
+    >
       <div
         className="pet-sprite"
         ref={spriteRef}

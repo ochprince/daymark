@@ -1,11 +1,14 @@
 /**
  * 小纸条：小伙伴偶尔塞给你的一句话。
  *
- * 规则（docs/plan-v2.md §6.9）：
+ * 规则：
  *   · 距上一张纸条 ≥ 3 天
  *   · 这个自然周里已经出了 < 2 张
- *   · 随机命中 30%
- * 三者都满足，舞台上那只手里就会多一张折起来的纸条 —— 点了才展开，不自动弹窗。
+ * 两条都满足就给，不再掷 30% 的骰子。
+ *
+ * 原来是「两条都满足再掷 30%」，结果是一天开一次 App 的人，
+ * 平均十天才等到一张——用户用了很多天只收到过一张，就是这里。
+ * 拿到条件本身就够克制了（三天最多一张、一周最多两张），不必再随机。
  *
  * 文案不重复：按已收张数往后取，取完从头循环。
  * 这里全是纯函数，随机数从外面传进来，测试才好写。
@@ -43,11 +46,8 @@ export type NoteGate = {
   notesThisWeek?: { week: number; count: number }
 }
 
-/**
- * 这次进前台，要不要给一张新纸条。
- * random 传 0–1 的随机数，便于测试。
- */
-export function shouldOfferNote(state: NoteGate, now: number, random = Math.random): boolean {
+/** 这次进前台，要不要给一张新纸条：只看间隔和本周上限 */
+export function shouldOfferNote(state: NoteGate, now: number): boolean {
   // 自己写的那张不算「系统刚发过一张」：不然写完纸条，三天内小伙伴都不吭声了
   const last = state.notes.find((note) => note.mine !== true)?.at
   if (typeof last === 'number' && now - last < 3 * DAY) return false
@@ -56,7 +56,7 @@ export function shouldOfferNote(state: NoteGate, now: number, random = Math.rand
   const thisWeek = state.notesThisWeek
   if (thisWeek && thisWeek.week === week && thisWeek.count >= 2) return false
 
-  return random() < 0.3
+  return true
 }
 
 /** 第 n 张纸条的文案：按已收数量往后取，取完循环 */

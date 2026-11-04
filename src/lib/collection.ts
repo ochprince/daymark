@@ -256,6 +256,14 @@ export function needsStageTransition(state: CollectionState, itemKey: string, st
   return typeof seen !== 'number' || seen < stage
 }
 
+/** 改一张自己写的纸条（只有 mine 的会走到这里） */
+export function updateNote(id: string, text: string): void {
+  collectionStore.reload()
+  const state = collectionStore.get()
+  const next = state.notes.map((item) => (item.id === id ? { ...item, text } : item))
+  collectionStore.patch({ notes: next })
+}
+
 /** 撕掉一张纸条。小伙伴那张撕了还会再来（文案按已收张数取，数就退回去了） */
 export function removeNote(id: string): void {
   collectionStore.reload()

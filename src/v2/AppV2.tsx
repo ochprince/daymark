@@ -52,8 +52,9 @@ import {
   unlockBadges,
   unlockDex,
 } from '../lib/collection'
-import type { BadgeId } from '../lib/collection'
+import type { BadgeContext, BadgeId } from '../lib/collection'
 import { bumpWeek, nextNoteText, shouldOfferNote } from '../lib/notes'
+import { FESTIVALS, festivalDateIn } from '../lib/festivals'
 import type { ItemView } from '../lib/itemview'
 import './app.css'
 import { PetLayer, type PetStage } from './pets/PetLayer'
@@ -342,6 +343,41 @@ export function AppV2() {
     return () => window.clearTimeout(timer)
   }, [toast])
 
+  /**
+   * 徽章判定：基础条件（几件事、最长成长、有没有翻篇）+ 这次的额外上下文。
+   * 之前只有「形态升级」一处会判，叫醒睡着的小伙伴、半夜记一笔、倒数日走到当天
+   * 这些条件压根没人往上送，于是那几个徽章永远解锁不了。
+   */
+  const checkBadges = useCallback(
+    (extra: Partial<BadgeContext> = {}) => {
+      const fresh = evaluateBadges(
+        {
+          itemCount: views.length,
+          maxGrowth: maxGrowthOf(views),
+          hasChapter: hasAnyChapter(views),
+          ...extra,
+        },
+        getCollection(),
+      )
+      const unlocked = unlockBadges(fresh)
+      if (unlocked.length) setBadges((queue) => [...queue, ...unlocked])
+    },
+    [views],
+  )
+
+  // 万圣节当天打开 App：南瓜帽（隐藏徽章）
+  useEffect(() => {
+    const today = new Date()
+    const monthDay = `${today.getMonth() + 1}-${today.getDate()}`
+    const hit = FESTIVALS.find((festival) => {
+      const at = festivalDateIn(festival, today.getFullYear())
+      return at ? `${at.month}-${at.day}` === monthDay : false
+    })
+    if (hit) checkBadges({ festivalId: hit.id })
+    // 只在挂载时判一次
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   // 形态升级：写图鉴、记 peak、播过场（只挂低频节点，日常记录不弹）
   useEffect(() => {
     for (const view of views) {
@@ -398,6 +434,8 @@ export function AppV2() {
     const result = tapCheckIn(focus.id, Date.now())
     // 记一次落定：一下中等触感 + 一声上行小铃；动效已经够多，声音点到为止
     hapticTap('medium')
+    // 夜猫子 / 早起鸟：这两个徽章看的是「记这一笔的时刻」，以前没人把时间传上去
+    checkBadges({ recordedAt: Date.now() })
     playSfx('settle')
     setFxCount((count) => count + 1)
     setOverride(next > 1 ? t('line.habit.count', { n: next }) : t('line.habit.done'))
@@ -410,7 +448,7 @@ export function AppV2() {
         setOverride(null)
       },
     })
-  }, [focus])
+  }, [focus, checkBadges])
 
   const openNote = useCallback(() => {
     const state = getCollection()
@@ -638,6 +676,7 @@ export function AppV2() {
           focusSeq={focusSeq}
           pokeSeq={pokeCount}
           onHoldLog={onLog}
+          onWake={() => checkBadges({ wokeUp: true })}
           visiting={petOut && !!outFrom && outFrom !== focus?.key}
         />
       ) : null}
@@ -652,6 +691,7 @@ export function AppV2() {
           onAdd={openAdd}
           onLog={onLog}
           onPoke={onPoke}
+          onCountdownToday={() => checkBadges({ celebratedCountdown: true })}
           noteReady={noteReady}
           onOpenNote={openNote}
           onProfile={() => setProfileOpen(true)}

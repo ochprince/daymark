@@ -2,7 +2,7 @@ import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'rea
 import type { CSSProperties } from 'react'
 import { Badge, Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
-import { BADGES, removeNote } from '../lib/collection'
+import { BADGES, removeNote, updateNote } from '../lib/collection'
 import type { CollectionState } from '../lib/collection'
 import { formatDate } from '../lib/days'
 import { t } from '../lib/i18n'
@@ -38,29 +38,60 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
   const [pane, setPane] = useState<Pane>('notes')
   const [opened, setOpened] = useState<ShelfBook | null>(null)
   /**
-   * 撕纸条：自己写的那张撕了就没了，点第一下只是变成「撕掉？」，
-   * 过 2.6 秒自己收回去。小伙伴给的那张撕了还会再来，一下就走。
+   * 纸条弹层：卡片只是"铺在藏馆里"，点开才有地方放复制 / 编辑 / 撕掉这些动作。
+   * 撕掉一律两步（不管是谁写的），交互统一，也免得手滑。
    */
-  const [sureId, setSureId] = useState<string | null>(null)
-  const sureTimer = useRef<number | null>(null)
-  function askDelete(id: string) {
-    if (sureTimer.current) window.clearTimeout(sureTimer.current)
-    setSureId(id)
-    sureTimer.current = window.setTimeout(() => setSureId(null), 2600)
+  const [detail, setDetail] = useState<string | null>(null)
+  const [sure, setSure] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [draft, setDraft] = useState('')
+  const openDetail = useCallback((id: string) => {
+    setDetail(id)
+    setSure(false)
+    setEditing(false)
+  }, [])
+  const closeDetail = useCallback(() => {
+    setDetail(null)
+    setSure(false)
+    setEditing(false)
+  }, [])
+  const detailNote = detail ? collection.notes.find((note) => note.id === detail) ?? null : null
+
+  /** 复制：先走剪贴板 API，浏览器不给（非 https / 老内核）就退回老办法 */
+  async function copyNote(text: string) {
+    try {
+      await navigator.clipboard.writeText(text)
+      onNotify(t('note.copied'))
+      return
+    } catch {
+      // 忽略，走下面的兜底
+    }
+    try {
+      const area = document.createElement('textarea')
+      area.value = text
+      area.setAttribute('readonly', '')
+      area.style.position = 'fixed'
+      area.style.opacity = '0'
+      document.body.appendChild(area)
+      area.select()
+      document.execCommand('copy')
+      document.body.removeChild(area)
+      onNotify(t('note.copied'))
+    } catch {
+      onNotify(t('note.copyFail'))
+    }
   }
-  function deleteNote(id: string, mine: boolean) {
-    if (mine && sureId !== id) {
-      askDelete(id)
+
+  function tear() {
+    if (!detailNote) return
+    if (!sure) {
+      setSure(true)
       return
     }
-    if (sureTimer.current) window.clearTimeout(sureTimer.current)
-    setSureId(null)
-    removeNote(id)
-    onNotify(t(mine ? 'museum.notes.gone' : 'museum.notes.goneSys'))
+    removeNote(detailNote.id)
+    onNotify(t(detailNote.mine ? 'museum.notes.gone' : 'museum.notes.goneSys'))
+    closeDetail()
   }
-  useEffect(() => () => {
-    if (sureTimer.current) window.clearTimeout(sureTimer.current)
-  }, [])
   // 翻书方向：翻的时候给 currentTarget 挂 flip-l / flip-r，0.5s 后自动落位
   const [flip, setFlip] = useState<'l' | 'r' | null>(null)
   // 一件事一本书：翻过的章夹在书里，点开才铺出来
@@ -181,31 +212,83 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
           {collection.notes.length === 0 ? (
             <p className="shelf-cap">{t('museum.notes.empty')}</p>
           ) : (
-            collection.notes.map((note) => {
-              const sure = sureId === note.id
-              return (
-                <div className="slip" key={note.id}>
-                  {note.text}
-                  <small>
-                    —— {note.mine ? t('museum.notes.mine') : note.from} · {formatDate(note.at)}
-                  </small>
-                  <button
-                    type="button"
-                    className={sure ? 'slip-del is-sure' : 'slip-del'}
-                    aria-label={t('museum.notes.del')}
-                    onClick={() => deleteNote(note.id, note.mine === true)}
-                  >
-                    {sure ? t('museum.notes.del.sure') : '×'}
-                  </button>
-                </div>
-              )
-            })
+            collection.notes.map((note) => (
+              <button
+                type="button"
+                className="slip"
+                key={note.id}
+                onClick={() => openDetail(note.id)}
+                aria-label={t('note.openOne')}
+              >
+                {note.text}
+                <small>
+                  —— {note.mine ? t('museum.notes.mine') : note.from} · {formatDate(note.at)}
+                </small>
+              </button>
+            ))
           )}
           {/* 自己写的那几张不算在「还有 N 张在路上」里，那是小伙伴要给你的 */}
           <div className="slip locked">
             {t('museum.notes.locked', {
               n: Math.max(0, 45 - collection.notes.filter((note) => note.mine !== true).length),
             })}
+          </div>
+        </div>
+      ) : null}
+
+      {detailNote ? (
+        <div className="ov note-ov" style={{ zIndex: 60 }}>
+          <div className="dim" onClick={closeDetail} aria-hidden="true" />
+          <div className="note-card slip-card" role="dialog" aria-modal="true" aria-label={t('note.title')}>
+            <button
+              type="button"
+              className="note-card-x"
+              aria-label={t('common.close')}
+              onClick={closeDetail}
+            >
+              ×
+            </button>
+            <p className="note-card-t">
+              {detailNote.mine ? t('museum.notes.mine') : detailNote.from} · {formatDate(detailNote.at)}
+            </p>
+            {editing ? (
+              <textarea
+                className="input note-write slip-edit"
+                value={draft}
+                autoFocus
+                rows={4}
+                maxLength={120}
+                onChange={(event) => setDraft(event.target.value.slice(0, 120))}
+              />
+            ) : (
+              <p className="note-card-body">{detailNote.text}</p>
+            )}
+            <div className="slip-acts">
+              <button type="button" onClick={() => copyNote(detailNote.text)}>
+                {t('note.copy')}
+              </button>
+              {detailNote.mine ? (
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (editing) {
+                      const next = draft.trim()
+                      if (next) updateNote(detailNote.id, next)
+                      setEditing(false)
+                      return
+                    }
+                    setDraft(detailNote.text)
+                    setEditing(true)
+                  }}
+                  disabled={editing && !draft.trim()}
+                >
+                  {editing ? t('note.editSave') : t('note.edit')}
+                </button>
+              ) : null}
+              <button type="button" className={sure ? 'danger is-sure' : 'danger'} onClick={tear}>
+                {sure ? t('museum.notes.del.sure') : t('museum.notes.del')}
+              </button>
+            </div>
           </div>
         </div>
       ) : null}
