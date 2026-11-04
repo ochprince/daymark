@@ -405,6 +405,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
   /* --c 只有卡片里才有，弹窗要带兜底，否则整条声明失效、面板变透明 */
   background: linear-gradient(180deg, color-mix(in oklab, var(--c, var(--accent)) 20%, var(--surface)), var(--surface) 72%);
 }
+/**
+ * 书页例外：它是纸。
+ * 上面那条夜航规则特异性比 .bookpage 高，会把书页也刷成深蓝，
+ * 而书页里的字（标题、大数字、日期）写的是深色，于是深底配深字，整页看不清。
+ */
+[data-skin='night'] .bookpage {
+  background: var(--paper);
+}
 .modal h3 { margin: 0; font-size: 21px; font-weight: 800; font-family: var(--font-title); letter-spacing: -0.01em; }
 [data-skin='pixel'] .modal h3 { font-family: var(--font-ui); }
 .modal .sheet-sub { margin: 6px 0 0; }
@@ -712,7 +720,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .bp-chapters { margin-top: 16px; }
 .bp-ch-h { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; color: #9a91a8; margin-bottom: 8px; }
 .bp-ch-empty { margin: 0; font-size: 13px; color: #9a91a8; text-align: center; padding: 10px 0; }
-.bp-ch-list { display: grid; gap: 6px; max-height: 220px; overflow-y: auto; scrollbar-width: none; padding-right: 2px; }
+.bp-ch-wrap { position: relative; }
+/* 还能往下滚的时候，底部压一层渐隐，明示「下面还有」 */
+.bp-ch-wrap.more::after {
+  content: '';
+  position: absolute; left: 0; right: 0; bottom: 0; height: 36px;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0), var(--paper) 82%);
+  pointer-events: none; border-radius: 0 0 12px 12px;
+}
+.bp-ch-list { display: grid; gap: 6px; max-height: 300px; overflow-y: auto; scrollbar-width: none; padding-right: 2px; }
 .bp-ch-list::-webkit-scrollbar { display: none; }
 .bp-ch {
   display: grid; grid-template-columns: auto 1fr; align-items: baseline; gap: 2px 10px;

@@ -1,4 +1,4 @@
-import { Fragment, useMemo, useState } from 'react'
+import { Fragment, useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Badge, Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
@@ -40,6 +40,22 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
   const [flip, setFlip] = useState<'l' | 'r' | null>(null)
   // 一件事一本书：翻过的章夹在书里，点开才铺出来
   const books = useMemo(() => collectBooks(views), [views])
+  /**
+   * 章多了列表是要滚的，但滚动条是藏起来的：不提示的话，
+   * 「翻过的 9 章」下面只露出 5 条，看着像是丢了几章。
+   */
+  const chapterListRef = useRef<HTMLDivElement | null>(null)
+  const [moreChapters, setMoreChapters] = useState(false)
+  const syncMoreChapters = useCallback(() => {
+    const el = chapterListRef.current
+    if (!el) return
+    setMoreChapters(el.scrollHeight - el.scrollTop - el.clientHeight > 8)
+  }, [])
+  useEffect(() => {
+    // 弹窗换了一本书 / 刚挂载：重新量一次
+    const id = window.setTimeout(syncMoreChapters, 0)
+    return () => window.clearTimeout(id)
+  }, [opened?.key, syncMoreChapters])
 
   /** 翻书：上一本 / 下一本，到头回绕。免费版翻到门外就弹付费墙，不放行 */
   function navChapter(dir: 1 | -1) {
@@ -175,7 +191,8 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
               {opened.chapters.length === 0 ? (
                 <p className="bp-ch-empty">{t('museum.book.none')}</p>
               ) : (
-                <div className="bp-ch-list">
+                <div className={`bp-ch-wrap${moreChapters ? ' more' : ''}`}>
+                <div className="bp-ch-list" ref={chapterListRef} onScroll={syncMoreChapters}>
                   {opened.chapters.map((chapter, index) => (
                     <div className="bp-ch" key={chapter.key}>
                       <b>{chapter.days > 0 ? t('unit.day', { n: chapter.days }) : '★'}</b>
@@ -184,6 +201,7 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
                       <i>{opened.chapters.length - index}</i>
                     </div>
                   ))}
+                </div>
                 </div>
               )}
             </div>
@@ -201,7 +219,8 @@ export function MuseumPage({ views, collection, pro, onUpgrade }: MuseumPageProp
                   {t('museum.chapter.prev')}
                 </button>
                 <span>
-                  {books.indexOf(opened) + 1} / {books.length}
+                  {/* 按 key 找：books 每次 views 变化都会重建，拿对象引用去 indexOf 会得 -1 */}
+                  {books.findIndex((book) => book.key === opened.key) + 1} / {books.length}
                 </span>
                 <button type="button" onClick={() => navChapter(1)}>
                   {t('museum.chapter.next')}
