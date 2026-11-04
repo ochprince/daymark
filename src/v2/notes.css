@@ -264,9 +264,13 @@
 
 .sc-note {
   position: absolute;
-  /* 夹在胳膊底下：往里压，且压到身体后面 —— 被身子挡掉一条边才像"夹着" */
-  right: 40px;
-  bottom: 30px;
+  /*
+   * 夹在胳膊边上，但要冒出身体轮廓：之前在 right:40px，
+   * 整个小纸条正好压在身体/信封上，纸本和夜航里那只本身就是米白的，
+   * 纸条和它同一色，人眼就当成了信封的一部分——看不见，但点得到。
+   */
+  right: 6px;
+  bottom: 34px;
   width: 34px;
   height: 34px;
   display: grid;
@@ -289,6 +293,20 @@
   transform: rotate(-10deg);
   box-shadow: 0 3px 8px rgba(43, 38, 56, 0.22), 0 1px 0 rgba(255, 255, 255, 0.8) inset;
   position: relative;
+}
+/* 一小条封口贴纸：不管旁边是米白的身体还是深色夜空，这一抹红都在 */
+.sc-note-paper::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: -4px;
+  width: 10px;
+  height: 5px;
+  margin-left: -5px;
+  border-radius: 2px;
+  background: #e0596b;
+  transform: rotate(-8deg);
+  box-shadow: 0 1px 2px rgba(43, 38, 56, 0.35);
 }
 /*
  * 纸本和夜航里它跟前一张纸「糊在一起」看不见（还能点开，更让人困惑）：
@@ -324,8 +342,8 @@
 /* 邮差那两只本来就一直拿着信封，纸条换到另一只手，免得看成同一件东西 */
 .sc-note--left {
   right: auto;
-  left: 40px;
-  bottom: 34px;
+  left: 6px;
+  bottom: 38px;
 }
 
 @keyframes noteBob {
@@ -418,4 +436,10 @@
 
 .note-card-x:active {
   background: rgba(43, 38, 56, 0.08);
+}
+
+/* 带照片的卡片：纸条落在照片上，必须有一圈白边才不会被雾面吃掉 */
+.has-photo .sc-note-paper {
+  border-color: #1d1a16;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.9), 0 4px 12px rgba(0, 0, 0, 0.45);
 }
