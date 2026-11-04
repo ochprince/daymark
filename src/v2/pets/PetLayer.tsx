@@ -251,6 +251,8 @@ export function PetLayer({
     plat: null as string | null,
     tx: 0,
     toWall: false,
+    /* 走到平台边上就松手掉下去（0 = 没这事，±1 = 往哪边） */
+    toEdge: 0 as 0 | 1 | -1,
     wall: 1,
     sayUntil: 0,
     sw: 0,
@@ -927,15 +929,16 @@ export function PetLayer({
         }
         setMode('stand', rand(0.5, 1))
       })
-      // 目标就在自己脚下（跳不过去）：走到边上直接掉下去，落到下面那一层
+      /*
+       * 目标就在自己脚下（跳不过去）：走到边上再掉下去，落到下面那一层。
+       * 原来这里是直接把 s.x 改成 p.l / p.r——那就是用户看到的「横向瞬移」，
+       * 走比瞬移慢，但看着才像活的。
+       */
       add(1.6, () => {
-        const dir = s.x - p.l <= p.r - s.x ? -1 : 1
-        s.x = dir < 0 ? p.l + 5 : p.r - 5
-        s.vx = dir * rand(26, 64)
-        s.vy = rand(30, 70)
-        s.plat = null
-        s.face = dir
-        setMode('fall')
+        s.toEdge = s.x - p.l <= p.r - s.x ? -1 : 1
+        s.tx = s.toEdge < 0 ? p.l + 6 : p.r - 6
+        s.face = s.toEdge
+        setMode('walk')
       })
       add(4, () => {
         s.tx = rand(p.l + 14, Math.max(p.l + 15, p.r - 14))
@@ -1068,7 +1071,19 @@ export function PetLayer({
         return
       }
       s.y = p.t + 3
-      s.x = Math.max(p.l + 6, Math.min(p.r - 6, s.x))
+      const inside = Math.max(p.l + 6, Math.min(p.r - 6, s.x))
+      if (Math.abs(inside - s.x) > 40) {
+        /*
+         * 平台整个挪了位置（换卡、翻页、列表重排），人还站在原地的话
+         * 硬拉过去就是一次瞬移。落差太大就让它就地掉下去。
+         */
+        s.plat = null
+        s.vx = 0
+        s.vy = 0
+        setMode('fall')
+        return
+      }
+      s.x = inside
 
       if (s.mode === 'walk') {
         const dir = s.tx >= s.x ? 1 : -1
@@ -1076,6 +1091,16 @@ export function PetLayer({
         s.x += dir * 44 * dt
         if ((dir > 0 && s.x >= s.tx) || (dir < 0 && s.x <= s.tx)) {
           s.x = s.tx
+          if (s.toEdge !== 0) {
+            const dir = s.toEdge
+            s.toEdge = 0
+            s.vx = dir * rand(26, 64)
+            s.vy = rand(30, 70)
+            s.plat = null
+            s.face = dir
+            setMode('fall')
+            return
+          }
           if (s.toWall) {
             s.toWall = false
             s.wall = dir
