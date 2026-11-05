@@ -39,6 +39,8 @@ export function CardPet({
 }: Props) {
   /** 它自己挑的小姿势：坐着 / 伸懒腰 / 开心蹦，位置仍由物理那套管 */
   const [pose, setPose] = useState<'' | 'sit' | 'stretch' | 'cheer'>('')
+  /** 正在走：给个迈步的姿势，不然看起来像在滑冰 */
+  const [moving, setMoving] = useState(false)
   const poseRef = useRef<'' | 'sit' | 'stretch' | 'cheer'>('')
   poseRef.current = pose
   const hostRef = useRef<HTMLDivElement | null>(null)
@@ -101,6 +103,7 @@ export function CardPet({
     /** '' = 在空地上；to = 正走过去；on = 在备忘上坐着；back = 跳回来 */
     let trip: '' | 'to' | 'on' | 'back' = ''
     let lastTrip = 0
+    let walking = false
 
     // 小动作的节拍：走两步或者蹦一下，剩下交给外层的歪头/打盹
     let timer = 0
@@ -118,22 +121,22 @@ export function CardPet({
         if (free) {
           const roll = Math.random()
           const canTrip = trip === '' && performance.now() - lastTrip > 45000 && measureMemo() > 12
-          if (canTrip && roll < 0.18) {
+          if (canTrip && roll < 0.12) {
             // 把备忘当平台：先走回空地中间，到了再往下掉
             trip = 'to'
             walkTo(body, 0)
-          } else if (roll < 0.42) {
+          } else if (roll < 0.52) {
             // 贴着墙就别再往墙里走，否则它会一直赖在卡片边上
             const nearWall = Math.abs(body.x) > limit * 0.8
             const target = nearWall
               ? (Math.random() * 2 - 1) * limit * 0.5
               : body.x + (Math.random() * 2 - 1) * limit * 0.9
             walkTo(body, target)
-          } else if (roll < 0.54) {
+          } else if (roll < 0.67) {
             hop(body, 16 + Math.random() * 20)
-          } else if (roll < 0.74) {
-            playPose('sit', 3200 + Math.random() * 2000)
-          } else if (roll < 0.88) {
+          } else if (roll < 0.8) {
+            playPose('sit', 2600 + Math.random() * 1600)
+          } else if (roll < 0.9) {
             playPose('stretch', 1700)
           } else {
             playPose('cheer', 1600)
@@ -142,7 +145,8 @@ export function CardPet({
         // 睡着了就把姿势收掉，别一边打盹一边坐着
         if (stillRef.current && poseRef.current) setPose('')
         schedule()
-      }, 4200 + Math.random() * 4600)
+        // 卡片里的世界小，别让它干站着：两秒多就有下一个念头
+      }, 2000 + Math.random() * 2200)
     }
     schedule()
 
@@ -182,7 +186,13 @@ export function CardPet({
       // 备忘那块在 DOM 里排在空地后面，会盖住它；下去的时候把空地抬到上面
       cardEl?.classList.toggle('pet-down', down)
 
-      mover.style.transform = `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0)`
+      if ((body.mode === 'walk') !== walking) {
+        walking = body.mode === 'walk'
+        setMoving(walking)
+      }
+      // 朝哪边走就朝哪边（和外面那只是一样的做法，镜像放在外层，别跟脚步动画抢 transform）
+      mover.style.transform =
+        `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0) scaleX(${body.dir})`
       // 影子和手里那张纸要跟着横向挪，否则它会「离地飞行」
       const shown = Math.round(body.x)
       if (shown !== pxShown) {
@@ -211,7 +221,7 @@ export function CardPet({
         style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
       >
         <Creature
-          className={`cr ${poseClass} ${pose}`}
+          className={`cr ${poseClass}${moving ? ' walk' : ''} ${pose}`}
           species={species}
           stage={stage}
           mood={mood}

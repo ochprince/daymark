@@ -253,6 +253,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .zzz { translate: var(--pet-x, 0px) 0; }
 .sc-note { translate: var(--pet-x, 0px) 0; transition: translate 0.28s ease-out; }
 /* 在家这只的小动作：只剩歪头（走来走去和忽大忽小用户已否决），2.4s，演完回 bob */
+/* 走起来：身体跟着脚步一颠一颠地晃，别像在滑冰 */
+.cr-wrap .cr.walk { animation: cr-step 0.44s ease-in-out infinite; transform-origin: 50% 92%; }
+@keyframes cr-step {
+  0%,
+  100% { transform: translateY(0) rotate(-2.2deg); }
+  30% { transform: translateY(-3px) rotate(-0.6deg); }
+  60% { transform: translateY(0) rotate(2.2deg); }
+  80% { transform: translateY(-2px) rotate(0.6deg); }
+}
 /* 卡片里它能做的事：坐下、伸个懒腰、开心蹦两下（都在卡片里的地面上） */
 .cr-wrap .cr.sit { animation: cr-sit 3.2s ease-in-out infinite; }
 @keyframes cr-sit {

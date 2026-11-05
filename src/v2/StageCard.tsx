@@ -305,7 +305,7 @@ export function StageCard({
     const schedule = () => {
       step = window.setTimeout(() => {
         // 四分之一的空档用来打盹，剩下歪一下头
-        if (Math.random() < 0.25) {
+        if (Math.random() < 0.15) {
           setNapping(true)
           stop = window.setTimeout(() => setNapping(false), 3600 + Math.random() * 2600)
         } else {
