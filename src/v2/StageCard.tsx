@@ -12,6 +12,7 @@ import { bubbleLine } from '../lib/lines'
 import { getPhotoUrl } from '../lib/photos'
 import { playSfx } from '../lib/sfx'
 import { PhotoBackdrop } from './PhotoBackdrop'
+import { CardPet } from './pets/CardPet'
 
 /** 蓄力时长：与 CheckInCard 同一个口径（500ms），改这里要连带改 CSS 的 transition */
 const HOLD_MS = 500
@@ -527,14 +528,30 @@ export function StageCard({
             <circle className="track" cx="100" cy="100" r="92.6" />
             <circle className="bar" cx="100" cy="100" r="92.6" />
           </svg>
-          <Creature
-            className={`cr ${looking ? 'look ' : ''}${idle}`}
-            species={view.species}
-            stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
-            mood={party ? 'wow' : view.mood}
-            size={158}
-            extra={party ? { hold: 'party' } : undefined}
-          />
+          {reducedMotion() ? (
+            /* 减弱动态效果：退回纯 CSS 的那一版，不跑物理循环 */
+            <Creature
+              className={`cr ${looking ? 'look ' : ''}${idle}`}
+              species={view.species}
+              stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
+              mood={party ? 'wow' : view.mood}
+              size={158}
+              extra={party ? { hold: 'party' } : undefined}
+            />
+          ) : (
+            /* 卡片里也走挂机那套：有自己的地面和左右两堵墙，出不了卡 */
+            <CardPet
+              species={view.species}
+              stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
+              mood={party ? 'wow' : view.mood}
+              poseClass={`${looking ? 'look ' : ''}${idle}`}
+              size={158}
+              still={sleeping || napping}
+              away={petAway}
+              pokeNonce={pokeNonce}
+              extra={party ? { hold: 'party' } : undefined}
+            />
+          )}
           {party ? (
             <div className="confetti" aria-hidden="true">
               {CONFETTI.map((piece, index) => (

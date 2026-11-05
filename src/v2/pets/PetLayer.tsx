@@ -18,7 +18,8 @@ export type { PetStage } from './art'
 import '../pets.css'
 
 /** 重力（px/s²） */
-export const PET_GRAVITY = 2200
+import { PET_GRAVITY } from './physics'
+export { PET_GRAVITY }
 /** 可站立的东西：页面里真实的卡片、按钮、底栏 */
 /**
  * 宠物能站的平台 —— 跟原型对齐的一张清单。

@@ -234,6 +234,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
  * 外层浮一次就够了。
  */
 .cr-wrap .cr .cr { animation: none; }
+/*
+ * 卡片里的它也有自己的世界：一条地面、左右两堵墙（卡片边），
+ * 不踩平台也不出卡。位置由 CardPet 的循环写在 --pet-x 上，
+ * 影子和小纸条跟着横向走，否则它会「离地飞行」。
+ * 用 translate 而不是 transform：影子自己有 scale 动画，会盖掉 transform。
+ */
+.card-pet { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+.card-pet-mover { position: absolute; left: 50%; top: 50%; will-change: transform; }
+.ground { left: calc(50% + var(--pet-x, 0px)); }
+.zzz { translate: var(--pet-x, 0px) 0; }
+.sc-note { translate: var(--pet-x, 0px) 0; transition: translate 0.28s ease-out; }
 /* 在家这只的小动作：只剩歪头（走来走去和忽大忽小用户已否决），2.4s，演完回 bob */
 .cr-wrap .cr.tilt { animation: cr-tilt 2.4s ease-in-out; }
 @keyframes cr-tilt {
