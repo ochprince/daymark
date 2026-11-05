@@ -228,6 +228,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
   transform-origin: 50% 92%;
 }
 .cr-wrap .cr.look { animation: look-around 1.6s ease-in-out; }
+/*
+ * 卡片里的绘制本体（svg）自己也带着 .cr，于是会把 bob 再跑一遍：
+ * 两层同频不同相，浮起来会互相错开一点，看着像被拉伸着抖。
+ * 外层浮一次就够了。
+ */
+.cr-wrap .cr .cr { animation: none; }
 /* 在家这只的小动作：只剩歪头（走来走去和忽大忽小用户已否决），2.4s，演完回 bob */
 .cr-wrap .cr.tilt { animation: cr-tilt 2.4s ease-in-out; }
 @keyframes cr-tilt {

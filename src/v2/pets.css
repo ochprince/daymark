@@ -28,7 +28,7 @@
 
 /* ---------- 状态动画（六个必需 + 拖拽 / 撒娇） ---------- */
 
-.pet-art[data-state='stand'] {
+.pet-sprite .pet-art[data-state='stand'] {
   animation: pz-stand 3.4s ease-in-out infinite;
 }
 @keyframes pz-stand {
@@ -41,13 +41,13 @@
   }
 }
 
-.pet-art[data-state='walk'] {
+.pet-sprite .pet-art[data-state='walk'] {
   animation: pz-walk 0.56s ease-in-out infinite;
 }
-.pet-art[data-state='walk'] .pet-foot-l {
+.pet-sprite .pet-art[data-state='walk'] .pet-foot-l {
   animation: pz-step 0.56s ease-in-out infinite;
 }
-.pet-art[data-state='walk'] .pet-foot-r {
+.pet-sprite .pet-art[data-state='walk'] .pet-foot-r {
   animation: pz-step 0.56s ease-in-out -0.28s infinite;
 }
 @keyframes pz-walk {
@@ -75,7 +75,7 @@
   }
 }
 
-.pet-art[data-state='sit'] {
+.pet-sprite .pet-art[data-state='sit'] {
   animation: pz-sit 3.2s ease-in-out infinite;
 }
 @keyframes pz-sit {
@@ -88,7 +88,7 @@
   }
 }
 
-.pet-art[data-state='sleep'] {
+.pet-sprite .pet-art[data-state='sleep'] {
   animation: pz-sleep 4s ease-in-out infinite;
 }
 @keyframes pz-sleep {
@@ -118,13 +118,13 @@
   }
 }
 
-.pet-art[data-state='fall'] {
+.pet-sprite .pet-art[data-state='fall'] {
   animation: pz-fall 1.1s ease-in-out infinite;
 }
-.pet-art[data-state='fall'] .pet-arm-l {
+.pet-sprite .pet-art[data-state='fall'] .pet-arm-l {
   animation: pz-flail-l 0.5s ease-in-out infinite;
 }
-.pet-art[data-state='fall'] .pet-arm-r {
+.pet-sprite .pet-art[data-state='fall'] .pet-arm-r {
   animation: pz-flail-r 0.5s ease-in-out -0.25s infinite;
 }
 @keyframes pz-fall {
@@ -155,13 +155,13 @@
   }
 }
 
-.pet-art[data-state='climb'] {
+.pet-sprite .pet-art[data-state='climb'] {
   animation: pz-climb 0.46s ease-in-out infinite;
 }
-.pet-art[data-state='climb'] .pet-arm-l {
+.pet-sprite .pet-art[data-state='climb'] .pet-arm-l {
   animation: pz-grip-l 0.46s ease-in-out infinite;
 }
-.pet-art[data-state='climb'] .pet-arm-r {
+.pet-sprite .pet-art[data-state='climb'] .pet-arm-r {
   animation: pz-grip-r 0.46s ease-in-out -0.23s infinite;
 }
 @keyframes pz-climb {
@@ -192,14 +192,14 @@
   }
 }
 
-.pet-art[data-state='drag'] {
+.pet-sprite .pet-art[data-state='drag'] {
   transform-origin: 50% 12%;
   animation: pz-dangle 0.7s ease-in-out infinite;
 }
-.pet-art[data-state='drag'] .pet-foot {
+.pet-sprite .pet-art[data-state='drag'] .pet-foot {
   animation: pz-kick 0.34s ease-in-out infinite;
 }
-.pet-art[data-state='drag'] .pet-foot-r {
+.pet-sprite .pet-art[data-state='drag'] .pet-foot-r {
   animation-delay: -0.17s;
 }
 @keyframes pz-dangle {
@@ -221,13 +221,13 @@
   }
 }
 
-.pet-art[data-state='cheer'] {
+.pet-sprite .pet-art[data-state='cheer'] {
   animation: pz-cheer 0.42s ease-in-out infinite;
 }
-.pet-art[data-state='cheer'] .pet-arm-l {
+.pet-sprite .pet-art[data-state='cheer'] .pet-arm-l {
   animation: pz-arm-up-l 0.42s ease-in-out infinite;
 }
-.pet-art[data-state='cheer'] .pet-arm-r {
+.pet-sprite .pet-art[data-state='cheer'] .pet-arm-r {
   animation: pz-arm-up-r 0.42s ease-in-out infinite;
 }
 @keyframes pz-cheer {
