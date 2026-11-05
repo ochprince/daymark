@@ -8,6 +8,7 @@ import type { PetArtSpecies } from './petArt'
 import {
   landingPlatform,
   placeBubble,
+  planDropDown,
   planJump,
   planJumpDown,
   simulateJump,
@@ -867,15 +868,24 @@ export function PetLayer({
     const jumpToPlatform = (q: Platform, from: Platform) => {
       const down = q.t > s.y + 8
       for (let attempt = 0; attempt < 8; attempt += 1) {
-        const plan = down
+        // 先按「越过自己的边」算；这一步对宽平台（整张舞台卡）永远无解，
+        // 于是再退一步：目标就在自己脚下时按直接落下算。
+        const overEdge = down
           ? planJumpDown({ x: s.x, y: s.y }, from, q, { gravity: PET_GRAVITY, maxVx: 420 })
-          : planJump({ x: s.x, y: s.y }, q, { gravity: PET_GRAVITY, maxVx: 420 })
+          : null
+        const plan =
+          overEdge ??
+          (down
+            ? planDropDown({ x: s.x, y: s.y }, from, q, { gravity: PET_GRAVITY, maxVx: 420 })
+            : planJump({ x: s.x, y: s.y }, q, { gravity: PET_GRAVITY, maxVx: 420 }))
         if (!plan) continue
+        // 直接从脚下的台阶落下去时，脚下这级不能参与接人（否则永远被自己接住）
+        const simPlats = overEdge ? platforms : platforms.filter((p2) => p2.key !== from.key)
         const hit = simulateJump(
           { x: s.x, y: s.y },
           plan.vx,
           plan.vy,
-          platforms,
+          simPlats,
           { gravity: PET_GRAVITY, bounds: { left: size * 0.35, right: rect.width - size * 0.35 } },
         )
         if (!hit || hit.key !== q.key) continue
@@ -932,7 +942,8 @@ export function PetLayer({
         const up = cands.filter((q) => q.t < s.y - 10)
         const down = cands.filter((q) => q.t > s.y + 10)
         const roll = Math.random()
-        const base = roll < 0.45 && up.length ? up : roll < 0.85 && down.length ? down : cands
+        // 往下多给一点：卡片顶是它的常驻位置，只往上跳会像在同一个地方弹
+        const base = roll < 0.4 && up.length ? up : roll < 0.9 && down.length ? down : cands
         /*
          * 藏馆里摊开的纸条是它最该去的地方，但正常抽签它只是十几个平台里的一个，
          * 一整天也未必轮到一次。这里给它三份权重，其余平台不变。

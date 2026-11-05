@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { planJump, planJumpDown, simulateJump, type Platform } from './geometry.ts'
+import { planDropDown, planJump, planJumpDown, simulateJump, type Platform } from './geometry.ts'
 
 const G = 2200
 
@@ -52,4 +52,36 @@ test('往下跳：先越过自己的台阶再落到下层，不会被自己那�
     if (hit?.key === 'low') ok += 1
   }
   assert.equal(ok, 20)
+})
+
+test('宽平台的往下跳：越边永无解，直接落下要成立', () => {
+  // 舞台卡横跨 16–374、顶边在 79；成长条在卡片里 38–352、顶边 492
+  const card = plat('card', 16, 374, 79)
+  const growth = plat('growth', 38, 352, 492)
+  const platforms = [card, growth, plat('tabbar', 54, 336, 756), plat('floor', 0, 390, 830)]
+
+  // 先证明：老老实实按「越过自己的边」算，三个起跳点全无解（这就是它不下来的原因）
+  for (const x of [40, 195, 350]) {
+    assert.equal(planJumpDown({ x, y: 79 }, card, growth, { gravity: G }), null, `x=${x} 本该无解`)
+  }
+
+  // 再证明：走「直接从脚下落下去」这条路，落点就是成长条
+  for (const x of [40, 195, 350]) {
+    const plan = planDropDown({ x, y: 79 }, card, growth, { gravity: G })
+    assert.ok(plan, `x=${x} 应该有解`)
+    const hit = simulateJump(
+      { x, y: 79 },
+      plan!.vx,
+      plan!.vy,
+      platforms.filter((p) => p.key !== card.key),
+      { gravity: G, bounds: { left: 32, right: 358 } },
+    )
+    assert.equal(hit?.key, 'growth', `x=${x} 的落点`)
+  }
+})
+
+test('不在脚下的平台不能走「直接落下」那条', () => {
+  const card = plat('card', 16, 374, 79)
+  const side = plat('side', 420, 520, 492) // 横向完全在卡片右边
+  assert.equal(planDropDown({ x: 195, y: 79 }, card, side, { gravity: G }), null)
 })

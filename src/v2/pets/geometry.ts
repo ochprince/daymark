@@ -209,6 +209,45 @@ export function simulateJump(
 }
 
 /**
+ * 目标整个落在自己脚下（卡片顶 → 卡片里的成长条 / 备忘块）。
+ *
+ * `planJumpDown` 要求「先越过自己这一级的边」才不会被脚下的台阶接住，
+ * 可源平台一旦很宽（.stage-card 横跨 16–374），越边要的横速比落点允许的还大，
+ * 于是永远无解——表现就是它趴在卡片顶上，十几分钟一次也不往下走。
+ * 这种情况不需要越边：它是从台阶前沿直接落下去的，按小跳 + 自由落体算就行。
+ */
+export function planDropDown(
+  from: { x: number; y: number },
+  source: Platform,
+  target: Platform,
+  opts: { gravity: number; maxVx?: number },
+): JumpPlan | null {
+  const g = opts.gravity
+  const maxVx = opts.maxVx ?? 420
+  const top = target.t + 3
+  if (top <= from.y + 8) return null
+  // 只有「目标横坐标基本在自己脚下」才走这条：不然应该用 planJumpDown 越边
+  if (target.l > source.r - 8 || target.r < source.l + 8) return null
+
+  const lo = target.l + 10
+  const hi = target.r - 10
+  if (hi <= lo) return null
+
+  // 先轻轻抬一下再落下去，看着像跳下去而不是直接掉
+  const c = 24
+  const tUp = Math.sqrt((2 * c) / g)
+  const drop = top - (from.y - c)
+  if (drop <= 0) return null
+  const tDown = Math.sqrt((2 * drop) / g)
+  const T = tUp + tDown
+  if (!Number.isFinite(T) || T <= 0) return null
+
+  const aim = Math.min(hi, Math.max(lo, from.x))
+  const vx = Math.min(maxVx, Math.max(-maxVx, (aim - from.x) / T))
+  return { vx, vy: -Math.sqrt(2 * g * c), tx: from.x + vx * T }
+}
+
+/**
  * 往下跳：麻烦在于起点就站在源平台上，落下来的瞬间如果人还在源平台上方，
  * 会被「自己的台阶」先接住——所以水平速度必须先够越出源平台的边，
  * 再保证按这个速度飞到目标高度时，横坐标刚好落在目标平台里。
