@@ -246,6 +246,27 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .zzz { translate: var(--pet-x, 0px) 0; }
 .sc-note { translate: var(--pet-x, 0px) 0; transition: translate 0.28s ease-out; }
 /* 在家这只的小动作：只剩歪头（走来走去和忽大忽小用户已否决），2.4s，演完回 bob */
+/* 卡片里它能做的事：坐下、伸个懒腰、开心蹦两下（都在卡片里的地面上） */
+.cr-wrap .cr.sit { animation: cr-sit 3.2s ease-in-out infinite; }
+@keyframes cr-sit {
+  0%,
+  100% { transform: translateY(3px) scale(1.04, 0.95); }
+  50% { transform: translateY(4px) scale(1.05, 0.94); }
+}
+.cr-wrap .cr.stretch { animation: cr-stretch 1.7s ease-in-out; }
+@keyframes cr-stretch {
+  0% { transform: none; }
+  35% { transform: translateY(-5px) scale(0.97, 1.05); }
+  65% { transform: translateY(1px) scale(1.03, 0.97); }
+  100% { transform: none; }
+}
+.cr-wrap .cr.cheer { animation: cr-cheer 0.52s ease-in-out 3; }
+@keyframes cr-cheer {
+  0%,
+  100% { transform: translateY(0) scale(1); }
+  40% { transform: translateY(-7px) scale(0.98, 1.03); }
+  70% { transform: translateY(0) scale(1.03, 0.97); }
+}
 .cr-wrap .cr.tilt { animation: cr-tilt 2.4s ease-in-out; }
 @keyframes cr-tilt {
   0% { transform: rotate(0deg); }

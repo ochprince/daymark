@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { Creature } from '../../components/Creature'
 import { createBody, hop, step, walkTo, type CardBody } from './cardSim'
 import type { PetArtSpecies } from './petArt'
@@ -37,6 +37,10 @@ export function CardPet({
   pokeNonce,
   extra,
 }: Props) {
+  /** 它自己挑的小姿势：坐着 / 伸懒腰 / 开心蹦，位置仍由物理那套管 */
+  const [pose, setPose] = useState<'' | 'sit' | 'stretch' | 'cheer'>('')
+  const poseRef = useRef<'' | 'sit' | 'stretch' | 'cheer'>('')
+  poseRef.current = pose
   const hostRef = useRef<HTMLDivElement | null>(null)
   const moverRef = useRef<HTMLDivElement | null>(null)
   const bodyRef = useRef<CardBody>(createBody())
@@ -79,23 +83,38 @@ export function CardPet({
 
     // 小动作的节拍：走两步或者蹦一下，剩下交给外层的歪头/打盹
     let timer = 0
+    let poseTimer = 0
+    const playPose = (next: 'sit' | 'stretch' | 'cheer', ms: number) => {
+      window.clearTimeout(poseTimer)
+      setPose(next)
+      poseTimer = window.setTimeout(() => setPose(''), ms)
+    }
     const schedule = () => {
       window.clearTimeout(timer)
       timer = window.setTimeout(() => {
         const body = bodyRef.current
-        if (!stillRef.current && body.mode === 'stand') {
+        const free = !stillRef.current && body.mode === 'stand' && !poseRef.current
+        if (free) {
           const roll = Math.random()
-          if (roll < 0.42) {
+          if (roll < 0.34) {
             // 贴着墙就别再往墙里走，否则它会一直赖在卡片边上
             const nearWall = Math.abs(body.x) > limit * 0.8
             const target = nearWall
               ? (Math.random() * 2 - 1) * limit * 0.5
               : body.x + (Math.random() * 2 - 1) * limit * 0.9
             walkTo(body, target)
-          } else if (roll < 0.7) {
+          } else if (roll < 0.54) {
             hop(body, 16 + Math.random() * 20)
+          } else if (roll < 0.74) {
+            playPose('sit', 3200 + Math.random() * 2000)
+          } else if (roll < 0.88) {
+            playPose('stretch', 1700)
+          } else {
+            playPose('cheer', 1600)
           }
         }
+        // 睡着了就把姿势收掉，别一边打盹一边坐着
+        if (stillRef.current && poseRef.current) setPose('')
         schedule()
       }, 4200 + Math.random() * 4600)
     }
@@ -127,6 +146,7 @@ export function CardPet({
     return () => {
       window.cancelAnimationFrame(raf)
       window.clearTimeout(timer)
+      window.clearTimeout(poseTimer)
       window.removeEventListener('resize', measure)
       wrap?.style.removeProperty('--pet-x')
     }
@@ -140,7 +160,7 @@ export function CardPet({
         style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
       >
         <Creature
-          className={`cr ${poseClass}`}
+          className={`cr ${poseClass} ${pose}`}
           species={species}
           stage={stage}
           mood={mood}
