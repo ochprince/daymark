@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Creature } from '../../components/Creature'
-import { createBody, hop, step, walkTo, type CardBody } from './cardSim'
+import { createBody, fallTo, hop, riseTo, step, walkTo, type CardBody } from './cardSim'
 import type { PetArtSpecies } from './petArt'
 import type { PetStage } from './art'
 
@@ -67,6 +67,7 @@ export function CardPet({
     if (away) return undefined
 
     const wrap = host.closest<HTMLElement>('.cr-wrap')
+    const cardEl = host.closest<HTMLElement>('.stage-card')
     const world = host.closest<HTMLElement>('.sc-hero') ?? wrap
     let limit = 24
     const measure = () => {
@@ -77,9 +78,29 @@ export function CardPet({
     measure()
     window.addEventListener('resize', measure)
 
+    // 备忘块那层：算它离脚下有多远（卡片里只有倒数日有备忘）
+    let memoDrop = 0
+    const measureMemo = () => {
+      if (!wrap) return 0
+      const memo = host.closest<HTMLElement>('.stage-card')?.querySelector<HTMLElement>('.c-memo')
+      if (!memo) {
+        memoDrop = 0
+        return 0
+      }
+      const wr = wrap.getBoundingClientRect()
+      const mr = memo.getBoundingClientRect()
+      // 艺术本体的脚大致在盒子的 86% 处
+      const feet = wr.top + wr.height / 2 + size * 0.36
+      memoDrop = Math.max(0, Math.min(240, mr.top - feet))
+      return memoDrop
+    }
+
     let raf = 0
     let last = performance.now()
     let pxShown = Number.NaN
+    /** '' = 在空地上；to = 正走过去；on = 在备忘上坐着；back = 跳回来 */
+    let trip: '' | 'to' | 'on' | 'back' = ''
+    let lastTrip = 0
 
     // 小动作的节拍：走两步或者蹦一下，剩下交给外层的歪头/打盹
     let timer = 0
@@ -96,7 +117,12 @@ export function CardPet({
         const free = !stillRef.current && body.mode === 'stand' && !poseRef.current
         if (free) {
           const roll = Math.random()
-          if (roll < 0.34) {
+          const canTrip = trip === '' && performance.now() - lastTrip > 45000 && measureMemo() > 12
+          if (canTrip && roll < 0.18) {
+            // 把备忘当平台：先走回空地中间，到了再往下掉
+            trip = 'to'
+            walkTo(body, 0)
+          } else if (roll < 0.42) {
             // 贴着墙就别再往墙里走，否则它会一直赖在卡片边上
             const nearWall = Math.abs(body.x) > limit * 0.8
             const target = nearWall
@@ -126,12 +152,35 @@ export function CardPet({
       last = now
 
       const body = bodyRef.current
+      let landed = false
       if (stillRef.current && body.mode !== 'jump') {
         // 睡着就原地趴下，不要滑回中间（那看着像被拖回去）
         body.mode = 'stand'
       } else {
-        step(body, limit, dt)
+        landed = step(body, limit, dt).landed
       }
+
+      // 来回备忘那一趟
+      if (trip === 'to' && body.mode === 'stand' && Math.abs(body.x) < 6 && memoDrop > 12) {
+        fallTo(body, memoDrop)
+        trip = 'on'
+      } else if (trip === 'on' && landed && body.ground > 12) {
+        // 落在备忘上了：坐着待一会儿，再跳回空地
+        playPose('sit', 2600 + Math.random() * 2200)
+        window.setTimeout(() => {
+          if (trip !== 'on') return
+          setPose('')
+          riseTo(body, 0)
+          trip = 'back'
+        }, 3000 + Math.random() * 1800)
+      } else if (trip === 'back' && landed && body.ground === 0) {
+        trip = ''
+        lastTrip = performance.now()
+      }
+      const down = body.ground > 12 || trip === 'on' || (trip === 'to' && body.mode === 'jump')
+      wrap?.classList.toggle('pet-down', down)
+      // 备忘那块在 DOM 里排在空地后面，会盖住它；下去的时候把空地抬到上面
+      cardEl?.classList.toggle('pet-down', down)
 
       mover.style.transform = `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0)`
       // 影子和手里那张纸要跟着横向挪，否则它会「离地飞行」
@@ -149,6 +198,8 @@ export function CardPet({
       window.clearTimeout(poseTimer)
       window.removeEventListener('resize', measure)
       wrap?.style.removeProperty('--pet-x')
+      wrap?.classList.remove('pet-down')
+      cardEl?.classList.remove('pet-down')
     }
   }, [away, size])
 

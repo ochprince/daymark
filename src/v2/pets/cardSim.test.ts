@@ -1,6 +1,6 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { CARD_WALK, createBody, hop, step, walkTo } from './cardSim'
+import { CARD_WALK, createBody, fallTo, hop, riseTo, step, walkTo } from './cardSim'
 
 test('卡片里的它：跳起来会自己落回地面', () => {
   const body = createBody()
@@ -44,6 +44,29 @@ test('卡片里的它：朝向跟着走的方向', () => {
   assert.equal(body.dir, -1)
   walkTo(body, 25)
   assert.equal(body.dir, 1)
+})
+
+test('卡片里的它：能掉到下面那层（备忘），也能跳回上面', () => {
+  const body = createBody()
+  fallTo(body, 148)
+  let landed = false
+  for (let i = 0; i < 200 && !landed; i += 1) landed = step(body, 60, 1 / 60).landed
+  assert.ok(landed, '一秒内应该落到备忘那层')
+  assert.equal(body.y, 148)
+  assert.equal(body.ground, 148)
+
+  riseTo(body, 0)
+  landed = false
+  let top = body.y
+  for (let i = 0; i < 300 && !landed; i += 1) {
+    landed = step(body, 60, 1 / 60).landed
+    top = Math.min(top, body.y)
+  }
+  assert.ok(landed, '两秒多内应该跳回空地')
+  assert.equal(body.ground, 0)
+  assert.equal(body.y, 0)
+  // 起跳高度要够得着上面那层（允许几像素误差）
+  assert.ok(top > -8, `不该冲到空地以上太多，实际顶点 ${top}`)
 })
 
 test('卡片里的它：一帧的步长有上限，卡顿不会让它瞬移', () => {
