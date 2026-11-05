@@ -278,6 +278,20 @@ export function StageCard({
     }
     let step: number = 0
     let stop: number = 0
+    /*
+     * 卡片是「一次只挂一张」的，key 里带着 focus.key：每滑一次就重新挂载，
+     * 计时器也跟着从头开始。原来第一个动作要等 4.2–8.8 秒——滑过去看两眼
+     * 就走的人，永远只看到它在原地浮，会以为别的宠物都不动。
+     * 第一下给得早一点，之后就按原来的节奏。
+     */
+    let first = true
+    const gap = () => {
+      if (first) {
+        first = false
+        return 1400 + Math.random() * 2000
+      }
+      return 4200 + Math.random() * 4600
+    }
     const schedule = () => {
       step = window.setTimeout(() => {
         // 四分之一的空档用来打盹，剩下歪一下头
@@ -289,7 +303,7 @@ export function StageCard({
           stop = window.setTimeout(() => setIdle(''), 2400)
         }
         schedule()
-      }, 4200 + Math.random() * 4600)
+      }, gap())
     }
     schedule()
     return () => {
