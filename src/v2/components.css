@@ -772,6 +772,12 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* 章节（书页） */
 .bookpage { background: var(--paper); color: #2b2638; border: var(--bw) solid var(--line); border-radius: 8px 22px 22px 8px; padding: 22px 22px 18px; box-shadow: var(--pop), inset 12px 0 0 rgba(0, 0, 0, 0.04); position: relative; }
 [data-skin='paper'] .bookpage { border-color: var(--hair); }
+/*
+ * .modal 靠 left/right 定宽，可 .bookpage 自己写了 position: relative，
+ * 相对定位下 left/right 不决定宽度，于是它铺满整层再多挪 20px——
+ * 右边那 20px 就被屏幕裁掉了。这里把它按回绝对定位。
+ */
+.modal.bookpage { position: absolute; left: 16px; right: 16px; }
 .bookpage.flip-l { animation: flipL 0.5s ease-out; }
 .bookpage.flip-r { animation: flipR 0.5s ease-out; }
 .bp-k { font-size: 12px; letter-spacing: 0.16em; color: #9a91a8; font-weight: 700; }

@@ -96,6 +96,56 @@ test('书架：倒数日到过的那天也是一本（没有天数）', () => {
   assert.equal(books[0].line, '那天打了电话。')
 })
 
+test('书架：倒数日同一天的「到过」只算一章（点两下不该变两章）', () => {
+  const views = viewsOf(
+    [],
+    [],
+    [
+      {
+        id: 'd2',
+        title: '说好要去的海边',
+        startedAt: at(2026, 11, 3),
+        createdAt: at(2026, 1, 1),
+        color: 3,
+        repeat: 'none',
+        history: [
+          { at: at(2026, 11, 3) + 3600_000 },
+          { at: at(2026, 11, 3) },
+        ],
+      },
+    ],
+    at(2026, 11, 5),
+  )
+  const books = collectChapters(views)
+  assert.equal(books.length, 1)
+})
+
+test('书架：删掉的那件事，书还留在架上', () => {
+  const views = viewsOf(
+    [],
+    [],
+    [
+      {
+        id: 'd3',
+        title: '等待的日子',
+        startedAt: at(2026, 11, 3),
+        createdAt: at(2026, 1, 1),
+        color: 1,
+        repeat: 'none',
+        history: [{ at: at(2026, 11, 3) }],
+      },
+    ],
+    at(2026, 11, 5),
+  )
+  const before = collectBooks(views)
+  assert.equal(before.length, 1)
+  // 删掉之后 views 里没有它了，只有藏馆里抄下来的那一本
+  const after = collectBooks([], before)
+  assert.equal(after.length, 1)
+  assert.equal(after[0].title, '等待的日子')
+  assert.equal(after[0].chapters.length, 1)
+})
+
 test('空数据不炸，返回空书架', () => {
   const views = viewsOf([], [], [], at(2026, 10, 25))
   assert.deepEqual(collectChapters(views), [])

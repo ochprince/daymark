@@ -95,7 +95,8 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
   // 翻书方向：翻的时候给 currentTarget 挂 flip-l / flip-r，0.5s 后自动落位
   const [flip, setFlip] = useState<'l' | 'r' | null>(null)
   // 一件事一本书：翻过的章夹在书里，点开才铺出来
-  const books = useMemo(() => collectBooks(views), [views])
+  // 第二参是「删掉的事留下的书」，它们已经没有对应的今天页条目了
+  const books = useMemo(() => collectBooks(views, collection.shelves), [views, collection.shelves])
   /**
    * 章多了列表是要滚的，但滚动条是藏起来的：不提示的话，
    * 「翻过的 9 章」下面只露出 5 条，看着像是丢了几章。

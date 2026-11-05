@@ -650,6 +650,39 @@ html.reduce-motion .pet-say,
   pointer-events: none;
 }
 
+/* 头顶的名字：它是哪件事变的（喝水 / 妈妈的生日）。
+   不放进 .pet-sprite，那边有 scaleX(face)，字会照成镜像。 */
+.pet-tag {
+  position: absolute;
+  left: 0;
+  top: 0;
+  z-index: 4;
+  max-width: 150px;
+  padding: 3px 9px 4px;
+  border-radius: 999px;
+  border: var(--bw) solid var(--line);
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: var(--pop-sm);
+  font-family: var(--font-cute);
+  font-size: 11.5px;
+  font-weight: 800;
+  line-height: 1.3;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+[data-skin='night'] .pet-tag {
+  background: #1c2050;
+}
+/* 它还在卡片里的时候不显示（出场的四段接力途中也先藏着） */
+.pet-layer[data-pet-out='0'] > .pet-tag {
+  opacity: 0;
+  visibility: hidden;
+}
+
 /* 人走了，家还在：占位尺寸不动，只是暂时空着、不能点 */
 .cr-wrap.pet-away {
   pointer-events: none;

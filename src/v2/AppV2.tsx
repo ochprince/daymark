@@ -13,6 +13,8 @@ import { patchEvent, removeEvent } from '../lib/storage'
 import { anchorOf, todayStart } from '../lib/days'
 import { dayKey, parseDayKey } from '../lib/daykey'
 import { focusAfterRemoval } from '../lib/itemview'
+import { collectBooks } from '../lib/museum'
+import { archiveBook } from '../lib/collection'
 import { ProfilePage } from './ProfilePage'
 import { MuseumPage } from './MuseumPage'
 import { DressPage } from './DressPage'
@@ -565,6 +567,13 @@ export function AppV2() {
   const deleteFocus = useCallback(
     (view: ItemView) => {
       const next = focusAfterRemoval(views, view.key)
+      /*
+       * 档案页的删除确认写的是「它会从今天页消失，但这一章会留在藏馆里」。
+       * 事一删，它的 chapters / history 就跟着没了，这本书在藏馆里也就空了——
+       * 所以先把整本书抄一份进 collection.shelves，再删。
+       */
+      const book = collectBooks(views).find((item) => item.key === view.key)
+      if (book) archiveBook(book)
       if (view.kind === 'since') removeEvent(view.id)
       else if (view.kind === 'habit') removeCheckIn(view.id)
       else removeCountdown(view.id)
@@ -686,6 +695,8 @@ export function AppV2() {
           pokeSeq={pokeCount}
           onHoldLog={onLog}
           onWake={() => checkBadges({ wokeUp: true })}
+          /* 头顶那块名字：它从哪件事出来的。串门时也还是原来那件事 */
+          name={views.find((view) => view.key === outFrom)?.title ?? focus.title}
           visiting={petOut && !!outFrom && outFrom !== focus?.key}
         />
       ) : null}

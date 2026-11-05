@@ -5,6 +5,7 @@
  * 徽章解锁即弹窗；迁移时静默补发，不弹。
  */
 import { createJsonStore } from './jsonStore'
+import type { ShelfBook } from './museum'
 import type { Stage } from './types'
 
 const STORAGE_KEY = 'daymark.collection.v1'
@@ -77,6 +78,12 @@ export type CollectionState = {
   seenStage: Record<string, Stage>
   /** 节日彩蛋：节日 id → 已经看过的那一天（当天只触发一次） */
   festivalSeen: Record<string, number>
+  /**
+   * 删掉的事留下的书。
+   * 档案页的删除确认写的是「它会从今天页消失，但这一章会留在藏馆里」——
+   * 事被删了，藏馆里那本书和里面的章要留着，否则这句话就是骗人的。
+   */
+  shelves: ShelfBook[]
 }
 
 export function emptyCollection(): CollectionState {
@@ -88,6 +95,7 @@ export function emptyCollection(): CollectionState {
     peakStage: {},
     seenStage: {},
     festivalSeen: {},
+    shelves: [],
   }
 }
 
@@ -162,6 +170,35 @@ function normalizeNotes(input: unknown): Note[] {
   return result.sort((a, b) => b.at - a.at)
 }
 
+/** 删掉的事留下的书：字段不全的整本丢掉，宁可少一本也别画出半本书 */
+function normalizeShelves(input: unknown): ShelfBook[] {
+  if (!Array.isArray(input)) return []
+  const result: ShelfBook[] = []
+  const seen = new Set<string>()
+  for (const item of input) {
+    if (!isRecord(item)) continue
+    if (typeof item.key !== 'string' || typeof item.title !== 'string') continue
+    if (typeof item.startedAt !== 'number' || !Number.isFinite(item.startedAt)) continue
+    if (seen.has(item.key)) continue
+    const chapters = Array.isArray(item.chapters)
+      ? item.chapters.filter((chapter): chapter is ShelfBook['chapters'][number] => {
+          if (!isRecord(chapter)) return false
+          return (
+            typeof chapter.key === 'string' &&
+            typeof chapter.endedAt === 'number' &&
+            Number.isFinite(chapter.endedAt)
+          )
+        })
+      : []
+    seen.add(item.key)
+    result.push({
+      ...(item as unknown as ShelfBook),
+      chapters,
+    })
+  }
+  return result.slice(0, 40)
+}
+
 export function normalizeCollection(input: unknown): CollectionState {
   if (!isRecord(input)) return emptyCollection()
   const note = input.notesThisWeek
@@ -171,6 +208,7 @@ export function normalizeCollection(input: unknown): CollectionState {
       ? [...new Set(input.dex.filter((key): key is string => typeof key === 'string' && key.length > 0))]
       : [],
     notes: normalizeNotes(input.notes),
+    shelves: normalizeShelves(input.shelves),
     lastNoteAt:
       typeof input.lastNoteAt === 'number' && Number.isFinite(input.lastNoteAt)
         ? input.lastNoteAt
@@ -293,6 +331,18 @@ export function addNote(note: Note): void {
   const state = collectionStore.get()
   const rest = state.notes.filter((item) => item.id !== note.id)
   collectionStore.patch({ notes: [note, ...rest].slice(0, 500) })
+}
+
+/**
+ * 删一件事之前先把这本书收进藏馆。
+ * 一件都没翻过的（没有章节）就不用留——空书在架上只是噪音。
+ */
+export function archiveBook(book: ShelfBook): void {
+  if (book.chapters.length === 0) return
+  collectionStore.reload()
+  const state = collectionStore.get()
+  const rest = state.shelves.filter((item) => item.key !== book.key)
+  collectionStore.patch({ shelves: [book, ...rest].slice(0, 40) })
 }
 
 /* ------------------------------------------------------------------ *

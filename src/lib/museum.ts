@@ -100,7 +100,15 @@ export function collectChapters(views: readonly ItemView[]): ShelfChapter[] {
         })
       })
     } else {
+      /*
+       * 倒数日的「到过」一天只算一章。以前点两次「说过了」会插两条
+       * （markSaid 没有去重），藏馆里就成了同一天两章，看着像记重了。
+       */
+      const seenDays = new Set<string>()
       ;(view.event.history ?? []).forEach((entry, index) => {
+        const day = new Date(entry.at).toDateString()
+        if (seenDays.has(day)) return
+        seenDays.add(day)
         books.push({
           key: `${view.key}#${index}`,
           itemKey: view.key,
@@ -141,9 +149,12 @@ export type ShelfBook = {
   chapters: ShelfChapter[]
 }
 
-export function collectBooks(views: readonly ItemView[]): ShelfBook[] {
+export function collectBooks(
+  views: readonly ItemView[],
+  archived: readonly ShelfBook[] = [],
+): ShelfBook[] {
   const chapters = collectChapters(views)
-  return views
+  const live = views
     .map((view): ShelfBook => {
       const mine = chapters.filter((chapter) => chapter.itemKey === view.key)
       const days =
@@ -167,7 +178,9 @@ export function collectBooks(views: readonly ItemView[]): ShelfBook[] {
         chapters: mine,
       }
     })
-    .sort((a, b) => b.startedAt - a.startedAt)
+  // 删掉的事：书和章都还在架上，但已经不在今天页了
+  const kept = archived.filter((book) => !views.some((view) => view.key === book.key))
+  return [...live, ...kept].sort((a, b) => b.startedAt - a.startedAt)
 }
 
 /** 图鉴总数：四个物种 × 五个形态 + 特别篇三格 */

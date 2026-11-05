@@ -164,6 +164,8 @@ export type PetLayerProps = {
   onHomeHot?: (hot: boolean) => void
   /** 点醒一只正在睡觉的它（徽章「回来了」靠这个） */
   onWake?: () => void
+  /** 头顶挂的名字：它从哪件事出来的（喝水 / 妈妈的生日） */
+  name?: string
 }
 
 type DragState = {
@@ -196,6 +198,7 @@ export function PetLayer({
   stage,
   hue = 4,
   size = 92,
+  name,
   spawn,
   out,
   onOut,
@@ -214,6 +217,8 @@ export function PetLayer({
   const layerRef = useRef<HTMLDivElement | null>(null)
   const spriteRef = useRef<HTMLDivElement | null>(null)
   const sayRef = useRef<HTMLDivElement | null>(null)
+  /** 头顶那块名字：不能放进 .pet-sprite（那里有 scaleX 会把它照成镜像） */
+  const tagRef = useRef<HTMLDivElement | null>(null)
   const dragRef = useRef<DragState | null>(null)
   const bubbleSeq = useRef(0)
   /** 桌宠是否在外面：卡片里那只与这只互斥 */
@@ -382,6 +387,15 @@ export function PetLayer({
       sprite.style.transform =
         `translate3d(${(s.x - size / 2).toFixed(1)}px, ${(s.y - size * 0.93).toFixed(1)}px, 0) ` +
         `scaleX(${s.face})`
+      // 名字跟着走，单独定位：精灵自己有 scaleX(face)，放进去字会被镜像
+      const tag = tagRef.current
+      if (tag) {
+        // 贴着左右边的时候别让牌子被裁掉半截
+        const half = (tag.offsetWidth || 60) / 2 + 6
+        const tagX = Math.min(Math.max(s.x, half), Math.max(half, rect.width - half))
+        tag.style.transform =
+          `translate3d(${tagX.toFixed(1)}px, ${(s.y - size * 0.93 - 26).toFixed(1)}px, 0) translateX(-50%)`
+      }
       sprite.dataset.petX = s.x.toFixed(1)
       sprite.dataset.petY = s.y.toFixed(1)
       sprite.dataset.petMode = s.mode
@@ -1341,6 +1355,12 @@ export function PetLayer({
       >
         <Pet species={species} stage={stage} state={view} size={size} hue={hue} />
       </div>
+      {/* 头顶的名字：它是哪件事变的。说话的时候让位给气泡，两个都挂在头顶会叠 */}
+      {name && !bubble ? (
+        <div className="pet-tag" ref={tagRef} aria-hidden="true">
+          {name}
+        </div>
+      ) : null}
       {bubble ? (
         <div className="pet-say on" ref={sayRef} key={bubble.id} data-dir="t">
           {bubble.text}

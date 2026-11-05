@@ -55,7 +55,9 @@ export function markSaid(id: string, occurrence: number): void {
   const current = countdowns.getAll().find((item) => item.id === id)
   if (!current) return
   const ackedFor = [...new Set([...(current.ackedFor ?? []), occurrence])]
-  const history = [{ at: occurrence }, ...(current.history ?? [])].slice(0, 200)
+  // 同一次发生只记一条：点两下不该在藏馆里变成两章
+  const rest = (current.history ?? []).filter((entry) => entry.at !== occurrence)
+  const history = [{ at: occurrence }, ...rest].slice(0, 200)
   countdowns.update(id, { ackedFor, history })
 }
 
