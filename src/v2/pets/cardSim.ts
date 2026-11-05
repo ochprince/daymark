@@ -1,7 +1,10 @@
 import { PET_GRAVITY } from './physics'
 
-/** 卡片里这只的走速：和外面那只一样，44 px/s */
-export const CARD_WALK = 44
+/**
+ * 卡片里这只的走速。外面那只 44 px/s（体积 92），
+ * 卡片里这只 158，按体积换算差不多这个数，看着才不拖沓。
+ */
+export const CARD_WALK = 70
 /** 落地后再弹起的最小间隔，防止抖成筛子 */
 export const CARD_BOUNCE_GAP = 900
 

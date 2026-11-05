@@ -80,21 +80,21 @@ export function CardPet({
     measure()
     window.addEventListener('resize', measure)
 
-    // 备忘块那层：算它离脚下有多远（卡片里只有倒数日有备忘）
-    let memoDrop = 0
-    const measureMemo = () => {
+    // 下面那一层：倒数日是备忘块，习惯是成长条，算它离脚下有多远
+    let belowDrop = 0
+    const measureBelow = () => {
       if (!wrap) return 0
-      const memo = host.closest<HTMLElement>('.stage-card')?.querySelector<HTMLElement>('.c-memo')
+      const memo = host.closest<HTMLElement>('.stage-card')?.querySelector<HTMLElement>('.c-memo, .growth')
       if (!memo) {
-        memoDrop = 0
+        belowDrop = 0
         return 0
       }
       const wr = wrap.getBoundingClientRect()
       const mr = memo.getBoundingClientRect()
       // 艺术本体的脚大致在盒子的 86% 处
       const feet = wr.top + wr.height / 2 + size * 0.36
-      memoDrop = Math.max(0, Math.min(240, mr.top - feet))
-      return memoDrop
+      belowDrop = Math.max(0, Math.min(240, mr.top - feet))
+      return belowDrop
     }
 
     let raf = 0
@@ -120,23 +120,23 @@ export function CardPet({
         const free = !stillRef.current && body.mode === 'stand' && !poseRef.current
         if (free) {
           const roll = Math.random()
-          const canTrip = trip === '' && performance.now() - lastTrip > 45000 && measureMemo() > 12
+          const canTrip = trip === '' && performance.now() - lastTrip > 45000 && measureBelow() > 12
           if (canTrip && roll < 0.12) {
-            // 把备忘当平台：先走回空地中间，到了再往下掉
+            // 把下面那块当平台（备忘 / 成长条）：先走回空地中间，到了再往下掉
             trip = 'to'
             walkTo(body, 0)
-          } else if (roll < 0.52) {
-            // 贴着墙就别再往墙里走，否则它会一直赖在卡片边上
-            const nearWall = Math.abs(body.x) > limit * 0.8
-            const target = nearWall
-              ? (Math.random() * 2 - 1) * limit * 0.5
-              : body.x + (Math.random() * 2 - 1) * limit * 0.9
-            walkTo(body, target)
-          } else if (roll < 0.67) {
-            hop(body, 16 + Math.random() * 20)
-          } else if (roll < 0.8) {
-            playPose('sit', 2600 + Math.random() * 1600)
-          } else if (roll < 0.9) {
+          } else if (roll < 0.62) {
+            // 每一步都迈远一点：原来只从当前位置挪一小截，
+            // 一是不活泼，二是运气不好能连着往同一边走好几趟。
+            // 六成走到对面，四成随便挑一边。
+            const side = Math.random() < 0.6 ? -Math.sign(body.x || 1) : Math.random() < 0.5 ? -1 : 1
+            const target = side * (0.35 + Math.random() * 0.65) * limit
+            walkTo(body, Math.max(-limit, Math.min(limit, target)))
+          } else if (roll < 0.74) {
+            hop(body, 16 + Math.random() * 22)
+          } else if (roll < 0.85) {
+            playPose('sit', 1800 + Math.random() * 1200)
+          } else if (roll < 0.93) {
             playPose('stretch', 1700)
           } else {
             playPose('cheer', 1600)
@@ -146,7 +146,7 @@ export function CardPet({
         if (stillRef.current && poseRef.current) setPose('')
         schedule()
         // 卡片里的世界小，别让它干站着：两秒多就有下一个念头
-      }, 2000 + Math.random() * 2200)
+      }, 900 + Math.random() * 1500)
     }
     schedule()
 
@@ -165,11 +165,11 @@ export function CardPet({
       }
 
       // 来回备忘那一趟
-      if (trip === 'to' && body.mode === 'stand' && Math.abs(body.x) < 6 && memoDrop > 12) {
-        fallTo(body, memoDrop)
+      if (trip === 'to' && body.mode === 'stand' && Math.abs(body.x) < 6 && belowDrop > 12) {
+        fallTo(body, belowDrop)
         trip = 'on'
       } else if (trip === 'on' && landed && body.ground > 12) {
-        // 落在备忘上了：坐着待一会儿，再跳回空地
+        // 落在下面那块上了：坐着待一会儿，再跳回空地
         playPose('sit', 2600 + Math.random() * 2200)
         window.setTimeout(() => {
           if (trip !== 'on') return

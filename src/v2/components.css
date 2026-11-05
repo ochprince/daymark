@@ -242,7 +242,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
  */
 .card-pet { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
 .card-pet-mover { position: absolute; left: 50%; top: 50%; will-change: transform; }
-.ground { left: calc(50% + var(--pet-x, 0px)); }
+.cr-wrap .ground { left: calc(50% + var(--pet-x, 0px)); }
+.cr-wrap .zzz { translate: var(--pet-x, 0px) 0; }
 /* 它跑去备忘那层的时候，空地上的影子和手里那张纸先收起来 */
 .cr-wrap.pet-down .ground,
 .cr-wrap.pet-down .sc-note { opacity: 0; transition: opacity 0.18s ease; }
@@ -250,11 +251,10 @@ button { font: inherit; color: inherit; cursor: pointer; }
    它下到备忘那层时要抬到它们上面（否则半截身子被埋掉）。
    选择器要把 .stage-card > *:not(…) 那条的权重压过去。 */
 .stage-card.pet-down > .sc-hero:not(.deco):not(.photo) { z-index: 3; }
-.zzz { translate: var(--pet-x, 0px) 0; }
-.sc-note { translate: var(--pet-x, 0px) 0; transition: translate 0.28s ease-out; }
+.cr-wrap .sc-note { translate: var(--pet-x, 0px) 0; transition: translate 0.28s ease-out; }
 /* 在家这只的小动作：只剩歪头（走来走去和忽大忽小用户已否决），2.4s，演完回 bob */
 /* 走起来：身体跟着脚步一颠一颠地晃，别像在滑冰 */
-.cr-wrap .cr.walk { animation: cr-step 0.44s ease-in-out infinite; transform-origin: 50% 92%; }
+.cr-wrap .cr.walk { animation: cr-step 0.36s ease-in-out infinite; transform-origin: 50% 92%; }
 @keyframes cr-step {
   0%,
   100% { transform: translateY(0) rotate(-2.2deg); }
