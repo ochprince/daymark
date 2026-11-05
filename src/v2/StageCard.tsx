@@ -276,6 +276,9 @@ export function StageCard({
    * 这里每隔一会儿就找个地方眯三四秒，是它自己的小习惯。
    */
   const [napping, setNapping] = useState(false)
+  /** 打盹那半分钟里别再插歪头，两个动作叠一起看着像抽搐 */
+  const nappingRef = useRef(napping)
+  nappingRef.current = napping
   const reducedMotion = () =>
     document.documentElement.classList.contains('reduce-motion') ||
     (typeof window.matchMedia === 'function' &&
@@ -304,11 +307,15 @@ export function StageCard({
     }
     const schedule = () => {
       step = window.setTimeout(() => {
-        // 四分之一的空档用来打盹，剩下歪一下头
-        if (Math.random() < 0.15) {
+        /*
+         * 打盹：以前 15% 的空档就眯一次、每次只眯 3.6–6.2 秒——太频繁、又短得像卡住。
+         * 现在难得睡一次，但一睡就睡够（半分钟上下），醒着的时候一直在忙。
+         */
+        if (Math.random() < 0.05) {
+          setIdle('')
           setNapping(true)
-          stop = window.setTimeout(() => setNapping(false), 3600 + Math.random() * 2600)
-        } else {
+          stop = window.setTimeout(() => setNapping(false), 30000 + Math.random() * 6000)
+        } else if (!nappingRef.current) {
           setIdle('tilt')
           stop = window.setTimeout(() => setIdle(''), 2400)
         }

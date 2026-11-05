@@ -104,6 +104,7 @@ export function CardPet({
     let raf = 0
     let last = performance.now()
     let pxShown = Number.NaN
+    let pyShown = Number.NaN
     let liftShown = -1
     /** '' = 在空地上；to = 正走过去；on = 在备忘上坐着；back = 跳回来 */
     let trip: '' | 'to' | 'on' | 'back' = ''
@@ -213,6 +214,12 @@ export function CardPet({
         liftShown = lift
         wrap?.style.setProperty('--pet-lift', lift.toFixed(3))
       }
+      // 打盹的 zzz 跟着它上下（下到备忘那层也贴着脑袋）
+      const shownY = Math.round(body.y)
+      if (shownY !== pyShown) {
+        pyShown = shownY
+        wrap?.style.setProperty('--pet-y', `${shownY}px`)
+      }
       // 影子和手里那张纸要跟着横向挪，否则它会「离地飞行」
       const shown = Math.round(body.x)
       if (shown !== pxShown) {
@@ -229,6 +236,7 @@ export function CardPet({
       window.removeEventListener('resize', measure)
       wrap?.style.removeProperty('--pet-x')
       wrap?.style.removeProperty('--pet-lift')
+      wrap?.style.removeProperty('--pet-y')
       wrap?.classList.remove('pet-down')
       cardEl?.classList.remove('pet-down')
     }

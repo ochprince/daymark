@@ -247,7 +247,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
  */
 .card-pet .cr { animation: none; }
 .cr-wrap .ground { left: calc(50% + var(--pet-x, 0px)); }
-.cr-wrap .zzz { translate: var(--pet-x, 0px) 0; }
+.cr-wrap .zzz { translate: var(--pet-x, 0px) var(--pet-y, 0px); }
 /* 它跑去备忘那层的时候，空地上的影子和手里那张纸先收起来 */
 .cr-wrap.pet-down .ground,
 .cr-wrap.pet-down .sc-note { opacity: 0; transition: opacity 0.18s ease; }
@@ -275,9 +275,14 @@ button { font: inherit; color: inherit; cursor: pointer; }
   72% { transform: rotate(-3deg); }
   100% { transform: rotate(0deg); }
 }
-.cr-wrap.sleep .cr,
+/*
+ * 只给「纯 CSS 那版」用（它是 .cr-wrap 的直接子元素）；
+ * 跑物理的时候 .cr 在 .card-pet 里，由里面那层 svg 按 data-state='sleep' 走 pz-sleep，
+ * 两套同时挂上会变成两个节奏叠加。
+ */
+.cr-wrap.sleep > .cr,
 /* 打盹：只是被哄睡了，不算「很久没来」，所以不复用 .sleep 那套状态 */
-.cr-wrap.nap .cr { animation: breathe 3.6s ease-in-out infinite; }
+.cr-wrap.nap > .cr { animation: breathe 3.6s ease-in-out infinite; }
 .ground { position: absolute; bottom: 4px; left: 50%; width: 120px; height: 18px; margin-left: -60px; border-radius: 50%; background: var(--c2); opacity: 0.18; z-index: 1; animation: shadow 3.2s ease-in-out infinite; }
 [data-skin='pixel'] .ground { border-radius: 0; height: 8px; bottom: 10px; }
 .charge-ring { position: absolute; inset: -6px; z-index: 0; }
@@ -287,7 +292,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .charging .charge-ring .track { opacity: 1; }
 .charging .charge-ring .bar { stroke-dashoffset: 0; transition: stroke-dashoffset 0.6s linear; }
 .charging .cr-wrap .cr { animation: wiggle 0.18s linear infinite; }
-.zzz { position: absolute; right: 6px; top: 6px; z-index: 3; font-family: var(--font-num); font-weight: 800; color: var(--c2); pointer-events: none; }
+/* 打盹的 zzz 贴在脑袋旁边（原来是打在卡片右上角，离它有半个卡片远） */
+.zzz { position: absolute; left: 50%; top: 30px; margin-left: 32px; z-index: 3; font-family: var(--font-num); font-weight: 800; color: var(--c2); pointer-events: none; }
 .zzz span { position: absolute; animation: zz 2.4s ease-in infinite; opacity: 0; }
 .zzz span:nth-child(2) { animation-delay: 0.8s; font-size: 20px; }
 .zzz span:nth-child(3) { animation-delay: 1.6s; font-size: 26px; }
