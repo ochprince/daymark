@@ -1,6 +1,13 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { planDropDown, planJump, planJumpDown, simulateJump, type Platform } from './geometry.ts'
+import {
+  landingPlatform,
+  planDropDown,
+  planJump,
+  planJumpDown,
+  simulateJump,
+  type Platform,
+} from './geometry.ts'
 
 const G = 2200
 
@@ -84,4 +91,16 @@ test('不在脚下的平台不能走「直接落下」那条', () => {
   const card = plat('card', 16, 374, 79)
   const side = plat('side', 420, 520, 492) // 横向完全在卡片右边
   assert.equal(planDropDown({ x: 195, y: 79 }, card, side, { gravity: G }), null)
+})
+
+test('站在平台上「原地往下掉」会被自己脚下这块按容差接回去', () => {
+  // 舞台卡顶边 t=79，人落在 t + 3 = 82 上
+  const card = plat('card', 16, 374, 79)
+  const hero = plat('hero', 115, 275, 317)
+  // 从 82 开始掉：82 就是它的顶面，落在 (prevY-1, y] 里，会被自己接住
+  assert.equal(landingPlatform([card, hero], 82, 82.4, 195)?.key, 'card')
+  // 先把脚挪开 6px 再掉，就掉得下去了
+  assert.equal(landingPlatform([card, hero], 88, 88.5, 195), null)
+  // 继续往下，接住它的是卡片里那块空地
+  assert.equal(landingPlatform([card, hero], 300, 320, 195)?.key, 'hero')
 })

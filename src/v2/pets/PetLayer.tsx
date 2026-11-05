@@ -812,6 +812,9 @@ export function PetLayer({
       // 在下面就要跳上来（差多少就跳多高），在上面就让它自己落下去。
       if (Math.abs(s.y - heroTop) > 14) {
         s.plat = null
+        // 往下落的时候先把脚挪开原来的顶面：落在「t + 3」上的它，
+        // 从原地起落的第一帧会被自己脚下这块平台按 prevY-1 的容差接回去，永远掉不下去。
+        if (s.y < heroTop) s.y += 6
         s.vx = Math.sign(hostMid - s.x) * 110
         s.vy = s.y > heroTop ? -Math.sqrt(2 * PET_GRAVITY * (s.y - heroTop + 26)) : 0
         setMode('fall')
