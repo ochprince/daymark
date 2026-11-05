@@ -279,12 +279,32 @@ export function StageCard({
   /** 打盹那半分钟里别再插歪头，两个动作叠一起看着像抽搐 */
   const nappingRef = useRef(napping)
   nappingRef.current = napping
+  /*
+   * 被点醒：睡着的它被戳一下要真的醒过来，而不是「跳一下继续睡」。
+   * 这只是视觉上的醒——真正的睡（3 天没记）是数据信号，不能被一次点击改掉，
+   * 所以叫醒只维持 45 秒，之后该睡还睡。
+   */
+  const [awake, setAwake] = useState(false)
+  const awakeTimer = useRef<number | null>(null)
+  const wakeUp = () => {
+    setAwake(true)
+    setNapping(false)
+    if (awakeTimer.current !== null) window.clearTimeout(awakeTimer.current)
+    awakeTimer.current = window.setTimeout(() => setAwake(false), 45000)
+  }
+  useEffect(
+    () => () => {
+      if (awakeTimer.current !== null) window.clearTimeout(awakeTimer.current)
+    },
+    [],
+  )
+  const asleep = (sleeping || napping) && !awake
   const reducedMotion = () =>
     document.documentElement.classList.contains('reduce-motion') ||
     (typeof window.matchMedia === 'function' &&
       window.matchMedia('(prefers-reduced-motion: reduce)').matches)
   useEffect(() => {
-    if (petAway || sleeping || reducedMotion()) {
+    if (petAway || asleep || reducedMotion()) {
       setIdle('')
       setNapping(false)
       return undefined
@@ -329,7 +349,7 @@ export function StageCard({
       setIdle('')
       setNapping(false)
     }
-  }, [petAway, sleeping])
+  }, [petAway, asleep])
   useEffect(() => {
     if (petAway || sleeping) return undefined
     let on = false
@@ -338,7 +358,7 @@ export function StageCard({
       setLooking(on)
     }, 15000)
     return () => window.clearInterval(timer)
-  }, [petAway, sleeping])
+  }, [petAway, asleep])
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target
 
   function startHold(event?: ReactPointerEvent<HTMLElement>) {
@@ -392,6 +412,13 @@ export function StageCard({
     // pressAt 没被记上（比如按下那一帧被别的手势接走）时按轻点算，别把这次点击吞掉
     if (pressAt.current && performance.now() - pressAt.current > 250) return
     if (dragRef.current?.active) return
+    // 睡着的时候点它 = 叫醒（醒了才轮到后面那些摸摸 / 连戳的逻辑）
+    if (asleep && !petAway) {
+      wakeUp()
+      onPoke()
+      streak.current.n = 0
+      return
+    }
     // 手里捏着纸条时，先给你看纸条：这比再摸一下有意思，也省得去戳那个小图标
     if (noteReady && !petAway) {
       onOpenNote?.()
@@ -514,7 +541,7 @@ export function StageCard({
         {/* 它出门了，卡片里就不该还留着它刚才说的话 */}
         {petAway ? null : <div className="bubble">{line}</div>}
         <div
-          className={`cr-wrap ${sleeping ? 'sleep' : ''} ${napping ? 'nap' : ''} ${
+          className={`cr-wrap ${asleep && sleeping ? 'sleep' : ''} ${asleep && napping ? 'nap' : ''} ${
             jumping ? 'jump' : ''
           } ${
             hyped ? 'hyped' : ''
@@ -553,7 +580,7 @@ export function StageCard({
               mood={party ? 'wow' : view.mood}
               poseClass={`${looking ? 'look ' : ''}${idle}`}
               size={158}
-              still={sleeping || napping}
+              still={asleep}
               away={petAway}
               pokeNonce={pokeNonce}
               extra={party ? { hold: 'party' } : undefined}
@@ -592,7 +619,7 @@ export function StageCard({
             </button>
           ) : null}
           <div className="ground" />
-          {sleeping || napping ? (
+          {asleep ? (
             <div className="zzz" aria-hidden="true">
               <span>z</span>
               <span>z</span>

@@ -332,6 +332,8 @@ export function PetLayer({
     let last = 0
     let lastScan = -1e9
     let platforms: Platform[] = []
+    /** 临时平台：串门时给来访者一块「卡片里那块空地」，让它真能站到主人家身边 */
+    let extraPlats: Platform[] = []
     let rect = layer.getBoundingClientRect()
     let alive = true
     // 出场令牌：用户关掉桌宠 / 重播时 +1，旧动画的每一步都先比这个再往下走
@@ -379,6 +381,7 @@ export function PetLayer({
           out.push({ key: `${sel}#${index}`, l, r, t: top, el, sel })
         })
       }
+      if (extraPlats.length) out.push(...extraPlats)
       out.push({ key: 'floor', l: 0, r: rect.width, t: rect.height - 14, floor: true })
       platforms = out
     }
@@ -773,37 +776,103 @@ export function PetLayer({
       playing = true
       const layerRect = layer.getBoundingClientRect()
       const br = cr.getBoundingClientRect()
+      const wr = wrap.getBoundingClientRect()
       const hostMid = br.left + br.width / 2 - layerRect.left
-      const targetX = Math.max(size / 2, Math.min(rect.width - size / 2, hostMid + br.width * 0.3))
-
-      s.tx = targetX
+      const clampX = (x: number) => Math.max(size / 2, Math.min(rect.width - size / 2, x))
+      /*
+       * 主人站在卡片那块空地上，来访者平时站在卡片顶边——两者差了两百多像素，
+       * 隔着半个卡片「互动」看着就是各演各的。所以开演之前先给它一块临时平台
+       * （卡片里那块空地），让它真的跳进卡片、和主人站在同一级台阶上。
+       */
+      const heroTop = wr.bottom - layerRect.top - 12
+      extraPlats = [
+        {
+          key: '__playground',
+          l: wr.left - layerRect.left + 8,
+          r: wr.right - layerRect.left - 8,
+          t: heroTop,
+          sel: '.cr-wrap',
+        },
+      ]
+      scan()
       s.toWall = false
-      s.face = targetX >= s.x ? 1 : -1
-      setMode('walk')
       say('pet.say.play', 1800)
 
+      // 1) 走到主人正上方，然后跳进卡片，落到主人身边
+      s.tx = clampX(hostMid)
+      s.face = s.tx >= s.x ? 1 : -1
+      setMode('walk')
       for (let i = 0; i < 40; i += 1) {
         await waitMs(60)
         if (tok !== playTok || !alive) return
-        if (Math.abs(s.x - targetX) < 6) break
+        if (Math.abs(s.x - s.tx) < 8) break
+      }
+      if (tok !== playTok || !alive) return
+      // 不管它原来在卡片顶上还是已经掉进了成长条，都先归位到这块空地上：
+      // 在下面就要跳上来（差多少就跳多高），在上面就让它自己落下去。
+      if (Math.abs(s.y - heroTop) > 14) {
+        s.plat = null
+        s.vx = Math.sign(hostMid - s.x) * 110
+        s.vy = s.y > heroTop ? -Math.sqrt(2 * PET_GRAVITY * (s.y - heroTop + 26)) : 0
+        setMode('fall')
+        for (let i = 0; i < 60; i += 1) {
+          await waitMs(40)
+          if (tok !== playTok || !alive) return
+          if (s.plat === '__playground') break
+        }
       }
       if (tok !== playTok || !alive) return
 
-      s.face = hostMid >= s.x ? 1 : -1
-      setMode('stand')
-      cr.classList.add('playing')
-      hop(0.9)
-      await waitMs(430)
+      // 2) 退半步，再一头撞过去
+      const dir = hostMid >= s.x ? 1 : -1
+      s.tx = clampX(hostMid - dir * size * 0.85)
+      s.face = dir
+      setMode('walk')
+      await waitMs(300)
       if (tok !== playTok || !alive) return
-      hop(0.7)
-      await waitMs(450)
+      s.tx = clampX(hostMid - dir * size * 0.24)
+      s.face = dir
+      setMode('walk')
+      for (let i = 0; i < 24; i += 1) {
+        await waitMs(40)
+        if (tok !== playTok || !alive) return
+        if (Math.abs(s.x - s.tx) < 5) break
+      }
+      if (tok !== playTok || !alive) return
+
+      // 3) 撞上：主人跳起来并被推开，自己被弹回去
+      cr.classList.add('playing')
+      window.dispatchEvent(new CustomEvent('daymark:pet-bump', { detail: { dir, power: 1.2 } }))
+      s.plat = null
+      // 弹回去的力道别太大：250 会把它从卡片里弹出屏幕，直接掉到地上，看着就是「撞飞了」
+      s.vx = -dir * 110
+      s.vy = -Math.sqrt(2 * PET_GRAVITY * 40)
+      setMode('fall')
+      hearts(2)
+      for (let i = 0; i < 40; i += 1) {
+        await waitMs(40)
+        if (tok !== playTok || !alive) return
+        if (s.plat === '__playground') break
+      }
+      if (tok !== playTok || !alive) return
+
+      // 4) 再凑回去蹭一下，两只一起蹦
+      s.tx = clampX(hostMid - dir * size * 0.55)
+      s.tx = Math.max(wr.left - layerRect.left + 20, Math.min(wr.right - layerRect.left - 20, s.tx))
+      s.face = dir
+      setMode('walk')
+      await waitMs(380)
       if (tok !== playTok || !alive) return
       cr.classList.add('nuzzle')
-      setMode('cheer', 0.7)
+      window.dispatchEvent(new CustomEvent('daymark:pet-bump', { detail: { dir: -dir, power: 0.6 } }))
+      hop(0.8)
       hearts(3)
       await waitMs(900)
       if (tok !== playTok || !alive) return
       cr.classList.remove('playing', 'nuzzle')
+      // 演完把那块临时平台收掉，它自己会去别处玩
+      extraPlats = []
+      scan()
       setMode('sit', 4)
       playing = false
     }
@@ -1029,7 +1098,11 @@ export function PetLayer({
       const H = rect.height
       const hw = size / 2
 
-      if (s.mode === 'drag' || homing || debuting || playing) return
+      /*
+       * 串门两只一起玩的时候不能再整段冻住：它得走过去、跳进来、撞一下。
+       * 所以 playing 不再拦物理，只在下面拦「自己想干嘛」（think）。
+       */
+      if (s.mode === 'drag' || homing || debuting) return
 
       if (s.mode === 'fall') {
         const prevY = s.y
@@ -1140,6 +1213,7 @@ export function PetLayer({
         return
       }
 
+      if (playing) return
       if (s.timer > 0) {
         s.timer -= dt
         if (s.timer <= 0) think()

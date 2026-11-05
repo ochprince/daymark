@@ -48,6 +48,8 @@ export function CardPet({
   const moverRef = useRef<HTMLDivElement | null>(null)
   /** 点它的热区：跟着它一起挪，否则它走开了还只能在原地戳中 */
   const hitRef = useRef<HTMLDivElement | null>(null)
+  /** 活动范围（卡片边往里收一点），串门被撞开时要夹回来 */
+  const limitRef = useRef(60)
   const bodyRef = useRef<CardBody>(createBody())
   const pokeRef = useRef(pokeNonce)
   const stillRef = useRef(still)
@@ -65,6 +67,25 @@ export function CardPet({
     hop(bodyRef.current, 54 + Math.random() * 16)
   }, [pokeNonce])
 
+  /*
+   * 串门时两只一起玩：外面那只冲过来会派这个事件，
+   * 卡片里这只被撞到就跳一下、并且被推开一点——不然「互动」只剩嘴上说说。
+   */
+  useEffect(() => {
+    const onBump = (event: Event) => {
+      const detail = (event as CustomEvent<{ dir?: number; power?: number }>).detail ?? {}
+      const body = bodyRef.current
+      const limit = limitRef.current
+      hop(body, Math.min(110, Math.max(12, (detail.power ?? 1) * 30)))
+      const shove = (detail.dir ?? 1) * 14
+      body.x = Math.max(-limit, Math.min(limit, body.x + shove))
+      setPose('cheer')
+      window.setTimeout(() => setPose(''), 1100)
+    }
+    window.addEventListener('daymark:pet-bump', onBump)
+    return () => window.removeEventListener('daymark:pet-bump', onBump)
+  }, [])
+
   useEffect(() => {
     const host = hostRef.current
     const mover = moverRef.current
@@ -80,6 +101,7 @@ export function CardPet({
       if (!world) return
       const w = world.getBoundingClientRect().width
       limit = Math.max(8, (w - size) / 2 - 8)
+      limitRef.current = limit
     }
     measure()
     window.addEventListener('resize', measure)
@@ -95,8 +117,8 @@ export function CardPet({
       }
       const wr = wrap.getBoundingClientRect()
       const mr = memo.getBoundingClientRect()
-      // 艺术本体的脚大致在盒子的 86% 处
-      const feet = wr.top + wr.height / 2 + size * 0.36
+      // 和外面那套对齐：精灵顶在 y - 0.93*size，所以居中摆放时脚在中心 + 0.43*size
+      const feet = wr.top + wr.height / 2 + size * 0.43
       belowDrop = Math.max(0, Math.min(240, mr.top - feet))
       return belowDrop
     }
@@ -132,21 +154,22 @@ export function CardPet({
             // 把下面那块当平台（备忘 / 成长条）：先走回空地中间，到了再往下掉
             trip = 'to'
             walkTo(body, 0)
-          } else if (roll < 0.62) {
+          } else if (roll < 0.36) {
             // 每一步都迈远一点：原来只从当前位置挪一小截，
             // 一是不活泼，二是运气不好能连着往同一边走好几趟。
             // 六成走到对面，四成随便挑一边。
             const side = Math.random() < 0.6 ? -Math.sign(body.x || 1) : Math.random() < 0.5 ? -1 : 1
             const target = side * (0.35 + Math.random() * 0.65) * limit
             walkTo(body, Math.max(-limit, Math.min(limit, target)))
-          } else if (roll < 0.74) {
+          } else if (roll < 0.64) {
+            // 主要是原地蹦：卡片里横着走过两家就不像「在卡片里」了
             hop(body, 16 + Math.random() * 22)
-          } else if (roll < 0.8) {
-            playPose('sit', 1800 + Math.random() * 1200)
-          } else if (roll < 0.92) {
+          } else if (roll < 0.72) {
             // 连着两下跳，比原地站着有意思
             hop(body, 26 + Math.random() * 26)
             window.setTimeout(() => hop(body, 18 + Math.random() * 14), 260)
+          } else if (roll < 0.88) {
+            playPose('sit', 1800 + Math.random() * 1200)
           } else {
             playPose('cheer', 1600)
           }

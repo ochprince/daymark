@@ -248,6 +248,8 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .card-pet .cr { animation: none; }
 .cr-wrap .ground { left: calc(50% + var(--pet-x, 0px)); }
 .cr-wrap .zzz { translate: var(--pet-x, 0px) var(--pet-y, 0px); }
+/* 蓄力的圆环也得跟着它：不然它走开了，环还在卡片正中间 */
+.cr-wrap .charge-ring { translate: var(--pet-x, 0px) var(--pet-y, 0px); }
 /* 它跑去备忘那层的时候，空地上的影子和手里那张纸先收起来 */
 .cr-wrap.pet-down .ground,
 .cr-wrap.pet-down .sc-note { opacity: 0; transition: opacity 0.18s ease; }
