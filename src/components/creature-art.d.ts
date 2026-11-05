@@ -5,7 +5,23 @@
  */
 
 export type CreatureSpecies = 'sprout' | 'moon' | 'drop' | 'star' | 'post'
-export type CreatureMood = 'idle' | 'happy' | 'sleep' | 'wow'
+/**
+ * 表情 / 状态。前四个是页面里沿用的旧名（happy / wow 会在渲染时对到 cheer / fall），
+ * 后八个是物理层（pets/art.ts 的 PET_STATES）用的状态名——卡片里那只现在也走
+ * 同一套状态，所以这里必须都收进来，否则内外只能用两套。
+ */
+export type CreatureMood =
+  | 'idle'
+  | 'happy'
+  | 'sleep'
+  | 'wow'
+  | 'stand'
+  | 'walk'
+  | 'sit'
+  | 'fall'
+  | 'climb'
+  | 'drag'
+  | 'cheer'
 export type CreatureHold = 'letter' | 'gift' | 'party'
 
 export type CreatureOptions = {

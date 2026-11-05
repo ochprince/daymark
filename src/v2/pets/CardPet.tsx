@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
-import { Creature } from '../../components/Creature'
+import { Creature, type CreatureMood } from '../../components/Creature'
 import { createBody, fallTo, hop, riseTo, step, walkTo, type CardBody } from './cardSim'
 import type { PetArtSpecies } from './petArt'
 import type { PetStage } from './art'
@@ -38,13 +38,16 @@ export function CardPet({
   extra,
 }: Props) {
   /** 它自己挑的小姿势：坐着 / 伸懒腰 / 开心蹦，位置仍由物理那套管 */
-  const [pose, setPose] = useState<'' | 'sit' | 'stretch' | 'cheer'>('')
-  /** 正在走：给个迈步的姿势，不然看起来像在滑冰 */
+  const [pose, setPose] = useState<'' | 'sit' | 'cheer'>('')
+  /** 正在走 / 正腾空：都只是为了让 mood 跟着状态变，动画本身走外面那套 pz-* */
   const [moving, setMoving] = useState(false)
-  const poseRef = useRef<'' | 'sit' | 'stretch' | 'cheer'>('')
+  const [airborne, setAirborne] = useState(false)
+  const poseRef = useRef<'' | 'sit' | 'cheer'>('')
   poseRef.current = pose
   const hostRef = useRef<HTMLDivElement | null>(null)
   const moverRef = useRef<HTMLDivElement | null>(null)
+  /** 点它的热区：跟着它一起挪，否则它走开了还只能在原地戳中 */
+  const hitRef = useRef<HTMLDivElement | null>(null)
   const bodyRef = useRef<CardBody>(createBody())
   const pokeRef = useRef(pokeNonce)
   const stillRef = useRef(still)
@@ -65,6 +68,7 @@ export function CardPet({
   useEffect(() => {
     const host = hostRef.current
     const mover = moverRef.current
+    const hit = hitRef.current
     if (!host || !mover) return undefined
     if (away) return undefined
 
@@ -100,15 +104,17 @@ export function CardPet({
     let raf = 0
     let last = performance.now()
     let pxShown = Number.NaN
+    let liftShown = -1
     /** '' = 在空地上；to = 正走过去；on = 在备忘上坐着；back = 跳回来 */
     let trip: '' | 'to' | 'on' | 'back' = ''
     let lastTrip = 0
     let walking = false
+    let airing = false
 
     // 小动作的节拍：走两步或者蹦一下，剩下交给外层的歪头/打盹
     let timer = 0
     let poseTimer = 0
-    const playPose = (next: 'sit' | 'stretch' | 'cheer', ms: number) => {
+    const playPose = (next: 'sit' | 'cheer', ms: number) => {
       window.clearTimeout(poseTimer)
       setPose(next)
       poseTimer = window.setTimeout(() => setPose(''), ms)
@@ -134,10 +140,12 @@ export function CardPet({
             walkTo(body, Math.max(-limit, Math.min(limit, target)))
           } else if (roll < 0.74) {
             hop(body, 16 + Math.random() * 22)
-          } else if (roll < 0.85) {
+          } else if (roll < 0.8) {
             playPose('sit', 1800 + Math.random() * 1200)
-          } else if (roll < 0.93) {
-            playPose('stretch', 1700)
+          } else if (roll < 0.92) {
+            // 连着两下跳，比原地站着有意思
+            hop(body, 26 + Math.random() * 26)
+            window.setTimeout(() => hop(body, 18 + Math.random() * 14), 260)
           } else {
             playPose('cheer', 1600)
           }
@@ -190,9 +198,21 @@ export function CardPet({
         walking = body.mode === 'walk'
         setMoving(walking)
       }
+      if ((body.mode === 'jump') !== airing) {
+        airing = body.mode === 'jump'
+        setAirborne(airing)
+      }
       // 朝哪边走就朝哪边（和外面那只是一样的做法，镜像放在外层，别跟脚步动画抢 transform）
       mover.style.transform =
         `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0) scaleX(${body.dir})`
+      // 热区不镜像，只跟位置
+      if (hit) hit.style.transform = `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0)`
+      // 跳起来影子就缩小、落回地面还原（0~1 的抬起比例，CSS 里算 scale）
+      const lift = Math.min(1, Math.max(0, -body.y) / 90)
+      if (Math.abs(lift - liftShown) > 0.01) {
+        liftShown = lift
+        wrap?.style.setProperty('--pet-lift', lift.toFixed(3))
+      }
       // 影子和手里那张纸要跟着横向挪，否则它会「离地飞行」
       const shown = Math.round(body.x)
       if (shown !== pxShown) {
@@ -208,23 +228,34 @@ export function CardPet({
       window.clearTimeout(poseTimer)
       window.removeEventListener('resize', measure)
       wrap?.style.removeProperty('--pet-x')
+      wrap?.style.removeProperty('--pet-lift')
       wrap?.classList.remove('pet-down')
       cardEl?.classList.remove('pet-down')
     }
   }, [away, size])
 
+  /*
+   * 状态就是外面那套：走路 / 坐下 / 腾空 / 开心 / 打盹 / 站着。
+   * 传成 mood 之后 svg 的 data-state 跟着变，动画全交给 pets.css 里
+   * 同一批 pz-* 关键帧——所以内外看到的是同一种走法，不是两套。
+   */
+  const live: CreatureMood =
+    still ? 'sleep' : pose === 'sit' ? 'sit' : moving ? 'walk' : airborne ? 'fall' : pose === 'cheer' ? 'cheer' : mood === 'idle' ? 'stand' : mood
+
   return (
     <div className="card-pet" ref={hostRef} aria-hidden="true" data-poke={pokeNonce}>
+      {/* 点它的热区要跟着它走，否则它挪开了还只能在原地戳中 */}
+      <div className="card-pet-hit" ref={hitRef} />
       <div
         className="card-pet-mover"
         ref={moverRef}
         style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
       >
         <Creature
-          className={`cr ${poseClass}${moving ? ' walk' : ''} ${pose}`}
+          className={`cr ${poseClass} ${pose}`}
           species={species}
           stage={stage}
-          mood={mood}
+          mood={live}
           size={size}
           extra={extra}
         />

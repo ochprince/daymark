@@ -223,17 +223,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .cr-wrap { position: relative; width: 176px; height: 176px; display: grid; place-items: center; touch-action: none; cursor: pointer; }
 .cr-wrap .cr {
   position: relative; z-index: 2; overflow: visible;
-  /* 一直轻轻的上下浮，6 秒一个来回 */
+  /* 纯 CSS 那版（减弱动态效果 / 低端机）才由外层浮；跑物理的时候外层不动，见下面 .card-pet */
   animation: bob 6s ease-in-out infinite;
   transform-origin: 50% 92%;
 }
 .cr-wrap .cr.look { animation: look-around 1.6s ease-in-out; }
-/*
- * 卡片里的绘制本体（svg）自己也带着 .cr，于是会把 bob 再跑一遍：
- * 两层同频不同相，浮起来会互相错开一点，看着像被拉伸着抖。
- * 外层浮一次就够了。
- */
-.cr-wrap .cr .cr { animation: none; }
 /*
  * 卡片里的它也有自己的世界：一条地面、左右两堵墙（卡片边），
  * 不踩平台也不出卡。位置由 CardPet 的循环写在 --pet-x 上，
@@ -241,7 +235,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
  * 用 translate 而不是 transform：影子自己有 scale 动画，会盖掉 transform。
  */
 .card-pet { position: absolute; inset: 0; z-index: 2; pointer-events: none; }
+/* mover 是普通 block：里面的 span.cr 默认是行内元素，量出来只有一行高（~16px），
+   出门动画按它的 rect 取尺寸/落点就会算歪。这里恢复成 158×158 的盒子。 */
 .card-pet-mover { position: absolute; left: 50%; top: 50%; will-change: transform; }
+.card-pet-mover .cr { display: grid; place-items: center; width: 100%; height: 100%; }
+/*
+ * 姿势只有一套，和外面那只用的是同一批关键帧（pets.css 里的 pz-*）：
+ * CardPet 把当前状态当 mood 传下去，svg 的 data-state 一变，
+ * 走路 / 坐下 / 腾空 / 开心就都走外面同一份规则，不再各写一套。
+ * 所以这里只把外层的 bob 关掉，让里面那层单独演。
+ */
+.card-pet .cr { animation: none; }
 .cr-wrap .ground { left: calc(50% + var(--pet-x, 0px)); }
 .cr-wrap .zzz { translate: var(--pet-x, 0px) 0; }
 /* 它跑去备忘那层的时候，空地上的影子和手里那张纸先收起来 */
@@ -252,36 +256,16 @@ button { font: inherit; color: inherit; cursor: pointer; }
    选择器要把 .stage-card > *:not(…) 那条的权重压过去。 */
 .stage-card.pet-down > .sc-hero:not(.deco):not(.photo) { z-index: 3; }
 .cr-wrap .sc-note { translate: var(--pet-x, 0px) 0; transition: translate 0.28s ease-out; }
-/* 在家这只的小动作：只剩歪头（走来走去和忽大忽小用户已否决），2.4s，演完回 bob */
-/* 走起来：身体跟着脚步一颠一颠地晃，别像在滑冰 */
-.cr-wrap .cr.walk { animation: cr-step 0.36s ease-in-out infinite; transform-origin: 50% 92%; }
-@keyframes cr-step {
-  0%,
-  100% { transform: translateY(0) rotate(-2.2deg); }
-  30% { transform: translateY(-3px) rotate(-0.6deg); }
-  60% { transform: translateY(0) rotate(2.2deg); }
-  80% { transform: translateY(-2px) rotate(0.6deg); }
-}
-/* 卡片里它能做的事：坐下、伸个懒腰、开心蹦两下（都在卡片里的地面上） */
-.cr-wrap .cr.sit { animation: cr-sit 3.2s ease-in-out infinite; }
-@keyframes cr-sit {
-  0%,
-  100% { transform: translateY(3px) scale(1.04, 0.95); }
-  50% { transform: translateY(4px) scale(1.05, 0.94); }
-}
-.cr-wrap .cr.stretch { animation: cr-stretch 1.7s ease-in-out; }
-@keyframes cr-stretch {
-  0% { transform: none; }
-  35% { transform: translateY(-5px) scale(0.97, 1.05); }
-  65% { transform: translateY(1px) scale(1.03, 0.97); }
-  100% { transform: none; }
-}
-.cr-wrap .cr.cheer { animation: cr-cheer 0.52s ease-in-out 3; }
-@keyframes cr-cheer {
-  0%,
-  100% { transform: translateY(0) scale(1); }
-  40% { transform: translateY(-7px) scale(0.98, 1.03); }
-  70% { transform: translateY(0) scale(1.03, 0.97); }
+/* 跳起来的时候影子要变小、落回来越还原：--pet-lift 是 0~1 的抬起比例，由 CardPet 写 */
+.cr-wrap .ground { scale: calc(1 - var(--pet-lift, 0)); transition: scale 0.12s linear; }
+/* 点它的时候手指得跟着它走：热区跟着宠物一起挪（否则只在原地能点到） */
+/* 尺寸必须写实数：宽高 0 的元素，margin 撑出来的「中心」不算进 rect，热区会错位 */
+.card-pet-hit {
+  position: absolute; left: 50%; top: 50%;
+  width: 124px; height: 124px; margin: -62px 0 0 -62px;
+  border-radius: 50%;
+  pointer-events: auto;
+  will-change: transform;
 }
 .cr-wrap .cr.tilt { animation: cr-tilt 2.4s ease-in-out; }
 @keyframes cr-tilt {

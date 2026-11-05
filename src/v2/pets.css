@@ -28,7 +28,7 @@
 
 /* ---------- 状态动画（六个必需 + 拖拽 / 撒娇） ---------- */
 
-.pet-sprite .pet-art[data-state='stand'] {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='stand'] {
   animation: pz-stand 3.4s ease-in-out infinite;
 }
 @keyframes pz-stand {
@@ -41,13 +41,13 @@
   }
 }
 
-.pet-sprite .pet-art[data-state='walk'] {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='walk'] {
   animation: pz-walk 0.56s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='walk'] .pet-foot-l {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='walk'] .pet-foot-l {
   animation: pz-step 0.56s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='walk'] .pet-foot-r {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='walk'] .pet-foot-r {
   animation: pz-step 0.56s ease-in-out -0.28s infinite;
 }
 @keyframes pz-walk {
@@ -75,7 +75,7 @@
   }
 }
 
-.pet-sprite .pet-art[data-state='sit'] {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='sit'] {
   animation: pz-sit 3.2s ease-in-out infinite;
 }
 @keyframes pz-sit {
@@ -88,7 +88,7 @@
   }
 }
 
-.pet-sprite .pet-art[data-state='sleep'] {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='sleep'] {
   animation: pz-sleep 4s ease-in-out infinite;
 }
 @keyframes pz-sleep {
@@ -118,13 +118,13 @@
   }
 }
 
-.pet-sprite .pet-art[data-state='fall'] {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='fall'] {
   animation: pz-fall 1.1s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='fall'] .pet-arm-l {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='fall'] .pet-arm-l {
   animation: pz-flail-l 0.5s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='fall'] .pet-arm-r {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='fall'] .pet-arm-r {
   animation: pz-flail-r 0.5s ease-in-out -0.25s infinite;
 }
 @keyframes pz-fall {
@@ -155,13 +155,13 @@
   }
 }
 
-.pet-sprite .pet-art[data-state='climb'] {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='climb'] {
   animation: pz-climb 0.46s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='climb'] .pet-arm-l {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='climb'] .pet-arm-l {
   animation: pz-grip-l 0.46s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='climb'] .pet-arm-r {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='climb'] .pet-arm-r {
   animation: pz-grip-r 0.46s ease-in-out -0.23s infinite;
 }
 @keyframes pz-climb {
@@ -192,14 +192,14 @@
   }
 }
 
-.pet-sprite .pet-art[data-state='drag'] {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='drag'] {
   transform-origin: 50% 12%;
   animation: pz-dangle 0.7s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='drag'] .pet-foot {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='drag'] .pet-foot {
   animation: pz-kick 0.34s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='drag'] .pet-foot-r {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='drag'] .pet-foot-r {
   animation-delay: -0.17s;
 }
 @keyframes pz-dangle {
@@ -221,13 +221,13 @@
   }
 }
 
-.pet-sprite .pet-art[data-state='cheer'] {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='cheer'] {
   animation: pz-cheer 0.42s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='cheer'] .pet-arm-l {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='cheer'] .pet-arm-l {
   animation: pz-arm-up-l 0.42s ease-in-out infinite;
 }
-.pet-sprite .pet-art[data-state='cheer'] .pet-arm-r {
+:is(.pet-sprite, .card-pet) .pet-art[data-state='cheer'] .pet-arm-r {
   animation: pz-arm-up-r 0.42s ease-in-out infinite;
 }
 @keyframes pz-cheer {
