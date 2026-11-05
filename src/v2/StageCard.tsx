@@ -171,8 +171,15 @@ export function StageCard({
 
   // 记一次落定：粒子 + 「+1」+ 闪一下，900ms 后自己收
   const [fxOn, setFxOn] = useState(false)
+  /*
+   * fxNonce 是全局计数器，卡片又是一次只挂一张（key 带 focus.key）。
+   * 在 A 卡按完 +1 再滑到 B 卡，B 是新挂载的，see 不到「变化」只看到
+   * 一个非 0 的数，于是把不属于自己的 +1 也放了。挂载时先把当前值记下来。
+   */
+  const seenFx = useRef(fxNonce)
   useEffect(() => {
-    if (fxNonce === 0) return undefined
+    if (fxNonce === seenFx.current) return undefined
+    seenFx.current = fxNonce
     setFxOn(true)
     const stop = window.setTimeout(() => setFxOn(false), 900)
     return () => window.clearTimeout(stop)
@@ -194,8 +201,10 @@ export function StageCard({
   }, [view])
 
   // 摸摸它：跳一下就好，不加粒子（日常交互的动效节点要省着用）
+  const seenPoke = useRef(pokeNonce)
   useEffect(() => {
-    if (pokeNonce === 0) return undefined
+    if (pokeNonce === seenPoke.current) return undefined
+    seenPoke.current = pokeNonce
     setJumping(true)
     const timer = window.setTimeout(() => setJumping(false), 620)
     return () => window.clearTimeout(timer)
