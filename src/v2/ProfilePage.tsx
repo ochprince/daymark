@@ -4,6 +4,7 @@ import { Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
 import { formatDate } from '../lib/days'
 import { STAGE_THRESHOLDS } from '../lib/growth'
+import { countdownArrivals } from '../lib/museum'
 import { getLocale, t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
@@ -116,7 +117,8 @@ export function ProfilePage({
   const chapters = useMemo(() => {
     if (view.kind === 'since') return view.event.history ?? []
     if (view.kind === 'habit') return view.event.chapters ?? []
-    return view.event.history?.map((item) => ({ days: 0, endedAt: item.at, line: item.line })) ?? []
+    // 到过的那天算一章，不管有没有点过「说过了」——见 museum.countdownArrivals
+    return countdownArrivals(view).map((item) => ({ days: 0, endedAt: item.at, line: item.line }))
   }, [view])
 
   function saveTitle() {

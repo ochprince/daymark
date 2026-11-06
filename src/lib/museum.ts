@@ -65,6 +65,27 @@ export function stageTint(stage: number): number {
 export const DEX_STAGE_COUNT = 5
 
 /**
+ * 倒数日「到过」的那些日子。
+ *
+ * 光靠 history 不够：history 是用户点「说过了」才写进去的，而 App 里根本没有
+ * 那个入口（markSaid 没人调），于是卡上写着「那天已经到过」、藏馆里却空着，
+ * 还配一句「那天到过之后会收进这里」——自相矛盾。
+ * 「到过」是事实，不是操作：到点的那一刻就该算一章。
+ */
+export function countdownArrivals(
+  view: ItemView & { kind: 'countdown' },
+): { at: number; line?: string }[] {
+  const out = [...(view.event.history ?? [])]
+  const repeating = view.event.repeat !== undefined && view.event.repeat !== 'none'
+  const arrived = repeating ? view.days === 0 : view.days <= 0
+  const occurrence = view.next ?? view.event.startedAt
+  if (arrived && !out.some((entry) => new Date(entry.at).toDateString() === new Date(occurrence).toDateString())) {
+    out.unshift({ at: occurrence })
+  }
+  return out
+}
+
+/**
  * 把三类事的已结束章节收成书架上的书。
  * 坚持/习惯读 history / chapters；倒数日到过的那天也算一章（★）。
  */
@@ -105,7 +126,7 @@ export function collectChapters(views: readonly ItemView[]): ShelfChapter[] {
        * （markSaid 没有去重），藏馆里就成了同一天两章，看着像记重了。
        */
       const seenDays = new Set<string>()
-      ;(view.event.history ?? []).forEach((entry, index) => {
+      countdownArrivals(view).forEach((entry, index) => {
         const day = new Date(entry.at).toDateString()
         if (seenDays.has(day)) return
         seenDays.add(day)

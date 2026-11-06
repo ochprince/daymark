@@ -485,12 +485,11 @@ function Shelf({
   )
 }
 
-/** 书页上的那一行小字：这本书现在讲到哪儿 */
-/** 章节区标题：没有章节时按种类说人话——每日打卡本来就不分章 */
+/** 章节区标题：按种类说人话——倒数日是「到过的日子」，打卡不分章 */
 function chapterTitle(book: ShelfBook): string {
-  if (book.chapters.length > 0) return t('museum.book.past', { n: book.chapters.length })
-  if (book.kind === 'habit') return t('museum.book.habitTitle')
   if (book.kind === 'countdown') return t('museum.book.countdownTitle')
+  if (book.kind === 'habit') return t('museum.book.habitTitle')
+  if (book.chapters.length > 0) return t('museum.book.past', { n: book.chapters.length })
   return t('museum.book.sinceTitle')
 }
 

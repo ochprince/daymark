@@ -8,6 +8,7 @@ import {
   badgeCount,
   collectBooks,
   collectChapters,
+  countdownArrivals,
   dexCount,
   dexCountOf,
   hasDex,
@@ -314,4 +315,40 @@ test('新建默认色：颜色由物种决定，水滴不会是柠檬黄', () =>
   assert.equal(speciesColor('star'), 0) // lemon
   assert.equal(speciesColor('post'), 1) // coral
   assert.equal(speciesColor('nope'), 4)
+})
+
+test('倒数日到过了，就算没点过「说过了」，也得算一章', () => {
+  const now = at(2026, 11, 6)
+  // 昨天建的、今天到：晚了之后没有任何 history 记录
+  const arrived = viewsOf(
+    [],
+    [],
+    [{ id: 'd1', title: '聚餐', startedAt: at(2026, 11, 6), createdAt: at(2026, 11, 5), color: 1, repeat: 'none' }],
+    now,
+  )
+  const chapters = collectChapters(arrived)
+  assert.equal(chapters.length, 1)
+  assert.equal(new Date(chapters[0].endedAt).toDateString(), new Date(at(2026, 11, 6)).toDateString())
+
+  // 还没到的，不该凭空多一章
+  const future = viewsOf(
+    [],
+    [],
+    [{ id: 'd2', title: '过年', startedAt: at(2026, 12, 1), createdAt: at(2026, 11, 5), color: 1, repeat: 'none' }],
+    now,
+  )
+  assert.equal(collectChapters(future).length, 0)
+
+  // 同一件事同一天只算一章
+  const acked = viewsOf(
+    [],
+    [],
+    [{
+      id: 'd3', title: '生日', startedAt: at(2026, 11, 6), createdAt: at(2026, 11, 5), color: 1, repeat: 'none',
+      history: [{ at: at(2026, 11, 6) }],
+    }],
+    now,
+  )
+  assert.equal(collectChapters(acked).length, 1)
+  assert.ok(countdownArrivals(acked.find((v) => v.kind === 'countdown') as never).length === 1)
 })
