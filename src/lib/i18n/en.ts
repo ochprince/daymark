@@ -400,6 +400,7 @@ export const en: Record<MessageKey, Msg> = {
   'profile.calendar.tapHint': 'Tap a day to see its log',
   'profile.chapters': 'Past chapters',
   'profile.chapters.empty': 'No chapters yet.',
+  'profile.chapters.emptyCountdown': 'No days arrived yet.',
   'profile.chapters.days': '{n} days',
   'profile.settings': 'Settings',
   'profile.setting.name': 'Name',

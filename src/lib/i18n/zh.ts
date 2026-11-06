@@ -400,6 +400,7 @@ export const zh = {
   'profile.calendar.tapHint': '点一天看当天的记录',
   'profile.chapters': '过去的章节',
   'profile.chapters.empty': '还没有翻过篇。',
+  'profile.chapters.emptyCountdown': '还没有到过的日子。',
   'profile.chapters.days': '{n} 天',
   'profile.settings': '设置',
   'profile.setting.name': '名称',

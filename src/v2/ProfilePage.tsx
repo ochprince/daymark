@@ -201,24 +201,31 @@ export function ProfilePage({
           />
         ) : null}
 
-        <div className="sec-title">{t('profile.chapters')}</div>
-        <div className="card list">
-          {chapters.length === 0 ? (
-            <div className="li">
-              <span className="grow muted">{t('profile.chapters.empty')}</span>
+        {/* 小习惯不翻章：它没有「过去的章节」这一说，整段不出现 */}
+        {view.kind !== 'habit' ? (
+          <>
+            <div className="sec-title">{t('profile.chapters')}</div>
+            <div className="card list">
+              {chapters.length === 0 ? (
+                <div className="li">
+                  <span className="grow muted">
+                    {t(view.kind === 'countdown' ? 'profile.chapters.emptyCountdown' : 'profile.chapters.empty')}
+                  </span>
+                </div>
+              ) : (
+                chapters.map((chapter, index) => (
+                  <div className="li" key={`${chapter.endedAt}-${index}`}>
+                    <span className="grow">
+                      {formatDate(chapter.endedAt)}
+                      {chapter.line ? <small className="li-sub">{chapter.line}</small> : null}
+                    </span>
+                    <small>{t('profile.chapters.days', { n: chapter.days })}</small>
+                  </div>
+                ))
+              )}
             </div>
-          ) : (
-            chapters.map((chapter, index) => (
-              <div className="li" key={`${chapter.endedAt}-${index}`}>
-                <span className="grow">
-                  {formatDate(chapter.endedAt)}
-                  {chapter.line ? <small className="li-sub">{chapter.line}</small> : null}
-                </span>
-                <small>{t('profile.chapters.days', { n: chapter.days })}</small>
-              </div>
-            ))
-          )}
-        </div>
+          </>
+        ) : null}
 
         <div className="sec-title">{t('profile.settings')}</div>
         <div className="card list">

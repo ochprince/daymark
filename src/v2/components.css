@@ -643,7 +643,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .path-node.cur .pn-art { background: color-mix(in oklab, var(--c) 50%, var(--surface)); box-shadow: 0 0 0 4px color-mix(in oklab, var(--c) 40%, transparent); }
 .path-node b { font-size: 12px; font-weight: 800; }
 .path-node small { font-size: 11px; color: var(--ink3); margin-top: -4px; }
-.cal { margin: 0 16px; padding: 14px; }
+.cal { margin: 14px 16px 0; padding: 14px; }
 .cal-h { display: flex; align-items: center; gap: 6px; font-weight: 800; font-size: 15px; margin-bottom: 10px; }
 .cal-h small { font-weight: 600; color: var(--ink3); font-size: 12.5px; }
 .cal-title { flex: 1; display: grid; gap: 1px; justify-items: center; text-align: center; }
