@@ -573,7 +573,12 @@ export function AppV2() {
        * 所以先把整本书抄一份进 collection.shelves，再删。
        */
       const book = collectBooks(views).find((item) => item.key === view.key)
-      if (book) archiveBook(book)
+      if (book) {
+        // 事一删，备忘和待办也跟着没了——趁还在，一起抄进书里，藏馆里点开才看得到
+        const memo = view.kind === 'countdown' ? view.event.memo : undefined
+        const todo = view.kind === 'countdown' ? view.event.todo : undefined
+        archiveBook({ ...book, deletedAt: Date.now(), ...(memo ? { memo } : {}), ...(todo?.length ? { todo } : {}) })
+      }
       if (view.kind === 'since') removeEvent(view.id)
       else if (view.kind === 'habit') removeCheckIn(view.id)
       else removeCountdown(view.id)
@@ -753,7 +758,6 @@ export function AppV2() {
 
       {tab === 'museum' ? (
         <MuseumPage
-          views={views}
           collection={collection}
           pro={pro}
           onUpgrade={() => setPaywall('upgrade')}

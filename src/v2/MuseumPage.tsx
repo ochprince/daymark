@@ -7,26 +7,25 @@ import type { CollectionState } from '../lib/collection'
 import { formatDate } from '../lib/days'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
-import type { ItemView } from '../lib/itemview'
 import {
   DEX_TOTAL,
   SPECIES_WITH_DEX,
   badgeCount,
-  collectBooks,
   dexCount,
   dexCountOf,
   hasDex,
+  shelfBooks,
   speciesHue,
   stageTint,
 } from '../lib/museum'
 import type { ShelfBook } from '../lib/museum'
+import { removeShelfBook } from '../lib/collection'
 import { FREE_CHAPTER_LIMIT } from '../lib/entitlement'
 import { BADGE_ART } from './BadgePopup'
 
 type Pane = 'chapters' | 'dex' | 'badges' | 'notes'
 
 export type MuseumPageProps = {
-  views: readonly ItemView[]
   collection: CollectionState
   /** 买断版能翻开全部章节；免费版只给最近几本 */
   pro: boolean
@@ -34,7 +33,7 @@ export type MuseumPageProps = {
   onNotify: (message: string) => void
 }
 
-export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: MuseumPageProps) {
+export function MuseumPage({ collection, pro, onUpgrade, onNotify }: MuseumPageProps) {
   const [pane, setPane] = useState<Pane>('notes')
   const [opened, setOpened] = useState<ShelfBook | null>(null)
   /**
@@ -94,9 +93,16 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
   }
   // 翻书方向：翻的时候给 currentTarget 挂 flip-l / flip-r，0.5s 后自动落位
   const [flip, setFlip] = useState<'l' | 'r' | null>(null)
+  /** 书也能从藏馆里拿走：和撕纸条一样两步确认 */
+  const [pullSure, setPullSure] = useState(false)
   // 一件事一本书：翻过的章夹在书里，点开才铺出来
   // 第二参是「删掉的事留下的书」，它们已经没有对应的今天页条目了
-  const books = useMemo(() => collectBooks(views, collection.shelves), [views, collection.shelves])
+  /*
+   * 架子上只摆「收起来的书」——删掉的那些。
+   * 还在今天页的事不上架：藏馆是过去，今天页是现在。
+   * （`views` 现在只用来判断哪些书还没被删，见下面的统计口径。）
+   */
+  const books = useMemo(() => shelfBooks(collection.shelves), [collection.shelves])
   /**
    * 章多了列表是要滚的，但滚动条是藏起来的：不提示的话，
    * 「翻过的 9 章」下面只露出 5 条，看着像是丢了几章。
@@ -113,6 +119,19 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
     const id = window.setTimeout(syncMoreChapters, 0)
     return () => window.clearTimeout(id)
   }, [opened?.key, syncMoreChapters])
+
+  /** 把这本书从藏馆里拿走（它本来就已经不在今天页了） */
+  function pullBook() {
+    if (!opened) return
+    if (!pullSure) {
+      setPullSure(true)
+      return
+    }
+    removeShelfBook(opened.key)
+    onNotify(t('museum.book.gone'))
+    setPullSure(false)
+    setOpened(null)
+  }
 
   /** 翻书：上一本 / 下一本，到头回绕。免费版翻到门外就弹付费墙，不放行 */
   function navChapter(dir: 1 | -1) {
@@ -181,6 +200,7 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
                   onUpgrade()
                   return
                 }
+                setPullSure(false)
                 setOpened(book)
               }}
             />
@@ -313,10 +333,36 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
             </div>
             <div className="bp-meta">{bookMeta(opened)}</div>
 
+            {/* 备忘和待办跟着书一起收进来：事没了，字还在 */}
+            {opened.memo ? (
+              <div className="bp-memo">
+                <div className="bp-ch-h">{t('museum.book.memo')}</div>
+                <p>{opened.memo}</p>
+              </div>
+            ) : null}
+            {opened.todo && opened.todo.length > 0 ? (
+              <div className="bp-todo">
+                <div className="bp-ch-h">
+                  {t('museum.book.todo', {
+                    n: opened.todo.filter((item) => item.done).length,
+                    total: opened.todo.length,
+                  })}
+                </div>
+                <ul>
+                  {opened.todo.map((item, index) => (
+                    <li key={index} className={item.done ? 'done' : ''}>
+                      <i aria-hidden="true">{item.done ? '✓' : ''}</i>
+                      <span>{item.text}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+
             <div className="bp-chapters">
-              <div className="bp-ch-h">{t('museum.book.past', { n: opened.chapters.length })}</div>
+              <div className="bp-ch-h">{chapterTitle(opened)}</div>
               {opened.chapters.length === 0 ? (
-                <p className="bp-ch-empty">{t('museum.book.none')}</p>
+                <p className="bp-ch-empty">{chapterEmpty(opened)}</p>
               ) : (
                 <div className={`bp-ch-wrap${moreChapters ? ' more' : ''}`}>
                 <div className="bp-ch-list" ref={chapterListRef} onScroll={syncMoreChapters}>
@@ -356,6 +402,10 @@ export function MuseumPage({ views, collection, pro, onUpgrade, onNotify }: Muse
             ) : null}
             <button className="btn block" type="button" onClick={() => setOpened(null)}>
               {t('common.ok')}
+            </button>
+            {/* 和纸条一个逻辑：藏馆里的东西也能拿走，两步确认 */}
+            <button type="button" className={pullSure ? 'danger is-sure' : 'danger'} onClick={pullBook}>
+              {pullSure ? t('museum.book.del.sure') : t('museum.book.del')}
             </button>
           </div>
         </div>
@@ -422,6 +472,20 @@ function Shelf({
 }
 
 /** 书页上的那一行小字：这本书现在讲到哪儿 */
+/** 章节区标题：没有章节时按种类说人话——每日打卡本来就不分章 */
+function chapterTitle(book: ShelfBook): string {
+  if (book.chapters.length > 0) return t('museum.book.past', { n: book.chapters.length })
+  if (book.kind === 'habit') return t('museum.book.habitTitle')
+  if (book.kind === 'countdown') return t('museum.book.countdownTitle')
+  return t('museum.book.sinceTitle')
+}
+
+function chapterEmpty(book: ShelfBook): string {
+  if (book.kind === 'habit') return t('museum.book.noneHabit')
+  if (book.kind === 'countdown') return t('museum.book.noneCountdown')
+  return t('museum.book.none')
+}
+
 function bookMeta(book: ShelfBook): string {
   if (book.kind === 'since') return t('museum.book.since', { date: formatDate(book.startedAt) })
   if (book.kind === 'habit') return t('museum.book.habit', { n: book.days })

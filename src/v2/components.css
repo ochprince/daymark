@@ -842,6 +842,17 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* 书页里的「翻过的章」：一件事的历史都夹在这本书里 */
 .bp-meta { text-align: center; color: #7d7490; font-size: 13px; font-weight: 600; margin-top: 6px; }
 .bp-chapters { margin-top: 16px; }
+/* 删掉的事：备忘和待办跟着书一起收进来 */
+.bp-memo, .bp-todo { margin-top: 14px; }
+.bp-memo p { margin: 0; font-size: 13.5px; line-height: 1.55; color: #4a4458; white-space: pre-wrap; word-break: break-word; }
+.bp-todo ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.bp-todo li { display: flex; align-items: flex-start; gap: 8px; font-size: 13px; line-height: 1.45; color: #4a4458; }
+.bp-todo li i { flex: 0 0 16px; height: 16px; margin-top: 1px; border: 1.6px solid #c9c1d8; border-radius: 5px; font-style: normal; font-size: 11px; line-height: 14px; text-align: center; color: #fff; }
+.bp-todo li.done i { background: var(--accent, #6f6a86); border-color: var(--accent, #6f6a86); }
+.bp-todo li.done span { color: #9a91a8; text-decoration: line-through; }
+/* 书页底部那两个动作：好的 / 从藏馆拿走 */
+.bookpage .danger { display: block; margin: 10px auto 0; border: 0; background: transparent; color: #9a91a8; font-size: 13px; font-weight: 600; padding: 6px 10px; }
+.bookpage .danger.is-sure { color: #d1495b; font-weight: 800; }
 .bp-ch-h { font-size: 12px; font-weight: 800; letter-spacing: 0.06em; color: #9a91a8; margin-bottom: 8px; }
 .bp-ch-empty { margin: 0; font-size: 13px; color: #9a91a8; text-align: center; padding: 10px 0; }
 .bp-ch-wrap { position: relative; }

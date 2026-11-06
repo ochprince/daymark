@@ -1,7 +1,7 @@
 import { dexKey } from './collection'
 import type { CollectionState } from './collection'
 import type { ItemView } from './itemview'
-import type { Stage } from './types'
+import type { Stage, TodoItem } from './types'
 
 /** 书架上的一本「书」：一件事结束过的某一章 */
 export type ShelfChapter = {
@@ -147,6 +147,11 @@ export type ShelfBook = {
   nextAt?: number
   /** 翻过的章节，新的在前 */
   chapters: ShelfChapter[]
+  /** 收进藏馆的那一刻（只有删掉的事才有）——架子上的书都是「过去」 */
+  deletedAt?: number
+  /** 删除时抄下来的备忘 / 待办：事没了，这些字还留在书里 */
+  memo?: string
+  todo?: TodoItem[]
 }
 
 export function collectBooks(
@@ -181,6 +186,23 @@ export function collectBooks(
   // 删掉的事：书和章都还在架上，但已经不在今天页了
   const kept = archived.filter((book) => !views.some((view) => view.key === book.key))
   return [...live, ...kept].sort((a, b) => b.startedAt - a.startedAt)
+}
+
+/**
+ * 藏馆书架上真正摆出来的书
+ *
+ * 还在今天页的事不上架：藏馆是「过去」，今天页是「现在」。
+ * 以前两处都列，用户会问「这本书到底是删了还是没删」。
+ */
+export function shelfBooks(archived: readonly ShelfBook[]): ShelfBook[] {
+  const seen = new Set<string>()
+  const books: ShelfBook[] = []
+  for (const book of archived) {
+    if (seen.has(book.key)) continue
+    seen.add(book.key)
+    books.push(book)
+  }
+  return books.sort((a, b) => (b.deletedAt ?? b.startedAt) - (a.deletedAt ?? a.startedAt))
 }
 
 /** 图鉴总数：四个物种 × 五个形态 + 特别篇三格 */

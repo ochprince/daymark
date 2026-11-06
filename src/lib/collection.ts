@@ -348,6 +348,15 @@ export function archiveBook(book: ShelfBook): void {
   collectionStore.patch({ shelves: [book, ...rest].slice(0, 40) })
 }
 
+/** 从藏馆里拿走一本书（和撕掉一张纸条一个逻辑，两步确认在界面上做） */
+export function removeShelfBook(key: string): void {
+  collectionStore.reload()
+  const state = collectionStore.get()
+  const rest = state.shelves.filter((item) => item.key !== key)
+  if (rest.length === state.shelves.length) return
+  collectionStore.patch({ shelves: rest })
+}
+
 /* ------------------------------------------------------------------ *
  * 徽章条件
  * ------------------------------------------------------------------ */

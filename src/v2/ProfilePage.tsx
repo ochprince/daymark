@@ -370,7 +370,8 @@ export function ProfilePage({
           <button className="btn ghost" type="button" onClick={onShare}>
             {shareCopy('share.title')}
           </button>
-          {view.kind !== 'countdown' ? (
+          {/* 只有「坚持」是从第 0 天数起来的，翻篇才有意义；每日打卡是连续累计，没有翻章 */}
+          {view.kind === 'since' ? (
             <button className="btn" type="button" onClick={() => setConfirm('end')}>
               {t('profile.endChapter')}
             </button>
