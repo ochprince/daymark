@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { Creature, type CreatureMood } from '../../components/Creature'
-import { createBody, fallTo, hop, riseTo, step, walkTo, type CardBody } from './cardSim'
+import { createBody, hop, step, type CardBody } from './cardSim'
 import type { PetArtSpecies } from './petArt'
 import type { PetStage } from './art'
 
@@ -38,11 +38,11 @@ export function CardPet({
   extra,
 }: Props) {
   /** 它自己挑的小姿势：坐着 / 伸懒腰 / 开心蹦，位置仍由物理那套管 */
-  const [pose, setPose] = useState<'' | 'sit' | 'cheer'>('')
+  const [pose, setPose] = useState<'' | 'sit' | 'cheer' | 'strut'>('')
   /** 正在走 / 正腾空：都只是为了让 mood 跟着状态变，动画本身走外面那套 pz-* */
   const [moving, setMoving] = useState(false)
   const [airborne, setAirborne] = useState(false)
-  const poseRef = useRef<'' | 'sit' | 'cheer'>('')
+  const poseRef = useRef<'' | 'sit' | 'cheer' | 'strut'>('')
   poseRef.current = pose
   const hostRef = useRef<HTMLDivElement | null>(null)
   const moverRef = useRef<HTMLDivElement | null>(null)
@@ -106,38 +106,18 @@ export function CardPet({
     measure()
     window.addEventListener('resize', measure)
 
-    // 下面那一层：倒数日是备忘块，习惯是成长条，算它离脚下有多远
-    let belowDrop = 0
-    const measureBelow = () => {
-      if (!wrap) return 0
-      const memo = host.closest<HTMLElement>('.stage-card')?.querySelector<HTMLElement>('.c-memo, .growth')
-      if (!memo) {
-        belowDrop = 0
-        return 0
-      }
-      const wr = wrap.getBoundingClientRect()
-      const mr = memo.getBoundingClientRect()
-      // 和外面那套对齐：精灵顶在 y - 0.93*size，所以居中摆放时脚在中心 + 0.43*size
-      const feet = wr.top + wr.height / 2 + size * 0.43
-      belowDrop = Math.max(0, Math.min(240, mr.top - feet))
-      return belowDrop
-    }
-
     let raf = 0
     let last = performance.now()
     let pxShown = Number.NaN
     let pyShown = Number.NaN
     let liftShown = -1
-    /** '' = 在空地上；to = 正走过去；on = 在备忘上坐着；back = 跳回来 */
-    let trip: '' | 'to' | 'on' | 'back' = ''
-    let lastTrip = 0
     let walking = false
     let airing = false
 
     // 小动作的节拍：走两步或者蹦一下，剩下交给外层的歪头/打盹
     let timer = 0
     let poseTimer = 0
-    const playPose = (next: 'sit' | 'cheer', ms: number) => {
+    const playPose = (next: 'sit' | 'cheer' | 'strut', ms: number) => {
       window.clearTimeout(poseTimer)
       setPose(next)
       poseTimer = window.setTimeout(() => setPose(''), ms)
@@ -149,29 +129,30 @@ export function CardPet({
         const free = !stillRef.current && body.mode === 'stand' && !poseRef.current
         if (free) {
           const roll = Math.random()
-          const canTrip = trip === '' && performance.now() - lastTrip > 45000 && measureBelow() > 12
-          if (canTrip && roll < 0.12) {
-            // 把下面那块当平台（备忘 / 成长条）：先走回空地中间，到了再往下掉
-            trip = 'to'
-            walkTo(body, 0)
-          } else if (roll < 0.36) {
-            // 每一步都迈远一点：原来只从当前位置挪一小截，
-            // 一是不活泼，二是运气不好能连着往同一边走好几趟。
-            // 六成走到对面，四成随便挑一边。
-            const side = Math.random() < 0.6 ? -Math.sign(body.x || 1) : Math.random() < 0.5 ? -1 : 1
-            const target = side * (0.35 + Math.random() * 0.65) * limit
-            walkTo(body, Math.max(-limit, Math.min(limit, target)))
-          } else if (roll < 0.64) {
-            // 主要是原地蹦：卡片里横着走过两家就不像「在卡片里」了
+          if (roll < 0.44) {
+            /*
+             * 卡片里不再左右走：外面那只本来就在横向游荡，
+             * 两只一起横着动，画面乱，也不利于点中它。只在中线上原地蹦。
+             */
             hop(body, 16 + Math.random() * 22)
-          } else if (roll < 0.72) {
-            // 连着两下跳，比原地站着有意思
+          } else if (roll < 0.52) {
+            // 连着两下跳，轻重不一样，比原地顿一下有意思
             hop(body, 26 + Math.random() * 26)
             window.setTimeout(() => hop(body, 18 + Math.random() * 14), 260)
-          } else if (roll < 0.88) {
+          } else if (roll < 0.64) {
+            // 原地踏步：腿脚在动，人钉在中线上
+            playPose('strut', 2200 + Math.random() * 1100)
+          } else if (roll < 0.74) {
+            // 回头张望：只是原地翻个面看另一边，不挪位置
+            body.dir = body.dir > 0 ? -1 : 1
+            const back = body.dir
+            window.setTimeout(() => {
+              if (bodyRef.current === body) body.dir = back
+            }, 700 + Math.random() * 500)
+          } else if (roll < 0.92) {
             playPose('sit', 1800 + Math.random() * 1200)
           } else {
-            playPose('cheer', 1600)
+            playPose('cheer', 1700)
           }
         }
         // 睡着了就把姿势收掉，别一边打盹一边坐着
@@ -188,35 +169,15 @@ export function CardPet({
       last = now
 
       const body = bodyRef.current
-      let landed = false
       if (stillRef.current && body.mode !== 'jump') {
         // 睡着就原地趴下，不要滑回中间（那看着像被拖回去）
         body.mode = 'stand'
       } else {
-        landed = step(body, limit, dt).landed
+        step(body, limit, dt)
       }
 
-      // 来回备忘那一趟
-      if (trip === 'to' && body.mode === 'stand' && Math.abs(body.x) < 6 && belowDrop > 12) {
-        fallTo(body, belowDrop)
-        trip = 'on'
-      } else if (trip === 'on' && landed && body.ground > 12) {
-        // 落在下面那块上了：坐着待一会儿，再跳回空地
-        playPose('sit', 2600 + Math.random() * 2200)
-        window.setTimeout(() => {
-          if (trip !== 'on') return
-          setPose('')
-          riseTo(body, 0)
-          trip = 'back'
-        }, 3000 + Math.random() * 1800)
-      } else if (trip === 'back' && landed && body.ground === 0) {
-        trip = ''
-        lastTrip = performance.now()
-      }
-      const down = body.ground > 12 || trip === 'on' || (trip === 'to' && body.mode === 'jump')
-      wrap?.classList.toggle('pet-down', down)
-      // 备忘那块在 DOM 里排在空地后面，会盖住它；下去的时候把空地抬到上面
-      cardEl?.classList.toggle('pet-down', down)
+      // 卡片里只上下动：被撞开、或者翻页留下的一点点偏移，自己溜回中线
+      if (!stillRef.current && body.ground === 0 && Math.abs(body.x) > 0.5) body.x *= 0.9
 
       if ((body.mode === 'walk') !== walking) {
         walking = body.mode === 'walk'
@@ -271,7 +232,22 @@ export function CardPet({
    * 同一批 pz-* 关键帧——所以内外看到的是同一种走法，不是两套。
    */
   const live: CreatureMood =
-    still ? 'sleep' : pose === 'sit' ? 'sit' : moving ? 'walk' : airborne ? 'fall' : pose === 'cheer' ? 'cheer' : mood === 'idle' ? 'stand' : mood
+    still
+      ? 'sleep'
+      : pose === 'sit'
+        ? 'sit'
+        : pose === 'strut'
+          ? // 原地踏步：借外面那套 pz-walk 的腿脚动作，但人一步都不挪
+            'walk'
+          : moving
+            ? 'walk'
+            : airborne
+              ? 'fall'
+              : pose === 'cheer'
+                ? 'cheer'
+                : mood === 'idle'
+                  ? 'stand'
+                  : mood
 
   return (
     <div className="card-pet" ref={hostRef} aria-hidden="true" data-poke={pokeNonce}>
