@@ -335,10 +335,13 @@ export function addNote(note: Note): void {
 
 /**
  * 删一件事之前先把这本书收进藏馆。
- * 一件都没翻过的（没有章节）就不用留——空书在架上只是噪音。
+ *
+ * 以前没有章节的书直接丢掉（「空书在架上只是噪音」），可是藏馆的架子上
+ * 本来就摆着所有还在的事——哪怕一章都没翻过。于是「让它去旅行（删除）」
+ * 之后那本书整个消失，和确认框里写的「这一章会留在藏馆里」正好相反。
+ * 现在一律留：没章节的书点开是「这一章还没写完」，书本身还在。
  */
 export function archiveBook(book: ShelfBook): void {
-  if (book.chapters.length === 0) return
   collectionStore.reload()
   const state = collectionStore.get()
   const rest = state.shelves.filter((item) => item.key !== book.key)

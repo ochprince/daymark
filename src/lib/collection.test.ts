@@ -2,6 +2,7 @@ import assert from 'node:assert/strict'
 import test from 'node:test'
 import {
   BADGES,
+  archiveBook,
   BADGE_BY_ID,
   collectionStore,
   dexKey,
@@ -121,4 +122,25 @@ test('徽章目录本身没重复 id，且都有文案键', () => {
   assert.equal(new Set(ids).size, ids.length)
   assert.equal(hasBadge(emptyCollection(), 'first'), false)
   assert.ok(BADGE_BY_ID.first)
+})
+
+test('删掉的书就算一章都没翻过，也得留在藏馆里', () => {
+  // 确认框写的是「它会从今天页消失，但这一章会留在藏馆里」，
+  // 以前没有 chapters 的书在 archiveBook 里被直接丢掉，删完藏馆里就空了。
+  collectionStore.patch({ shelves: [] })
+  archiveBook({
+    key: 'countdown:1',
+    title: '妈妈的生日',
+    kind: 'countdown',
+    color: 1,
+    species: 'drop',
+    stage: 0,
+    days: 10,
+    startedAt: 1_700_000_000_000,
+    chapters: [],
+  })
+  const shelves = collectionStore.get().shelves
+  assert.equal(shelves.length, 1)
+  assert.equal(shelves[0].title, '妈妈的生日')
+  assert.deepEqual(shelves[0].chapters, [])
 })
