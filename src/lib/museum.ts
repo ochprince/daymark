@@ -221,15 +221,42 @@ export function collectBooks(
  * 还在今天页的事不上架：藏馆是「过去」，今天页是「现在」。
  * 以前两处都列，用户会问「这本书到底是删了还是没删」。
  */
-export function shelfBooks(archived: readonly ShelfBook[]): ShelfBook[] {
+export function shelfBooks(archived: readonly ShelfBook[], now = Date.now()): ShelfBook[] {
   const seen = new Set<string>()
   const books: ShelfBook[] = []
   for (const book of archived) {
     if (seen.has(book.key)) continue
     seen.add(book.key)
-    books.push(book)
+    books.push(withArrival(book, now))
   }
-  return books.sort((a, b) => (b.deletedAt ?? b.startedAt) - (a.deletedAt ?? a.startedAt))
+  return books.sort((a, b) => (b.deletedAt ?? b.startedAt) - (a.deletedAt ?? b.startedAt))
+}
+
+/**
+ * 早就存在存档里的书，章节是删除那一刻抄下来的。
+ * 那时还没有「到过就算一章」这条规则，抄下来的章节是空的——书里就会
+ * 「那天已经到过」配一片空白。读的时候补上，别再动存档。
+ */
+function withArrival(book: ShelfBook, now: number): ShelfBook {
+  if (book.kind !== 'countdown') return book
+  if (book.chapters.length > 0) return book
+  if (book.days > 0) return book // 还没到那天
+  if (book.startedAt > now) return book
+  return {
+    ...book,
+    chapters: [
+      {
+        key: `${book.key}#arrived`,
+        itemKey: book.key,
+        title: book.title,
+        days: 0,
+        endedAt: book.startedAt,
+        color: book.color,
+        species: book.species,
+        stage: 0,
+      },
+    ],
+  }
 }
 
 /** 图鉴总数：四个物种 × 五个形态 + 特别篇三格 */

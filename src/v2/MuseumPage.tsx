@@ -385,7 +385,7 @@ export function MuseumPage({ collection, pro, onUpgrade, onNotify }: MuseumPageP
                       <b>{chapter.days > 0 ? t('unit.day', { n: chapter.days }) : '★'}</b>
                       <span>{formatDate(chapter.endedAt)}</span>
                       {chapter.line ? <small>{chapter.line}</small> : null}
-                      <i>{opened.chapters.length - index}</i>
+                      {opened.chapters.length > 1 ? <i>{opened.chapters.length - index}</i> : null}
                     </div>
                   ))}
                 </div>

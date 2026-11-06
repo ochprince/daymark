@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
 import { emptyCollection } from './collection'
+import type { ShelfBook } from './museum'
 import { buildItemViews } from './itemview'
 import {
   DEX_TOTAL,
@@ -13,6 +14,7 @@ import {
   dexCountOf,
   hasDex,
   speciesColor,
+  shelfBooks,
   speciesHue,
   stageTint,
 } from './museum'
@@ -351,4 +353,36 @@ test('倒数日到过了，就算没点过「说过了」，也得算一章', ()
   )
   assert.equal(collectChapters(acked).length, 1)
   assert.ok(countdownArrivals(acked.find((v) => v.kind === 'countdown') as never).length === 1)
+})
+
+test('早就在存档里的书：到过但没抄下章节，读的时候补上', () => {
+  const now = at(2026, 11, 6)
+  const legacy: ShelfBook = {
+    key: 'countdown:c1',
+    title: '聚餐',
+    kind: 'countdown' as const,
+    color: 1,
+    species: 'sprout' as const,
+    stage: 0 as const,
+    days: 0,
+    startedAt: at(2026, 11, 6),
+    deletedAt: now,
+    chapters: [],
+  }
+  const [book] = shelfBooks([legacy], now)
+  assert.equal(book.chapters.length, 1)
+  assert.equal(new Date(book.chapters[0].endedAt).toDateString(), new Date(at(2026, 11, 6)).toDateString())
+
+  // 删的时候还没到那天：不补
+  const notYet: ShelfBook = { ...legacy, key: 'countdown:c2', days: 9, startedAt: at(2026, 11, 15) }
+  assert.equal(shelfBooks([notYet], now)[0].chapters.length, 0)
+
+  // 已经有章节的，原样
+  const withChapter: ShelfBook = {
+    ...legacy,
+    key: 'countdown:c3',
+    chapters: [{ key: 'x', itemKey: 'countdown:c3', title: '聚餐', days: 0, endedAt: at(2026, 11, 1), color: 1, species: 'sprout' as const, stage: 0 as const }],
+  }
+  assert.equal(shelfBooks([withChapter], now)[0].chapters.length, 1)
+  assert.equal(new Date(shelfBooks([withChapter], now)[0].chapters[0].endedAt).getDate(), 1)
 })
