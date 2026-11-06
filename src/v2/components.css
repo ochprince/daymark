@@ -850,6 +850,11 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .bp-todo li i { flex: 0 0 16px; height: 16px; margin-top: 1px; border: 1.6px solid #c9c1d8; border-radius: 5px; font-style: normal; font-size: 11px; line-height: 14px; text-align: center; color: #fff; }
 .bp-todo li.done i { background: var(--accent, #6f6a86); border-color: var(--accent, #6f6a86); }
 .bp-todo li.done span { color: #9a91a8; text-decoration: line-through; }
+/* 删掉的打卡：日历嵌在书页里，去掉它自带的外框和左右外边距 */
+.bp-cal { margin-top: 14px; }
+.bp-cal .cal { margin: 0; padding: 0; background: transparent; border: 0; box-shadow: none; }
+/* 书页可能比屏幕高（备忘、待办、日历一起来）：让它自己滚，别顶出屏幕 */
+.bookpage { max-height: calc(100dvh - 130px); overflow-y: auto; overscroll-behavior: contain; }
 /* 书页底部那两个动作：好的 / 从藏馆拿走 */
 .bookpage .danger { display: block; margin: 10px auto 0; border: 0; background: transparent; color: #9a91a8; font-size: 13px; font-weight: 600; padding: 6px 10px; }
 .bookpage .danger.is-sure { color: #d1495b; font-weight: 800; }

@@ -348,6 +348,7 @@ export const zh = {
   'museum.book.noneHabit': '每日打卡是天天累计的，不分章。',
   'museum.book.noneCountdown': '那天到过之后会收进这里。',
   'museum.book.memo': '备忘',
+  'museum.book.checkins': '打卡记录',
   'museum.book.todo': '待办 {n} / {total}',
   'museum.book.del': '把它从藏馆拿走',
   'museum.book.del.sure': '真的拿走',

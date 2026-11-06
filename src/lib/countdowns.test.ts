@@ -1,6 +1,12 @@
 import assert from 'node:assert/strict'
 import test from 'node:test'
-import { addCountdown, getCountdowns, markSaid, unsayDone } from './countdowns.ts'
+import {
+  addCountdown,
+  getCountdowns,
+  markSaid,
+  unsayDone,
+  worthCelebrating,
+} from './countdowns.ts'
 
 /** 本地时间的某天 00:00（倒数日的发生日就是这个刻度） */
 function day(year: number, month: number, date: number): number {
@@ -63,4 +69,15 @@ test('撤销没说过的一次 / 不存在的 id：安静地什么都不做', ()
   unsayDone(event.id, when)
   assert.deepEqual(read(event.id).ackedFor ?? [], [])
   assert.deepEqual(read(event.id).history ?? [], [])
+})
+
+test('刚建的倒数日填了今天：不算「陪它走到那天」', () => {
+  // 2026-11-06 中午建的，日期也是今天 —— 没有等过
+  const now = new Date(2026, 10, 6, 12, 0, 0).getTime()
+  assert.equal(worthCelebrating(now, now), false)
+  // 昨天建的、今天到：等过一夜，该庆祝
+  assert.equal(worthCelebrating(now - 86400000, now), true)
+  // 今天 00:05 建的，也算今天
+  const early = new Date(2026, 10, 6, 0, 5, 0).getTime()
+  assert.equal(worthCelebrating(early, now), false)
 })

@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from 'react'
 import { Creature } from '../components/Creature'
 import type { CreatureSpecies } from '../components/Creature'
+import { worthCelebrating } from '../lib/countdowns'
 import { formatDate, formatSpan } from '../lib/days'
 import { dayKey } from '../lib/daykey'
 import { nextStageAt, stageFills, stageOf } from '../lib/growth'
@@ -193,6 +194,12 @@ export function StageCard({
       setParty(false)
       return undefined
     }
+    /*
+     * 刚建的倒数日如果就填了今天，不算「陪它走到那天」：
+     * 新建的那一刻它就已经是今天了，没有等过。以前这里不判，
+     * 建一个「就是今天」的倒数日会当场放彩纸、当场发「生日快乐」徽章。
+     */
+    if (!worthCelebrating(view.event.createdAt, Date.now())) return undefined
     if (partyFiredToday(view.key)) return undefined
     markParty(view.key)
     onCountdownToday?.()

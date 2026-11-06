@@ -152,6 +152,12 @@ export type ShelfBook = {
   /** 删除时抄下来的备忘 / 待办：事没了，这些字还留在书里 */
   memo?: string
   todo?: TodoItem[]
+  /** 每日打卡的原始记录（日期 → 当天次数）：删掉之后还能翻那本打卡日历 */
+  checkedDays?: Record<string, number>
+  /** 每次打卡的时刻（日期 → 时刻数组），日历点某一天时用来列几点几分 */
+  checkedTimes?: Record<string, number[]>
+  /** 打卡目标次数：决定日历里一天点亮到多深 */
+  target?: number | null
 }
 
 export function collectBooks(

@@ -22,6 +22,7 @@ import type { ShelfBook } from '../lib/museum'
 import { removeShelfBook } from '../lib/collection'
 import { FREE_CHAPTER_LIMIT } from '../lib/entitlement'
 import { BADGE_ART } from './BadgePopup'
+import { MonthCalendar } from './MonthCalendar'
 
 type Pane = 'chapters' | 'dex' | 'badges' | 'notes'
 
@@ -356,6 +357,19 @@ export function MuseumPage({ collection, pro, onUpgrade, onNotify }: MuseumPageP
                     </li>
                   ))}
                 </ul>
+              </div>
+            ) : null}
+
+            {/* 删掉的打卡：把那本日历也收进来，点开还能看见那些日子 */}
+            {opened.kind === 'habit' && opened.checkedDays ? (
+              <div className="bp-cal">
+                <div className="bp-ch-h">{t('museum.book.checkins')}</div>
+                <MonthCalendar
+                  days={opened.checkedDays}
+                  times={opened.checkedTimes}
+                  target={opened.target ?? null}
+                  now={Date.now()}
+                />
               </div>
             ) : null}
 

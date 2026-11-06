@@ -348,6 +348,7 @@ export const en: Record<MessageKey, Msg> = {
   'museum.book.noneHabit': 'Daily check-ins add up — nothing to split into chapters.',
   'museum.book.noneCountdown': 'Once that day arrives, it lands here.',
   'museum.book.memo': 'Note',
+  'museum.book.checkins': 'Check-in days',
   'museum.book.todo': 'To-dos {n} / {total}',
   'museum.book.del': 'Remove from museum',
   'museum.book.del.sure': 'Remove for good',

@@ -577,7 +577,19 @@ export function AppV2() {
         // 事一删，备忘和待办也跟着没了——趁还在，一起抄进书里，藏馆里点开才看得到
         const memo = view.kind === 'countdown' ? view.event.memo : undefined
         const todo = view.kind === 'countdown' ? view.event.todo : undefined
-        archiveBook({ ...book, deletedAt: Date.now(), ...(memo ? { memo } : {}), ...(todo?.length ? { todo } : {}) })
+        // 打卡记录也一起收：删掉之后还能在书里翻「那几个月都哪天打过卡」
+        const checkedDays = view.kind === 'habit' ? view.event.days : undefined
+        const checkedTimes = view.kind === 'habit' ? view.event.times : undefined
+        const target = view.kind === 'habit' ? (view.event.target ?? null) : undefined
+        archiveBook({
+          ...book,
+          deletedAt: Date.now(),
+          ...(memo ? { memo } : {}),
+          ...(todo?.length ? { todo } : {}),
+          ...(checkedDays && Object.keys(checkedDays).length > 0 ? { checkedDays } : {}),
+          ...(checkedTimes && Object.keys(checkedTimes).length > 0 ? { checkedTimes } : {}),
+          ...(typeof target === 'number' ? { target } : {}),
+        })
       }
       if (view.kind === 'since') removeEvent(view.id)
       else if (view.kind === 'habit') removeCheckIn(view.id)

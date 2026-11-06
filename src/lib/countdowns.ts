@@ -99,3 +99,14 @@ export function updateCountdown(id: string, patch: Partial<CountdownDraft>): voi
     ...(Object.prototype.hasOwnProperty.call(patch, 'festivalId') ? { festivalId: patch.festivalId } : {}),
   })
 }
+
+/**
+ * 今天正好到点的倒数日，值不值得庆祝（彩纸 + 「生日快乐」徽章）。
+ *
+ * 判据只有一条：它得是**昨天之前**就建好的。新建时把日期填成今天，
+ * 那一刻它就已经是今天了，没有等过——以前不判这一条，建完当场放彩纸、
+ * 当场发徽章，用户会报「走完了一轮」。
+ */
+export function worthCelebrating(createdAt: number, now: number): boolean {
+  return createdAt < todayStart(now)
+}

@@ -6,7 +6,7 @@
  */
 import { createJsonStore } from './jsonStore'
 import type { ShelfBook } from './museum'
-import type { Stage } from './types'
+import type { Stage, TodoItem } from './types'
 
 const STORAGE_KEY = 'daymark.collection.v1'
 
@@ -170,6 +170,39 @@ function normalizeNotes(input: unknown): Note[] {
   return result.sort((a, b) => b.at - a.at)
 }
 
+/** 删掉的书额外带的几样：备忘 / 待办 / 打卡记录。坏数据一律丢掉，不整份作废 */
+function normalizeBookExtras(item: Record<string, unknown>): Partial<ShelfBook> {
+  const out: Partial<ShelfBook> = {}
+  if (typeof item.memo === 'string' && item.memo.trim()) out.memo = item.memo
+  if (Array.isArray(item.todo)) {
+    const todo = item.todo.filter(
+      (entry): entry is TodoItem =>
+        isRecord(entry) && typeof entry.text === 'string' && typeof entry.done === 'boolean',
+    )
+    if (todo.length > 0) out.todo = todo
+  }
+  if (typeof item.target === 'number' && Number.isFinite(item.target)) out.target = item.target
+  if (isRecord(item.checkedDays)) {
+    const days: Record<string, number> = {}
+    for (const [key, value] of Object.entries(item.checkedDays)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key)) continue
+      const count = Math.floor(Number(value))
+      if (Number.isFinite(count) && count > 0) days[key] = count
+    }
+    if (Object.keys(days).length > 0) out.checkedDays = days
+  }
+  if (isRecord(item.checkedTimes)) {
+    const times: Record<string, number[]> = {}
+    for (const [key, value] of Object.entries(item.checkedTimes)) {
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(key) || !Array.isArray(value)) continue
+      const list = value.filter((at): at is number => typeof at === 'number' && Number.isFinite(at))
+      if (list.length > 0) times[key] = list
+    }
+    if (Object.keys(times).length > 0) out.checkedTimes = times
+  }
+  return out
+}
+
 /** 删掉的事留下的书：字段不全的整本丢掉，宁可少一本也别画出半本书 */
 function normalizeShelves(input: unknown): ShelfBook[] {
   if (!Array.isArray(input)) return []
@@ -194,6 +227,7 @@ function normalizeShelves(input: unknown): ShelfBook[] {
     result.push({
       ...(item as unknown as ShelfBook),
       chapters,
+      ...normalizeBookExtras(item),
     })
   }
   return result.slice(0, 40)
