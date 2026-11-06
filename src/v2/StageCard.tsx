@@ -362,6 +362,8 @@ export function StageCard({
   const habitDone = view.kind === 'habit' && view.target !== null && view.count >= view.target
 
   function startHold(event?: ReactPointerEvent<HTMLElement>) {
+    // 出门了就没有蓄力这回事：按住空位不该计数，也不该起那个圆环
+    if (petAway) return
     pressAt.current = performance.now()
     if (!canHold) return
     if (habitDone) {
@@ -409,6 +411,12 @@ export function StageCard({
 
   // 轻点摸摸：和原型一致——短按（<250ms）且没拖动，就是在摸它
   function tapPoke() {
+    /*
+     * 它已经出门了：卡片里那块只是空位，点上去不该有任何反应——
+     * 以前这里没拦，空位照样冒音效、冒爱心（爱心还长在外面那只身上），
+     * 用户会问「为什么点空的地方它也在动」。所有互动都归外面那个实体。
+     */
+    if (petAway) return
     // pressAt 没被记上（比如按下那一帧被别的手势接走）时按轻点算，别把这次点击吞掉
     if (pressAt.current && performance.now() - pressAt.current > 250) return
     if (dragRef.current?.active) return

@@ -1,3 +1,4 @@
+import { playSfx } from '../../lib/sfx'
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react'
 import type { PointerEvent as ReactPointerEvent } from 'react'
 import { t } from '../../lib/i18n'
@@ -1448,7 +1449,11 @@ export function PetLayer({
         noSleepUntil.current = performance.now() + rand(45000, 75000)
         onWake?.()
       } else {
+        // 现在它在外面，点它就该有反应：爱心 + 音效都算它身上
+        // （hearts 在模拟 useEffect 里面，外面拿不到，走同一个 api 更省事）
+        apiRef.current?.react('poke')
         setMode('cheer', 0.9)
+        playSfx('tap')
         say(pick(['pet.say.poke', 'pet.say.hello', 'pet.say.cheer'] as const), 2200)
       }
     }
