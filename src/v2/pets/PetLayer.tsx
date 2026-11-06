@@ -872,12 +872,40 @@ export function PetLayer({
       hearts(3)
       await waitMs(900)
       if (tok !== playTok || !alive) return
+      // 5) 不收工，再陪它玩一会儿：两只轮流蹦，中间蹭一下
+      const rounds = 3 + Math.floor(Math.random() * 2)
+      for (let i = 0; i < rounds; i += 1) {
+        await waitMs(1150 + Math.random() * 650)
+        if (tok !== playTok || !alive) return
+        hop(0.55 + Math.random() * 0.3)
+        // 主人跟着一起蹦（力量小，只是陪着），蹦两下给一颗心
+        window.dispatchEvent(new CustomEvent('daymark:pet-bump', { detail: { dir: 0, power: 0.35 } }))
+        if (i % 2 === 1) hearts(1)
+        if (Math.random() < 0.45) {
+          cr.classList.add('nuzzle')
+          await waitMs(480)
+          cr.classList.remove('nuzzle')
+          if (tok !== playTok || !alive) return
+        }
+      }
+
       cr.classList.remove('playing', 'nuzzle')
-      // 演完把那块临时平台收掉，它自己会去别处玩
-      extraPlats = []
-      scan()
       setMode('sit', 4)
       playing = false
+      /*
+       * 台子先别撤：撤了它脚下就空了，等于把它从卡片里扔下去。
+       * 等它自己往下/往上跳走（s.plat 不再是这块）再收，
+       * 所以「什么时候离开」还是它自己的那套跳平台逻辑说了算。
+       */
+      const done = performance.now()
+      const sweep = window.setInterval(() => {
+        const left = s.plat !== '__playground'
+        if (!alive || tok !== playTok || left || performance.now() - done > 25000) {
+          window.clearInterval(sweep)
+          extraPlats = []
+          scan()
+        }
+      }, 500)
     }
 
     apiRef.current = {

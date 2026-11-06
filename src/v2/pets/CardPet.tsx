@@ -177,8 +177,8 @@ export function CardPet({
         // 睡着了就把姿势收掉，别一边打盹一边坐着
         if (stillRef.current && poseRef.current) setPose('')
         schedule()
-        // 卡片里的世界小，别让它干站着：两秒多就有下一个念头
-      }, 900 + Math.random() * 1500)
+        // 卡片里的世界小，别让它干站着，但也别一直动：三四秒一个念头刚好
+      }, 1900 + Math.random() * 2300)
     }
     schedule()
 
