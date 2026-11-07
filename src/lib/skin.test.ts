@@ -25,8 +25,8 @@ test('纸本 auto → 衬线（--font-num: Instrument Serif）', () => {
   assert.equal(resolveNum('paper', 'auto'), 'serif')
 })
 
-test('夜航 auto → 圆体（--font-num: Baloo 2 / ui-rounded，只是字重更轻）', () => {
-  assert.equal(resolveNum('night', 'auto'), 'round')
+test('夜航 auto → 手写（四套包各有一种笔迹，深色那套用圆体会和软糖撞车）', () => {
+  assert.equal(resolveNum('night', 'auto'), 'hand')
 })
 
 test('像素 auto → 像素体（--font-num: Silkscreen）', () => {

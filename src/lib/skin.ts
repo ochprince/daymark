@@ -44,15 +44,19 @@ export type ResolvedTexture = Exclude<TextureStyle, 'auto'>
  * num:'auto' 的显式映射——「跟包走」到底走成哪一种。
  *
  * 取值依据 docs/prototype-v2/proto.css 里四套皮肤自己的 --font-num：
- *   软糖 / 夜航  'Baloo 2', ui-rounded  → round
+ *   软糖        'Baloo 2', ui-rounded  → round
  *   纸本        'Instrument Serif'       → serif
+ *   夜航        'Baloo 2', ui-rounded  → round（和软糖撞了，见下）
  *   像素        'Silkscreen'             → pixel
- * hand 是玩家自己挑的手写体，没有哪套皮肤默认用它。
+ *
+ * 夜航原本也是 Baloo：两套包共用同一个字形，四套包里只有它没有自己的笔迹。
+ * 现在把夜航改到 hand —— 深色、发光、深夜独处的那套，用手写比用圆体更像它的气质，
+ * 四套包也就各自有了各自的字体。
  */
 export const NUM_AUTO: Record<SkinPack, ResolvedNum> = {
   jelly: 'round',
   paper: 'serif',
-  night: 'round',
+  night: 'hand',
   pixel: 'pixel',
 }
 
