@@ -41,7 +41,6 @@ import { BadgePopup } from './BadgePopup'
 import { HatchOverlay } from './HatchOverlay'
 import { BookFlight } from './BookFlight'
 import { WelcomeFlow } from './WelcomeFlow'
-import type { WelcomeResult } from './WelcomeFlow'
 import type { HatchInfo } from './HatchOverlay'
 import {
   addNote,
@@ -260,7 +259,7 @@ export function AppV2() {
   const [hatch, setHatch] = useState<HatchInfo | null>(null)
   const [flight, setFlight] = useState<{ from: DOMRect; to: DOMRect; color: number } | null>(null)
   const [backupPending, setBackupPending] = useState<{ file: BackupFile; summary: BackupSummary } | null>(null)
-  // 首启引导：一件东西都没有、也没看过，就先走三步。
+  // 首启欢迎：一件东西都没有、也没看过，就先给这一屏。
   // 只在挂载这一刻判断一次——之后新建/删除都不会再把它请回来。
   const [welcome, setWelcome] = useState(() => views.length === 0 && !hasSeenWelcome())
 
@@ -909,11 +908,10 @@ export function AppV2() {
             markWelcomeSeen()
             setWelcome(false)
           }}
-          onDone={(result: WelcomeResult) => {
-            // 第一件事建好就直接进孵化过场，不再让用户自己点一次
+          onStart={() => {
             markWelcomeSeen()
             setWelcome(false)
-            setHatch(result)
+            openAdd()
           }}
         />
       ) : null}

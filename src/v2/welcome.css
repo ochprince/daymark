@@ -1,222 +1,93 @@
-/* 首次见面：一屏只讲一件事。蛋是主角，按钮钉在底部，退回上一步放在角落。
-   只复用现有令牌（--bg / --surface / --ink / --h-N / --pop-sm），不新造视觉语言。 */
+/* 首启欢迎盖住整页。原型画在 402px 的手机屏里，宽屏时仍按那一屏来排。 */
 
-.wf {
+.welcome {
   position: fixed;
-  inset: 0;
   z-index: 85;
-  display: flex;
-  flex-direction: column;
-  padding: calc(14px + env(safe-area-inset-top)) var(--pad) calc(20px + env(safe-area-inset-bottom));
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  width: min(402px, 100%);
+  margin-inline: auto;
+  box-sizing: border-box;
   background: var(--bg);
-  color: var(--ink);
-  font-family: var(--font-ui);
-  overflow: hidden;
-  animation: fade 0.3s ease-out;
+  box-shadow: 0 0 0 100vmax var(--bg);
+  padding-bottom: calc(46px + env(safe-area-inset-bottom));
 }
 
-/* 一层很淡的光：选中哪只小家伙，光就换成它的颜色 */
-.wf-glow {
-  position: absolute;
-  inset: 0;
-  pointer-events: none;
-  background: radial-gradient(58% 40% at 50% 24%, color-mix(in oklab, var(--c) 40%, transparent), transparent 72%);
-  opacity: 0.5;
-  transition: background 0.4s var(--ease-out);
+/* 光晕要画在底色上面。原型用 z-index:-1，那里没有不透明底。 */
+.welcome::after {
+  z-index: 0;
 }
 
-.wf-top {
+.welcome > * {
   position: relative;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 8px;
-  height: 34px;
+  z-index: 1;
+}
+
+.welcome .w-brand,
+.welcome h1,
+.welcome p,
+.welcome .btn,
+.welcome .w-skip {
   flex: none;
 }
 
-/* 上一步：轻淡的次要动作，不跟主按钮抢注意力 */
-.wf-back,
-.wf-skip {
-  border: 0;
-  background: transparent;
-  color: var(--ink3);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 600;
-  padding: 6px 2px;
+.welcome .creature {
+  display: block;
+  line-height: 0;
 }
 
-.wf-back {
-  justify-self: start;
-}
-
-.wf-skip {
-  justify-self: end;
-  text-decoration: underline;
-  text-underline-offset: 3px;
-  text-decoration-color: var(--line-strong);
-}
-
-.wf-back:active,
-.wf-skip:active {
-  opacity: 0.6;
-}
-
-/* 占位：三栏对齐，缺按钮时不塌 */
-.wf-back.is-void,
-.wf-skip.is-void {
-  visibility: hidden;
-}
-
-.wf-dots {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.wf-dots i {
-  width: 7px;
-  height: 7px;
-  border-radius: 99px;
-  background: var(--line-strong);
-  transition: width 0.26s var(--ease-out), background 0.26s;
-}
-
-.wf-dots i.is-on {
-  width: 18px;
-  background: var(--ink);
-}
-
-.wf-body {
+.w-egg {
   position: relative;
-  flex: 1;
-  min-height: 0;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  padding-bottom: 86px;
-  overflow-y: auto;
-  scrollbar-width: none;
-  animation: wfIn 0.32s var(--ease-out);
-}
-
-.wf-body::-webkit-scrollbar {
-  display: none;
-}
-
-.wf-body h2 {
-  margin: 0;
-  font-size: 26px;
-  font-weight: 800;
-  font-family: var(--font-title);
-  line-height: 1.25;
-}
-
-.wf-body p {
-  margin: 10px 0 0;
-  max-width: 300px;
-  color: var(--ink2);
-  font-size: 15px;
-  line-height: 1.65;
-}
-
-.wf-egg {
-  display: flex;
-  justify-content: center;
-  margin-bottom: 6px;
-  animation: bob 3.2s ease-in-out infinite;
-}
-
-.wf-picks {
-  display: flex;
-  gap: 10px;
-  width: 100%;
-  max-width: 360px;
-  margin-top: 24px;
-}
-
-.wf-pick {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 3px;
-  padding: 10px 6px 13px;
-  border-radius: var(--r2);
-  border: var(--bw) solid var(--line);
-  background: var(--surface);
-  box-shadow: var(--pop-sm);
-  color: var(--ink);
-  font: inherit;
-  transition: transform 0.18s var(--ease-pop), border-color 0.18s, box-shadow 0.18s;
-}
-
-.wf-pick.is-on {
-  transform: translateY(-4px);
-  border-color: color-mix(in oklab, var(--c) 62%, var(--line));
-  box-shadow: 0 0 0 3px color-mix(in oklab, var(--c) 24%, transparent), var(--pop-sm);
-}
-
-.wf-pick-art {
   display: grid;
   place-items: center;
-  width: 100%;
-  height: 92px;
 }
 
-.wf-pick b {
-  font-size: 15px;
-  font-weight: 800;
+.w-egg .cr {
+  animation: dough 2.2s ease-in-out infinite;
+  transform-origin: 50% 92%;
+  position: relative;
+  z-index: 1;
 }
 
-.wf-pick small {
-  color: var(--ink3);
-  font-size: 11.5px;
-  line-height: 1.4;
-}
-
-[data-skin='pixel'] .wf-pick {
-  border-radius: 0;
-}
-
-.wf-preview {
-  display: grid;
-  place-items: center;
-  width: 136px;
-  height: 136px;
-  margin-bottom: 8px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 50% 62%, color-mix(in oklab, var(--c) 42%, transparent), transparent 72%);
-}
-
-.wf-body .input {
-  max-width: 340px;
-  margin-top: 20px;
-  text-align: center;
-}
-
-.wf-foot {
+.w-egg-shadow {
   position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  bottom: 4px;
+  left: 50%;
+  width: 120px;
+  height: 16px;
+  margin-left: -60px;
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0.1;
 }
 
-.wf-foot .btn:disabled {
-  opacity: 0.4;
-  box-shadow: none;
+.w-hero .orbit {
+  position: absolute;
 }
 
-@keyframes wfIn {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
+.w-hero .orbit .cr {
+  animation: none;
+}
+
+.welcome p {
+  white-space: normal;
+}
+
+@keyframes dough {
+  0%,
+  55%,
+  100% {
     transform: none;
+  }
+  66% {
+    transform: scale(1.06, 0.93);
+  }
+  80% {
+    transform: scale(0.97, 1.04);
+  }
+  90% {
+    transform: scale(1.02, 0.98);
   }
 }

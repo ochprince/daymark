@@ -1,6 +1,8 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import '@fontsource-variable/inter/index.css'
+import '@fontsource/zcool-kuaile/latin-400.css'
+import '@fontsource/zcool-kuaile/chinese-simplified-400.css'
 import './skins/tokens.css'
 import './skins/custom.css'
 import './v2/components.css'
