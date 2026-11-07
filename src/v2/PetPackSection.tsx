@@ -2,6 +2,7 @@ import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { t } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
 import {
+  CARD_PACK_ID,
   getPetPackSnapshot,
   importPetPack,
   loadPetPacks,
@@ -36,16 +37,6 @@ export function PetPackSection({
     void loadPetPacks()
   }, [])
 
-  function resetAll() {
-    const assigned = views.filter((view) => view.petPackId)
-    if (!assigned.length) {
-      onToast(t('dress.pets.already'))
-      return
-    }
-    for (const view of assigned) onAssign(view, null)
-    onToast(t('dress.pets.restoredAll'))
-  }
-
   return (
     <>
       <div className="sec-title">
@@ -60,7 +51,7 @@ export function PetPackSection({
               ))}
             </span>
           </span>
-          <button className="grow petpack-pick" type="button" onClick={resetAll}>
+          <button className="grow petpack-pick" type="button" onClick={() => setPicking(CARD_PACK_ID)}>
             <span>{t('dress.pets.card')}</span>
             <small className="li-sub">{t('dress.pets.card.sub')}</small>
           </button>
@@ -121,9 +112,10 @@ export function PetPackSection({
           {...{ webkitdirectory: '', directory: '' }}
         />
       </div>
-      {picked ? (
+      {picking ? (
         <PackSheet
           pack={picked}
+          reset={picking === CARD_PACK_ID}
           views={views}
           onAssign={onAssign}
           onToast={onToast}
@@ -136,12 +128,18 @@ export function PetPackSection({
 
 function PackSheet({
   pack,
+  reset = false,
   views,
   onAssign,
   onToast,
   onClose,
 }: {
-  pack: PetPackMeta
+  pack: PetPackMeta | null
+  /**
+   * 以「卡片里的小伙伴」打开：预览的是没换包的那只，按钮不是「换上」而是
+   * 「一键还原」——它一次改掉所有卡片，所以要点两下（4 秒内不点就恢复）。
+   */
+  reset?: boolean
   views: readonly ItemView[]
   onAssign: (view: ItemView, packId: string | null) => void
   onToast: (text: string) => void
@@ -149,14 +147,22 @@ function PackSheet({
 }) {
   const railRef = useRef<HTMLDivElement | null>(null)
   const [index, setIndex] = useState(0)
+  const [sure, setSure] = useState(false)
+  const sureTimer = useRef<number | null>(null)
   const view = views[index]
+  const assigned = views.filter((item) => item.petPackId)
+  const using = reset ? !view?.petPackId : !!view && view.petPackId === pack?.id
+  const disabled = reset ? assigned.length === 0 : !view || using
 
   useEffect(() => {
     const onKey = (event: KeyboardEvent) => {
       if (event.key === 'Escape') onClose()
     }
     window.addEventListener('keydown', onKey)
-    return () => window.removeEventListener('keydown', onKey)
+    return () => {
+      window.removeEventListener('keydown', onKey)
+      if (sureTimer.current !== null) window.clearTimeout(sureTimer.current)
+    }
   }, [onClose])
 
   function scrollTo(next: number) {
@@ -184,20 +190,56 @@ function PackSheet({
     setIndex(best)
   }
 
-  const using = !!view && view.petPackId === pack.id
+  function act() {
+    if (reset) {
+      // 第一下只是问一句：这一步会把每张卡片的包一起撤掉，点错很难补回来
+      if (!sure) {
+        setSure(true)
+        if (sureTimer.current !== null) window.clearTimeout(sureTimer.current)
+        sureTimer.current = window.setTimeout(() => {
+          sureTimer.current = null
+          setSure(false)
+        }, 4000)
+        return
+      }
+      if (sureTimer.current !== null) window.clearTimeout(sureTimer.current)
+      for (const item of assigned) onAssign(item, null)
+      onToast(t('dress.pets.restoredAll'))
+      onClose()
+      return
+    }
+    if (!view || using || !pack) return
+    onAssign(view, pack.id)
+    onToast(t('dress.pets.assigned', { card: view.title, name: pack.name }))
+  }
+
+  const title = reset ? t('dress.pets.card') : (pack?.name ?? '')
+  const previewId = reset ? CARD_PACK_ID : pack?.id
+  const sub = reset
+    ? t('dress.pets.restore.sub')
+    : views.length > 1
+      ? t('dress.pets.swipe')
+      : t('dress.pets.preview')
+  const label = reset
+    ? sure
+      ? t('dress.pets.restore.sure')
+      : t('dress.pets.restore')
+    : using
+      ? t('dress.pets.onCard')
+      : t('dress.pets.swap')
 
   return (
     <div className="petpack-ov">
       <div className="dim" onClick={onClose} />
-      <div className="sheet petpack-sheet" role="dialog" aria-modal="true" aria-label={pack.name}>
+      <div className="sheet petpack-sheet" role="dialog" aria-modal="true" aria-label={title}>
         <div className="grab" />
         <div className="sheet-h">
-          <h3>{pack.name}</h3>
+          <h3>{title}</h3>
           <button className="icon-btn" type="button" onClick={onClose} aria-label={t('common.close')}>
             <IconClose />
           </button>
         </div>
-        <p className="sheet-sub">{views.length > 1 ? t('dress.pets.swipe') : t('dress.pets.preview')}</p>
+        <p className="sheet-sub">{sub}</p>
         {views.length === 0 ? (
           <p className="petpack-empty">{t('dress.pets.noCards')}</p>
         ) : (
@@ -205,7 +247,7 @@ function PackSheet({
             <div className="petpack-rail" ref={railRef} onScroll={onScroll}>
               {views.map((item) => (
                 <div className="petpack-slide" key={item.key}>
-                  <StageCard view={item} previewPackId={pack.id} onLog={noop} onPoke={noop} onProfile={noop} />
+                  <StageCard view={item} previewPackId={previewId} onLog={noop} onPoke={noop} onProfile={noop} />
                 </div>
               ))}
             </div>
@@ -223,16 +265,12 @@ function PackSheet({
               </div>
             ) : null}
             <button
-              className="petpack-apply"
+              className={`petpack-apply${sure ? ' sure' : ''}`}
               type="button"
-              disabled={!view || using}
-              onClick={() => {
-                if (!view || using) return
-                onAssign(view, pack.id)
-                onToast(t('dress.pets.assigned', { card: view.title, name: pack.name }))
-              }}
+              disabled={disabled}
+              onClick={act}
             >
-              {using ? t('dress.pets.onCard') : t('dress.pets.swap')}
+              {disabled && reset ? t('dress.pets.already') : label}
             </button>
           </>
         )}

@@ -84,6 +84,11 @@
   font-weight: 800;
 }
 .petpack-apply:disabled { opacity: 0.55; }
+/* 一键还原的第二下：颜色换成提醒色，让人看清这一步是不可逆的 */
+.petpack-apply.sure {
+  background: var(--danger, #d9503f);
+  color: #fff;
+}
 .petpack-empty {
   margin: 0 0 12px;
   color: var(--ink3);
