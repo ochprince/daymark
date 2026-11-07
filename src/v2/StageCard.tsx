@@ -188,12 +188,22 @@ export function StageCard({
    * 一个非 0 的数，于是把不属于自己的 +1 也放了。挂载时先把当前值记下来。
    */
   const seenFx = useRef(fxNonce)
+  /*
+   * 记完那一下的兴奋：以前靠 view.mood 挂在「今天记过」上，一挂就是一整天，
+   * 看着像蓄力/记账的激活态没收回去。现在改成每次记完演 2.4 秒就收。
+   */
+  const [cheerOn, setCheerOn] = useState(false)
   useEffect(() => {
     if (fxNonce === seenFx.current) return undefined
     seenFx.current = fxNonce
     setFxOn(true)
+    setCheerOn(true)
     const stop = window.setTimeout(() => setFxOn(false), 900)
-    return () => window.clearTimeout(stop)
+    const stopCheer = window.setTimeout(() => setCheerOn(false), 2400)
+    return () => {
+      window.clearTimeout(stop)
+      window.clearTimeout(stopCheer)
+    }
   }, [fxNonce])
 
   // 「就是今天」：当天第一次打开这一件时放一次彩纸，戴一次派对帽
@@ -595,7 +605,7 @@ export function StageCard({
                 className={`cr ${looking ? 'look ' : ''}${idle}`}
                 species={view.species}
                 stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
-                mood={party ? 'wow' : view.mood}
+                mood={party ? 'wow' : cheerOn ? 'happy' : view.mood}
                 size={158}
                 extra={party ? { hold: 'party' } : undefined}
               />
@@ -605,7 +615,7 @@ export function StageCard({
             <CardPet
               species={view.species}
               stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
-              mood={party ? 'wow' : view.mood}
+              mood={party ? 'wow' : cheerOn ? 'happy' : view.mood}
               poseClass={`${looking ? 'look ' : ''}${idle}`}
               size={158}
               still={asleep}

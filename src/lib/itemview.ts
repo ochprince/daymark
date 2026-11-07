@@ -15,7 +15,7 @@ import {
   sortEvents,
 } from './days'
 import { sortCheckIns, countInPeriod } from './checkins'
-import { displayStage, growthOfSince, habitGrowthDays, isSleeping, recordedOn } from './growth'
+import { displayStage, growthOfSince, habitGrowthDays, isSleeping } from './growth'
 import type {
   CheckInCadence,
   CheckInEvent,
@@ -125,7 +125,6 @@ export function buildItemViews(
     const key = itemKey('habit', event.id)
     const growth = habitGrowthDays(event)
     const sleeping = isSleeping(event, now)
-    const recorded = recordedOn(event, now)
     const count = countInPeriod(event, now)
     const target =
       typeof event.target === 'number' && event.target > 0 ? Math.trunc(event.target) : null
@@ -141,7 +140,13 @@ export function buildItemViews(
       count,
       target,
       cadence: event.cadence,
-      mood: sleeping ? 'sleep' : recorded || (target !== null && count >= target) ? 'happy' : 'idle',
+      /*
+       * 今天记过不代表整天都在兴奋：以前这里只要 recorded 就给 'happy'，
+       * 结果按住记完一次之后，卡片里那只一整天都挂着那张「张嘴笑」的脸，
+       * 看着像蓄力/记账的激活态没收回去。记完那一下的兴奋交给卡片自己演
+       * （见 StageCard 的 cheerOn），这里只留真睡。
+       */
+      mood: sleeping ? 'sleep' : 'idle',
       ...(event.remind ? { remind: event.remind } : {}),
       ...(event.petPackId ? { petPackId: event.petPackId } : {}),
       event,
