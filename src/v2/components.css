@@ -316,6 +316,9 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .bubble.left { right: auto; left: 0; border-radius: 18px 18px 6px 18px; }
 .bubble.left::after { left: auto; right: -2px; border-left: 0; border-right: var(--bw) solid var(--line); border-radius: 0 0 14px 0; transform: skewX(-30deg); transform-origin: top right; }
 .bubble.pop { animation: pop 0.42s var(--ease-pop); }
+/* 说完收起：留白不塌（气泡是绝对定位的），只淡出并轻轻上飘一点 */
+.bubble { transition: opacity 0.34s ease, transform 0.34s ease; }
+.bubble.gone { opacity: 0; transform: translateY(-6px) scale(0.96); pointer-events: none; }
 
 .sc-num { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin-top: 8px; }
 .sc-num .lead, .sc-num .unit { font-size: 16px; font-weight: 700; color: var(--ink2); }

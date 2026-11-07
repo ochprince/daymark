@@ -19,6 +19,8 @@ import { useLivePack } from './pets/useLivePack'
 
 /** 蓄力时长：与 CheckInCard 同一个口径（500ms），改这里要连带改 CSS 的 transition */
 const HOLD_MS = 500
+/** 气泡亮多久：说完就收（2–3 秒），别一直挂在卡片上 */
+const BUBBLE_MS = 2800
 
 export type StageCardProps = {
   view: ItemView
@@ -546,11 +548,11 @@ export function StageCard({
             const next = ambientLine(view, lastAmbient.current)
             lastAmbient.current = next
             setAmbient(next)
-            hold = window.setTimeout(() => setAmbient(null), 9000)
+            hold = window.setTimeout(() => setAmbient(null), BUBBLE_MS)
           }
           schedule(false)
         },
-        first ? 14000 + Math.random() * 9000 : 20000 + Math.random() * 20000,
+        first ? 9000 + Math.random() * 7000 : 14000 + Math.random() * 16000,
       )
     }
     schedule(true)
@@ -567,13 +569,49 @@ export function StageCard({
     view.kind === 'habit' ? 0 : view.days,
   ])
 
-  const line = hyped
+  const baseLine = hyped
     ? t(visitor ? 'pet.say.playHost' : 'pet.say.frenzy')
     : guest
       ? t('pet.say.visitor')
       : back
       ? t('pet.say.back')
-      : (overrideLine ?? ambient ?? bubbleLine(view))
+      : (overrideLine ?? bubbleLine(view))
+  const line = ambient ?? baseLine
+
+  /*
+   * 气泡说完就走：它原来一直挂在卡片上，念久了像块说明牌。
+   * 只有「刚换了句」的时候亮 5 秒——记完、摸完、状态变了、自己冒出一句都算；
+   * 自己那句收回时不重新亮，否则会闪两下。
+   */
+  const [bubbleOn, setBubbleOn] = useState(true)
+  const bubbleTimer = useRef<number | null>(null)
+  const prevAmbient = useRef<string | null>(null)
+  useEffect(() => {
+    const wasAmbient = prevAmbient.current
+    prevAmbient.current = ambient
+    /*
+     * 自己冒的那句收回时不要「重新亮一遍」原来的话：
+     * 那会让气泡闪两下。直接收掉，等下次真的换句再亮。
+     */
+    if (ambient === null && wasAmbient !== null) {
+      if (bubbleTimer.current !== null) window.clearTimeout(bubbleTimer.current)
+      bubbleTimer.current = null
+      setBubbleOn(false)
+      return
+    }
+    setBubbleOn(true)
+    if (bubbleTimer.current !== null) window.clearTimeout(bubbleTimer.current)
+    bubbleTimer.current = window.setTimeout(() => {
+      bubbleTimer.current = null
+      setBubbleOn(false)
+    }, BUBBLE_MS)
+  }, [line, ambient])
+  useEffect(
+    () => () => {
+      if (bubbleTimer.current !== null) window.clearTimeout(bubbleTimer.current)
+    },
+    [],
+  )
   const nextStage = nextStageAt(view.growth)
   const rest = nextStage === null ? 0 : nextStage - view.growth
   const nextName = nextStage === null ? '' : stageName(view.species, stageOf(nextStage))
@@ -615,7 +653,11 @@ export function StageCard({
 
       <div className="sc-hero">
         {/* 它出门了，卡片里就不该还留着它刚才说的话 */}
-        {petAway ? null : <div className="bubble">{line}</div>}
+        {petAway ? null : (
+          <div className={`bubble${bubbleOn ? '' : ' gone'}`} aria-live="polite">
+            {line}
+          </div>
+        )}
         <div
           className={`cr-wrap ${asleep && sleeping ? 'sleep' : ''} ${asleep && napping ? 'nap' : ''} ${
             jumping ? 'jump' : ''
