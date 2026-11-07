@@ -27,7 +27,8 @@ export { PET_GRAVITY }
  * 宠物能站的平台 —— 跟原型对齐的一张清单。
  *
  * 只放底栏太单调：它应该能站到按住计时的按钮、成长条、卡片顶边、切换开关、
- * 图标按钮上。判定沿用原型的几条过滤（见 scan）：太窄（<36）、太靠上（压状态栏）、
+ * 图标按钮上。舞台卡另外还有一条下沿（见 scan）：脚踩在底边上面，人站在卡片里。
+ * 判定沿用原型的几条过滤（见 scan）：太窄（<36）、太靠上（压状态栏）、
  * 太靠底（钻到底栏后面）都不算平台。
  */
 export const PET_PLATFORM_SELECTORS = [
@@ -380,6 +381,15 @@ export function PetLayer({
           if (top < 44) return
           if (top > rect.height - 30 && !el.closest('.tabbar')) return
           out.push({ key: `${sel}#${index}`, l, r, t: top, el, sel })
+          // 舞台卡的下沿也是一条路：人站在卡片里，脚踩在底边上面。
+          // 落地时脚会再往下 3px，这里先扣掉，免得脚伸到边框外面。
+          if (el.classList.contains('stage-card')) {
+            const border = Number.parseFloat(getComputedStyle(el).borderBottomWidth) || 0
+            const ledge = b.bottom - rect.top - border - 3
+            if (ledge > top + 36 && ledge < rect.height - 30) {
+              out.push({ key: `${sel}#${index}:bottom`, l, r, t: ledge, el, sel })
+            }
+          }
         })
       }
       if (extraPlats.length) out.push(...extraPlats)
