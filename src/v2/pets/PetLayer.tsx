@@ -4,7 +4,10 @@ import type { PointerEvent as ReactPointerEvent } from 'react'
 import { t } from '../../lib/i18n'
 import type { MessageKey } from '../../lib/i18n'
 import { Pet } from './Pet'
-import type { PetStage, PetState } from './art'
+import { PackSprite } from './PackSprite'
+import { useLivePack } from './useLivePack'
+import { PET_STATES, type PetStage, type PetState } from './art'
+import type { LivePack } from '../../lib/petpackStore'
 import type { PetArtSpecies } from './petArt'
 import {
   landingPlatform,
@@ -17,6 +20,15 @@ import {
   type Platform,
 } from './geometry'
 export type { PetStage } from './art'
+
+/** 导入包才有的原地动作。没选包时状态机不会进入这些姿势。 */
+type PetPose = PetState | 'dance' | 'hug' | 'dangle' | 'spin'
+
+function clipSeconds(frames: { durMs: number }[] | undefined): number {
+  if (!frames?.length) return 0
+  const ms = frames.reduce((sum, frame) => sum + frame.durMs, 0)
+  return Math.max(1.4, Math.min(16, ms / 1000))
+}
 import '../pets.css'
 
 /** 重力（px/s²） */
@@ -170,6 +182,8 @@ export type PetLayerProps = {
   onWake?: () => void
   /** 头顶挂的名字：它从哪件事出来的（喝水 / 妈妈的生日） */
   name?: string
+  /** 这张卡片指定的导入包。空着就画原来的小伙伴。 */
+  packId?: string | null
 }
 
 type DragState = {
@@ -217,6 +231,7 @@ export function PetLayer({
   onHomed,
   onHomeHot,
   onWake,
+  packId = null,
 }: PetLayerProps) {
   const layerRef = useRef<HTMLDivElement | null>(null)
   const spriteRef = useRef<HTMLDivElement | null>(null)
@@ -240,7 +255,13 @@ export function PetLayer({
     goHome: () => void
     react: (kind: 'log' | 'focus' | 'poke' | 'milestone') => void
   } | null>(null)
-  const [view, setView] = useState<PetState>('fall')
+  const [view, setView] = useState<PetPose>('fall')
+  const live = useLivePack(packId)
+  const liveRef = useRef<LivePack | null>(null)
+  liveRef.current = live
+  /** 腾空时：往上用跳，落得够快才用摔倒那一帧。导入包的 fall 图经常是绊倒。 */
+  const [airPose, setAirPose] = useState<'jump' | 'fall'>('jump')
+  const airRef = useRef<'jump' | 'fall'>('jump')
   /**
    * 刚被叫醒的冷却期。
    * 不设这个的话，醒来后下一次 think 可能立刻又挑到「睡」——
@@ -255,7 +276,7 @@ export function PetLayer({
     vx: 0,
     vy: 0,
     face: 1,
-    mode: 'fall' as PetState,
+    mode: 'fall' as PetPose,
     timer: 0,
     plat: null as string | null,
     tx: 0,
@@ -269,9 +290,13 @@ export function PetLayer({
     ready: false,
   })
 
-  const setMode = useCallback((mode: PetState, dur = 0) => {
+  const setMode = useCallback((mode: PetPose, dur = 0) => {
     const s = sim.current
     s.timer = dur
+    if (mode !== 'walk') {
+      s.toWall = false
+      s.toEdge = 0
+    }
     if (s.mode === mode) return
     s.mode = mode
     setView(mode)
@@ -400,9 +425,19 @@ export function PetLayer({
     const platOf = () => platforms.find((p) => p.key === s.plat) ?? null
 
     const paint = () => {
+      const pack = liveRef.current
+      if (pack && s.mode === 'fall') {
+        const next = s.vy > 220 ? 'fall' : 'jump'
+        if (airRef.current !== next) {
+          airRef.current = next
+          setAirPose(next)
+        }
+      }
+      // 卡片 SVG 朝右；Shimeji 原画朝左，同样的 face 要反着翻，不然会倒着走
+      const sign = pack && pack.facing !== 'right' ? -s.face : s.face
       sprite.style.transform =
         `translate3d(${(s.x - size / 2).toFixed(1)}px, ${(s.y - size * 0.93).toFixed(1)}px, 0) ` +
-        `scaleX(${s.face})`
+        `scaleX(${sign})`
       // 名字跟着走，单独定位：精灵自己有 scaleX(face)，放进去字会被镜像
       const tag = tagRef.current
       if (tag) {
@@ -1090,7 +1125,7 @@ export function PetLayer({
         setMode('sleep', rand(5, 10))
         say('pet.say.sleep', 2000)
       })
-      add(p.l <= 24 || p.r >= rect.width - 24 ? 1 : 0, () => {
+      add(!liveRef.current && (p.l <= 24 || p.r >= rect.width - 24) ? 1 : 0, () => {
         s.wall = p.l <= 24 && (p.r < rect.width - 24 || Math.random() < 0.5) ? -1 : 1
         s.tx = s.wall < 0 ? (size / 2) * 0.75 : rect.width - (size / 2) * 0.75
         s.face = s.tx >= s.x ? 1 : -1
@@ -1118,6 +1153,14 @@ export function PetLayer({
         }, 420)
       })
       add(1.2, () => setMode('cheer', rand(0.6, 1.1)))
+      // 只有当前这只导入包自己写了这些动作才排进去。默认的卡片小伙伴走不到这里。
+      const costume = liveRef.current
+      const wrote = (key: 'dangle' | 'spin' | 'dance' | 'hug') =>
+        !!costume && costume.authored.includes(key) && costume.frames[key]?.length
+      if (wrote('dangle')) add(1.1, () => setMode('dangle', rand(2.4, 4.2)))
+      if (wrote('spin')) add(0.8, () => setMode('spin', rand(1.8, 3)))
+      if (wrote('dance')) add(2.4, () => setMode('dance', clipSeconds(costume?.frames.dance)))
+      if (wrote('hug')) add(1.8, () => setMode('hug', clipSeconds(costume?.frames.hug)))
       add(0.9, () => {
         s.face = -s.face
         setMode('stand', rand(0.5, 1))
@@ -1191,7 +1234,15 @@ export function PetLayer({
       }
 
       if (s.mode === 'climb') {
-        s.x = s.wall < 0 ? hw * 0.75 : W - hw * 0.75
+        const target = s.wall < 0 ? hw * 0.75 : W - hw * 0.75
+        if (Math.abs(s.x - target) > 48) {
+          s.plat = null
+          s.vx = 0
+          s.vy = 0
+          setMode('fall')
+          return
+        }
+        s.x = target
         s.face = s.wall
         s.timer -= dt
         if (s.timer > 0.6) s.y -= 34 * dt
@@ -1485,7 +1536,17 @@ export function PetLayer({
         onPointerUp={onPointerUp}
         onPointerCancel={onPointerUp}
       >
-        <Pet species={species} stage={stage} state={view} size={size} hue={hue} />
+        {live ? (
+          <PackSprite pose={view === 'fall' ? airPose : view} frames={live.frames} size={size} />
+        ) : (
+          <Pet
+            species={species}
+            stage={stage}
+            state={(PET_STATES as readonly string[]).includes(view) ? (view as PetState) : 'stand'}
+            size={size}
+            hue={hue}
+          />
+        )}
       </div>
       {/* 头顶的名字：它是哪件事变的。说话的时候让位给气泡，两个都挂在头顶会叠 */}
       {name && !bubble ? (

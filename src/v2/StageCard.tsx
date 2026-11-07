@@ -14,6 +14,8 @@ import { getPhotoUrl } from '../lib/photos'
 import { playSfx } from '../lib/sfx'
 import { PhotoBackdrop } from './PhotoBackdrop'
 import { CardPet } from './pets/CardPet'
+import { PackSprite } from './pets/PackSprite'
+import { useLivePack } from './pets/useLivePack'
 
 /** 蓄力时长：与 CheckInCard 同一个口径（500ms），改这里要连带改 CSS 的 transition */
 const HOLD_MS = 500
@@ -55,6 +57,11 @@ export type StageCardProps = {
   homeNonce?: number
   /** 连戳三下（每下间隔 < 0.9s）：它兴奋乱跳，然后自己走出卡片 */
   onFrenzy?: () => void
+  /**
+   * 装扮弹窗里的预览：先按这个包画，不改卡片上已经保存的选择。
+   * 不传就用 view.petPackId。
+   */
+  previewPackId?: string
   /** 倒数日就是今天：当天第一次打开时放彩纸，这里告诉外面「陪它走到了」 */
   onCountdownToday?: () => void
 }
@@ -138,7 +145,9 @@ export function StageCard({
   homeNonce = 0,
   onFrenzy,
   onCountdownToday,
+  previewPackId,
 }: StageCardProps) {
+  const pack = useLivePack(previewPackId ?? view.petPackId)
   const [charging, setCharging] = useState(false)
   const [jumping, setJumping] = useState(false)
   const [party, setParty] = useState(false)
@@ -578,15 +587,19 @@ export function StageCard({
             <circle className="bar" cx="100" cy="100" r="92.6" />
           </svg>
           {reducedMotion() ? (
-            /* 减弱动态效果：退回纯 CSS 的那一版，不跑物理循环 */
-            <Creature
-              className={`cr ${looking ? 'look ' : ''}${idle}`}
-              species={view.species}
-              stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
-              mood={party ? 'wow' : view.mood}
-              size={158}
-              extra={party ? { hold: 'party' } : undefined}
-            />
+            pack ? (
+              <PackSprite pose={asleep ? 'sleep' : 'stand'} frames={pack.frames} size={158} />
+            ) : (
+              /* 减弱动态效果：退回纯 CSS 的那一版，不跑物理循环 */
+              <Creature
+                className={`cr ${looking ? 'look ' : ''}${idle}`}
+                species={view.species}
+                stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4}
+                mood={party ? 'wow' : view.mood}
+                size={158}
+                extra={party ? { hold: 'party' } : undefined}
+              />
+            )
           ) : (
             /* 卡片里也走挂机那套：有自己的地面和左右两堵墙，出不了卡 */
             <CardPet
@@ -599,6 +612,7 @@ export function StageCard({
               away={petAway}
               pokeNonce={pokeNonce}
               extra={party ? { hold: 'party' } : undefined}
+              pack={pack}
             />
           )}
           {party ? (

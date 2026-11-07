@@ -43,6 +43,8 @@ type ViewBase = {
   mood: Mood
   /** 提醒规则；空 = 不提醒 */
   remind?: Reminder
+  /** 这张卡片换成的导入萌宠包 */
+  petPackId?: string
 }
 
 export type SinceView = ViewBase & {
@@ -114,6 +116,7 @@ export function buildItemViews(
       days: daysSince(anchorOf(event), now),
       mood: 'idle',
       ...(event.remind ? { remind: event.remind } : {}),
+      ...(event.petPackId ? { petPackId: event.petPackId } : {}),
       event,
     })
   }
@@ -140,6 +143,7 @@ export function buildItemViews(
       cadence: event.cadence,
       mood: sleeping ? 'sleep' : recorded || (target !== null && count >= target) ? 'happy' : 'idle',
       ...(event.remind ? { remind: event.remind } : {}),
+      ...(event.petPackId ? { petPackId: event.petPackId } : {}),
       event,
     })
   }
@@ -168,6 +172,7 @@ export function buildItemViews(
       next,
       mood: days === 0 ? 'happy' : 'idle',
       ...(event.remind ? { remind: event.remind } : {}),
+      ...(event.petPackId ? { petPackId: event.petPackId } : {}),
       event,
     })
   }

@@ -287,6 +287,12 @@
 .pet-sprite > * {
   pointer-events: none;
 }
+.pet-sprite img.pet-pack {
+  display: block;
+  object-fit: contain;
+  object-position: center bottom;
+  pointer-events: none;
+}
 
 /* ---------- 说话气泡 ---------- */
 
@@ -690,6 +696,8 @@ html.reduce-motion .pet-say,
 }
 .cr-wrap.pet-away .cr,
 .cr-wrap.pet-away .creature,
+.cr-wrap.pet-away .card-pet,
+.cr-wrap.pet-away .pet-pack,
 .cr-wrap.pet-away .ground,
 .cr-wrap.pet-away .zzz,
 .cr-wrap.pet-away .charge-ring,

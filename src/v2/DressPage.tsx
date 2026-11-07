@@ -8,9 +8,10 @@ import { FREE_SKIN_PACKS } from '../lib/entitlement'
 import { playSfx } from '../lib/sfx'
 import { choosePack, SKIN_PACKS } from '../lib/skin'
 import type { NumStyle, SkinPack, SkinState, TextureStyle } from '../lib/skin'
-import type { SinceView } from '../lib/itemview'
+import type { ItemView, SinceView } from '../lib/itemview'
 import type { DayEvent } from '../lib/types'
 import { StageCard } from './StageCard'
+import { PetPackSection } from './PetPackSection'
 import './dress.css'
 
 export type DressPageProps = {
@@ -28,6 +29,9 @@ export type DressPageProps = {
   onUpgrade: () => void
   /** 缩略机里显示的那件事：优先用用户自己的，没有才用中性示例 */
   sampleTitle?: string
+  /** 现在这几张卡片，弹窗里左右滑着挑，换上哪个包 */
+  petViews: readonly ItemView[]
+  onAssignPet: (view: ItemView, packId: string | null) => void
 }
 
 const NUM_STYLES: readonly NumStyle[] = ['auto', 'round', 'serif', 'pixel', 'hand']
@@ -47,6 +51,8 @@ export function DressPage({
   pro,
   onUpgrade,
   sampleTitle,
+  petViews,
+  onAssignPet,
 }: DressPageProps) {
   // 画廊与预览对齐原型：横滑到哪一张，松手就换上（点击也算一次落定）
   const galleryRef = useRef<HTMLDivElement | null>(null)
@@ -234,6 +240,8 @@ export function DressPage({
           </div>
         </button>
       )}
+
+      <PetPackSection views={petViews} onAssign={onAssignPet} onToast={showToast} />
 
       <div className="sec-title">{t('dress.other')}</div>
       <div className="card list">

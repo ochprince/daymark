@@ -30,6 +30,8 @@ export type DayEvent = {
   history?: Chapter[]
   /** 养成角色物种；老数据缺省按芽芽处理 */
   species?: Species
+  /** 这张卡片换成的导入萌宠包。空着就是原来的小伙伴。 */
+  petPackId?: string
   /**
    * v3 色相（mint / sky / grape / lemon / coral）。
    * 老数据没有这一项，迁移时按 hueFromLegacyColor(color) 补齐；color 保留做兼容。
@@ -108,6 +110,8 @@ export type CountdownEvent = {
   history?: { at: number; line?: string }[]
   /** 相片背景 */
   photoId?: string
+  /** 这张卡片换成的导入萌宠包。空着就是原来的小伙伴。 */
+  petPackId?: string
 }
 
 export type TodoItem = { text: string; done: boolean }
@@ -151,6 +155,8 @@ export type CheckInEvent = {
   times?: Record<string, number[]>
   /** 养成角色物种 */
   species?: Species
+  /** 这张卡片换成的导入萌宠包。空着就是原来的小伙伴。 */
+  petPackId?: string
   /** 每个周期的目标次数；空 = 不设上限 */
   target?: number | null
   /**

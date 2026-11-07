@@ -2,6 +2,110 @@
    整屏预览已经去掉：预览交给画廊本身（四张 .mini 就是真实界面的缩放版，
    横滑松手即换，见原型 tabs.js 的 miniPhone / settle）。这里只剩 toast 的一点动效。 */
 
+.petpack-row { gap: 10px; }
+.petpack-mark {
+  width: 64px;
+  height: 48px;
+  flex: none;
+  position: relative;
+}
+.petpack-thumb {
+  width: 44px;
+  height: 44px;
+  object-fit: contain;
+  object-position: center bottom;
+  display: block;
+}
+.petpack-stack {
+  position: relative;
+  width: 64px;
+  height: 48px;
+}
+.petpack-stack .pet {
+  position: absolute;
+  top: 6px;
+}
+.petpack-stack .pet:nth-child(1) { left: 0; z-index: 4; }
+.petpack-stack .pet:nth-child(2) { left: 10px; z-index: 3; }
+.petpack-stack .pet:nth-child(3) { left: 20px; z-index: 2; }
+.petpack-stack .pet:nth-child(4) { left: 30px; z-index: 1; }
+.petpack-ov {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+}
+.petpack-ov > * { pointer-events: auto; }
+.petpack-sheet { display: flex; flex-direction: column; }
+.petpack-rail {
+  display: flex;
+  overflow-x: auto;
+  scroll-snap-type: x mandatory;
+  scrollbar-width: none;
+  margin: 0 -20px;
+}
+.petpack-rail::-webkit-scrollbar { display: none; }
+.petpack-slide {
+  flex: 0 0 100%;
+  scroll-snap-align: center;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+.petpack-slide .stage-card {
+  pointer-events: none;
+  max-height: 460px;
+  overflow: hidden;
+}
+.petpack-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+  color: var(--ink3);
+  font-size: 13px;
+  font-weight: 700;
+}
+.petpack-nav button {
+  border: 0;
+  background: transparent;
+  color: var(--ink);
+  font: inherit;
+  font-weight: 700;
+  padding: 8px 0;
+}
+.petpack-nav button:disabled { color: var(--ink3); }
+.petpack-apply {
+  margin-top: 8px;
+  height: 48px;
+  border-radius: 16px;
+  border: var(--bw) solid var(--line);
+  background: var(--accent);
+  color: var(--accent-ink);
+  font: inherit;
+  font-weight: 800;
+}
+.petpack-apply:disabled { opacity: 0.55; }
+.petpack-empty {
+  margin: 0 0 12px;
+  color: var(--ink3);
+  font-size: 13px;
+}
+.petpack-pick {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  text-align: left;
+  font: inherit;
+  font-weight: 600;
+  color: inherit;
+}
+.petpack-remove {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: var(--ink3);
+  font-size: 13px;
+  font-weight: 600;
+}
 .dress-toast {
   animation: toastIn 0.22s var(--ease-pop);
 }

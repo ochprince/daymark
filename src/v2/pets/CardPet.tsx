@@ -1,8 +1,10 @@
 import { useEffect, useRef, useState } from 'react'
 import { Creature, type CreatureMood } from '../../components/Creature'
+import type { LivePack } from '../../lib/petpackStore'
 import { createBody, hop, step, type CardBody } from './cardSim'
 import type { PetArtSpecies } from './petArt'
 import type { PetStage } from './art'
+import { PackSprite } from './PackSprite'
 
 type Props = {
   species: PetArtSpecies
@@ -19,6 +21,8 @@ type Props = {
   pokeNonce: number
   /** 派对帽之类的附加件原样透传给 Creature */
   extra?: { hold?: 'party' }
+  /** 这张卡片换成的导入包。有的话卡片里也播它的序列帧。 */
+  pack?: LivePack | null
 }
 
 /**
@@ -36,6 +40,7 @@ export function CardPet({
   away,
   pokeNonce,
   extra,
+  pack = null,
 }: Props) {
   /** 它自己挑的小姿势：坐着 / 伸懒腰 / 开心蹦，位置仍由物理那套管 */
   const [pose, setPose] = useState<'' | 'sit' | 'cheer' | 'strut'>('')
@@ -54,9 +59,11 @@ export function CardPet({
   const pokeRef = useRef(pokeNonce)
   const stillRef = useRef(still)
   const awayRef = useRef(away)
+  const packRef = useRef(pack)
 
   stillRef.current = still
   awayRef.current = away
+  packRef.current = pack
 
   // 被摸 / 被连点：蹦一下
   useEffect(() => {
@@ -187,9 +194,11 @@ export function CardPet({
         airing = body.mode === 'jump'
         setAirborne(airing)
       }
-      // 朝哪边走就朝哪边（和外面那只是一样的做法，镜像放在外层，别跟脚步动画抢 transform）
+      // 朝哪边走就朝哪边。卡片 SVG 朝右；导入包的原画通常朝左，要反着翻。
+      const worn = packRef.current
+      const sign = worn && worn.facing !== 'right' ? -body.dir : body.dir
       mover.style.transform =
-        `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0) scaleX(${body.dir})`
+        `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0) scaleX(${sign})`
       // 热区不镜像，只跟位置
       if (hit) hit.style.transform = `translate3d(${body.x.toFixed(1)}px, ${body.y.toFixed(1)}px, 0)`
       // 跳起来影子就缩小、落回地面还原（0~1 的抬起比例，CSS 里算 scale）
@@ -258,14 +267,22 @@ export function CardPet({
         ref={moverRef}
         style={{ width: size, height: size, marginLeft: -size / 2, marginTop: -size / 2 }}
       >
-        <Creature
-          className={`cr ${poseClass} ${pose}`}
-          species={species}
-          stage={stage}
-          mood={live}
-          size={size}
-          extra={extra}
-        />
+        {pack ? (
+          <PackSprite
+            pose={still ? 'sleep' : pose === 'sit' ? 'sit' : moving ? 'walk' : airborne ? 'jump' : pose === 'cheer' ? 'cheer' : 'stand'}
+            frames={pack.frames}
+            size={size}
+          />
+        ) : (
+          <Creature
+            className={`cr ${poseClass} ${pose}`}
+            species={species}
+            stage={stage}
+            mood={live}
+            size={size}
+            extra={extra}
+          />
+        )}
       </div>
     </div>
   )
