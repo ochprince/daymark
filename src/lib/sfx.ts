@@ -24,6 +24,8 @@ export type SfxId =
   | 'settle' // 记一次落定：两声上行小铃
   | 'evolve' // 形态升级：一小段上行琶音
   | 'stamp' // 徽章盖章：闷响 + 纸声
+  | 'crack' // 揉面团：两声往下沉的软响
+  | 'hatch' // 揉出来：三声上行
 
 const SOUND_KEY = 'daymark.sound.v1'
 
@@ -616,6 +618,51 @@ function evolve(ac: AudioContext, bus: Bus, t0: number): void {
   })
 }
 
+/** 揉一下面团：两声往下沉的正弦，第二声更闷，像面团被按扁 */
+function crack(ac: AudioContext, bus: Bus, t0: number): void {
+  const notes = [
+    { freq: 220, at: 0, dur: 0.08 },
+    { freq: 170, at: 0.05, dur: 0.06 },
+  ]
+  for (const note of notes) {
+    const at = t0 + note.at
+    const osc = ac.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(note.freq, at)
+    const gain = ac.createGain()
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.exponentialRampToValueAtTime(0.2, at + 0.008)
+    gain.gain.exponentialRampToValueAtTime(0.0005, at + note.dur)
+    osc.connect(gain)
+    both(gain, bus)
+    osc.start(at)
+    stopAt(osc, at + note.dur + 0.02)
+  }
+}
+
+/** 面团揉开、小家伙睁眼：660 → 880 → 1175，第三声留得长一点 */
+function hatch(ac: AudioContext, bus: Bus, t0: number): void {
+  const notes = [
+    { freq: 660, at: 0, dur: 0.1 },
+    { freq: 880, at: 0.062, dur: 0.1 },
+    { freq: 1175, at: 0.124, dur: 0.26 },
+  ]
+  for (const note of notes) {
+    const at = t0 + note.at
+    const osc = ac.createOscillator()
+    osc.type = 'sine'
+    osc.frequency.setValueAtTime(note.freq, at)
+    const gain = ac.createGain()
+    gain.gain.setValueAtTime(0.0001, at)
+    gain.gain.exponentialRampToValueAtTime(0.2, at + 0.012)
+    gain.gain.exponentialRampToValueAtTime(0.0005, at + note.dur)
+    osc.connect(gain)
+    both(gain, bus)
+    osc.start(at)
+    stopAt(osc, at + note.dur + 0.02)
+  }
+}
+
 /** 徽章盖章：一声闷响，加一点纸的沙沙 */
 function stamp(ac: AudioContext, bus: Bus, t0: number): void {
   const thud = ac.createOscillator()
@@ -660,6 +707,8 @@ const RENDERERS: Record<SfxId, (ac: AudioContext, bus: Bus, t0: number) => void>
   settle,
   evolve,
   stamp,
+  crack,
+  hatch,
 }
 
 /** 每个音效的干湿度：室内小声音少送一点，室外大响动多送一点 */
@@ -675,6 +724,8 @@ const WET: Record<SfxId, number> = {
   settle: 0.24,
   evolve: 0.4,
   stamp: 0.2,
+  crack: 0.12,
+  hatch: 0.28,
 }
 
 export function hasSfx(id: string | undefined): id is SfxId {

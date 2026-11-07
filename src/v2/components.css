@@ -608,11 +608,15 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .hatch > * { position: relative; }
 .hatch h3 { margin: 0 0 6px; font-size: 24px; font-weight: 800; font-family: var(--font-cute); }
 .hatch p { margin: 0; color: var(--ink2); }
+.hatch-mid { display: flex; flex-direction: column; align-items: center; min-height: 320px; justify-content: flex-end; }
 .hatch-egg { margin: 30px 0 26px; border: 0; background: transparent; padding: 0; height: 240px; display: grid; place-items: end center; }
 .hatch-egg .cr { transform-origin: 50% 90%; }
-.hatch-egg.shake .cr { animation: crack 0.45s ease-in-out; }
+.hatch-egg.shake .cr { animation: knead 0.5s ease-out; }
+.hatch-egg.born { height: auto; margin-top: -34px; }
 .hatch-egg.born .cr { animation: born 0.7s var(--ease-pop); }
-.hatch .bubble { position: relative; top: auto; right: auto; max-width: none; display: inline-block; margin-bottom: 4px; }
+.hatch .bubble { position: relative; top: auto; right: auto; max-width: none; display: inline-block; margin-bottom: 4px; animation: pop 0.45s var(--ease-pop) 0.35s both; }
+.hatch .btn.block { width: 100%; margin-top: 18px; }
+.hatch > .confetti { position: absolute; inset: 0; }
 .taps { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
 .taps i { width: 12px; height: 12px; border-radius: 50%; border: var(--bw) solid var(--line); }
 .taps i.on { background: var(--c2); }
@@ -1062,6 +1066,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 @keyframes wave { 0%, 100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
 @keyframes wobble { 0%, 60%, 100% { transform: rotate(0); } 70% { transform: rotate(-6deg); } 80% { transform: rotate(5deg); } 90% { transform: rotate(-3deg); } }
 @keyframes crack { 0%, 100% { transform: rotate(0); } 25% { transform: rotate(-10deg) scale(1.04); } 75% { transform: rotate(10deg) scale(1.04); } }
+@keyframes knead { 0%, 100% { transform: none; } 22% { transform: scale(1.18, 0.78); } 48% { transform: scale(0.9, 1.12); } 72% { transform: scale(1.05, 0.96); } }
 @keyframes born { 0% { transform: scale(0.2) translateY(30px); opacity: 0; } 100% { transform: none; opacity: 1; } }
 @keyframes zz { 0% { opacity: 0; transform: translate(0, 10px); } 30% { opacity: 1; } 100% { opacity: 0; transform: translate(18px, -40px); } }
 @keyframes pop { 0% { transform: scale(0.6); opacity: 0; } 100% { transform: none; opacity: 1; } }

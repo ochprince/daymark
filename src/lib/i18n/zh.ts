@@ -294,9 +294,12 @@ export const zh = {
   'welcome.skip': '我先随便看看',
 
   /* 孵化 */
-  'hatch.title': '孵化',
-  'hatch.tap': '轻点三下，叫醒它',
-  'hatch.hello': '你好呀，我是 {name}！',
+  'hatch.title': '轻点三下，把它揉出来',
+  'hatch.lead': '揉一下，它就醒一点',
+  'hatch.knead': '揉一揉面团',
+  'hatch.born': '{name}出生啦',
+  'hatch.with': '以后，它会陪着「{title}」一起长大',
+  'hatch.hello': '你好呀，我是{name}！',
   'hatch.start': '开始吧',
 
   /* 角色名 */

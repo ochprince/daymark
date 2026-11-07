@@ -294,8 +294,11 @@ export const en: Record<MessageKey, Msg> = {
   'welcome.skip': 'I\'ll just look around',
 
   /* Hatch */
-  'hatch.title': 'Hatch',
-  'hatch.tap': 'Tap three times to wake it',
+  'hatch.title': 'Tap three times to shape it',
+  'hatch.lead': 'Each tap wakes it a little',
+  'hatch.knead': 'Knead the dough',
+  'hatch.born': '{name} is here',
+  'hatch.with': 'From now on, it grows up with “{title}”',
   'hatch.hello': 'Hi, I\'m {name}!',
   'hatch.start': 'Let\'s begin',
 

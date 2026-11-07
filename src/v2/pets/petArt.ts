@@ -220,9 +220,11 @@ export function decoratePetSvg(raw: string, opts: DecorateOptions): string {
   const root = raw.match(ROOT_RE)?.[0] ?? ''
   const style = stripHueVars(root.match(STYLE_RE)?.[1] ?? '')
 
-  let svg = raw.replace(FACE_RE, (_, a: string, y: string, sx: string, small: string, _forced: string, b: string) => {
-    // 状态优先：底图里的 force 是作者意图，不压实时状态
-    return `<g${a}${b}>${face(mood, +y, +sx, small === '1')}</g>`
+  let svg = raw.replace(FACE_RE, (_, a: string, y: string, sx: string, small: string, forced: string, b: string) => {
+    // 素材里写了 force 就用这张脸（面团 0/1 是闭眼，揉开才变成 wow）。
+    // 没写的时候才跟实时状态走，卡片上睡着的小家伙不会被底图钉死。
+    const drawn: FaceMood = forced === 'sleep' || forced === 'happy' || forced === 'wow' || forced === 'idle' ? forced : mood
+    return `<g${a}${b}>${face(drawn, +y, +sx, small === '1')}</g>`
   })
   svg = uniqueClipIds(svg, opts.uid)
 

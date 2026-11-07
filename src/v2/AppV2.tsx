@@ -889,7 +889,12 @@ export function AppV2() {
             // 第一次建东西才播孵化，后续都直接落回今天页
             if (hasHatched()) return
             // 打招呼的是小伙伴自己，不是这件事的标题（「我是芽芽」而不是「我是戒烟」）
-            setHatch({ ...info, name: t(`creature.${info.species}` as MessageKey) })
+            setHatch({
+              species: info.species,
+              color: info.color,
+              name: t(`creature.${info.species}` as MessageKey),
+              title: info.name,
+            })
           }}
         />
       ) : null}

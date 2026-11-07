@@ -143,6 +143,14 @@ test('表情跟着状态实时变：walk/sit/climb 是 idle 脸，sleep/cheer/fa
   assert.equal(faceOf(deco('drag')), faceOf(deco('fall')), 'drag 与 fall 都是 wow')
 })
 
+test('底图写了 force 时用这张脸：面团第一张是闭眼，不跟实时的 idle', () => {
+  const raw = SAMPLE.replace('data-face="122,20,0,"', 'data-face="138,17,1,sleep"')
+  const svg = decoratePetSvg(raw, { state: 'stand', size: 210, species: 'post', stage: 0, uid: 'egg0' })
+  assert.ok(!faceOf(svg).includes('class="pet-eyes"'), '闭眼不该有眼珠')
+  assert.ok(faceOf(svg).includes('fill="none"'))
+  assert.ok(faceOf(svg).includes('rx="3.5" ry="4"'), '闭眼有鼻尖')
+})
+
 test('small 为真时脸缩到 0.8，sx 控制两眼间距', () => {
   const big = decoratePetSvg(SAMPLE, { state: 'stand', size: 64, species: 'sprout', stage: 3, uid: 'x' })
   const smallRaw = SAMPLE.replace('data-face="122,20,0,"', 'data-face="138,17,1,"')
