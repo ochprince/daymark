@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { CSSProperties } from 'react'
 import { Creature } from '../components/Creature'
+import { PetThumb } from './pets/PetThumb'
 import type { CreatureSpecies } from '../components/Creature'
 import { formatDate } from '../lib/days'
 import { STAGE_THRESHOLDS } from '../lib/growth'
@@ -142,7 +143,7 @@ export function ProfilePage({
 
         <div className="d-hero">
           <span className="sw-av">
-            <Creature species={view.species} stage={Math.min(4, view.stage) as 0 | 1 | 2 | 3 | 4} size={88} />
+            <PetThumb view={view} size={88} />
           </span>
           <div style={{ minWidth: 0 }}>
             <h2>{view.title}</h2>

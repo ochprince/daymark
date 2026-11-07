@@ -269,7 +269,26 @@ export function CardPet({
       >
         {pack ? (
           <PackSprite
-            pose={still ? 'sleep' : pose === 'sit' ? 'sit' : moving ? 'walk' : airborne ? 'jump' : pose === 'cheer' ? 'cheer' : 'stand'}
+            /*
+             * strut 就是「原地踏步」：SVG 那套借 pz-walk 的关键帧腿脚在动、
+             * 人钉在中线上；导入包没有表情，动感全靠这一档，所以要走 walk 的
+             * 序列帧，别掉回 stand——不然卡片里只剩上下跳。
+             */
+            pose={
+              still
+                ? 'sleep'
+                : pose === 'sit'
+                  ? 'sit'
+                  : pose === 'strut'
+                    ? 'walk'
+                    : moving
+                      ? 'walk'
+                      : airborne
+                        ? 'jump'
+                        : pose === 'cheer'
+                          ? 'cheer'
+                          : 'stand'
+            }
             frames={pack.frames}
             size={size}
           />

@@ -678,7 +678,7 @@ export function PetLayer({
       for (let i = 0; i < 24; i += 1) {
         if (tok !== debutTok || !alive) return
         wrap = cardWrap()
-        if (wrap && wrap.querySelector('.cr')) break
+        if (wrap && wrap.querySelector('.cr, .pet-pack')) break
         wrap = null
         await waitMs(80)
       }
@@ -687,7 +687,7 @@ export function PetLayer({
         skipDebut()
         return
       }
-      const cr = wrap.querySelector<HTMLElement>('.cr')
+      const cr = wrap.querySelector<HTMLElement>('.cr, .pet-pack')
       const card = wrap.closest<HTMLElement>('.stage-card')
       if (!cr || !card) {
         skipDebut()
@@ -711,7 +711,7 @@ export function PetLayer({
       debutEl.className = 'pet-debut'
       debutEl.innerHTML = `<div class="pet-debut-spin">${cr.outerHTML}</div>`
       paintHue(debutEl)
-      const cloneCr = debutEl.querySelector<HTMLElement>('.cr')
+      const cloneCr = debutEl.querySelector<HTMLElement>('.cr, .pet-pack')
       if (cloneCr) {
         cloneCr.style.width = `${br.width}px`
         cloneCr.style.height = `${br.height}px`
@@ -797,7 +797,7 @@ export function PetLayer({
       abort()
       playTok += 1
       playing = false
-      const cardCr = cardWrap()?.querySelector<HTMLElement>('.cr')
+      const cardCr = cardWrap()?.querySelector<HTMLElement>('.cr, .pet-pack')
       cardCr?.classList.remove('playing', 'nuzzle')
       homing = false
       clearDebutDom()
@@ -816,7 +816,7 @@ export function PetLayer({
     const play = async () => {
       if (!outRef.current || !visitingRef.current || playing) return
       const wrap = cardWrap()
-      const cr = wrap?.querySelector<HTMLElement>('.cr')
+      const cr = wrap?.querySelector<HTMLElement>('.cr, .pet-pack')
       if (!wrap || !cr) return
       const tok = ++playTok
       playing = true

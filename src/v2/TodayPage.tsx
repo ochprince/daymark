@@ -2,6 +2,7 @@ import { formatDateHeading } from '../lib/days'
 import { t } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
 import { Creature } from '../components/Creature'
+import { PetThumb } from './pets/PetThumb'
 import { IconDown, IconPlus } from './icons'
 import { petHueVars } from './pets/petArt'
 import { StageCard } from './StageCard'
@@ -145,7 +146,7 @@ export function TodayPage({
                     } as React.CSSProperties
                   }
                 >
-                  <Creature species={other.species} stage={0} size={30} />
+                  <PetThumb view={other} size={30} />
                 </span>
               ))}
             </span>

@@ -1,6 +1,6 @@
 import { t } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
-import { Creature } from '../components/Creature'
+import { PetThumb } from './pets/PetThumb'
 import { IconClose, IconPlus } from './icons'
 
 export type SwitcherProps = {
@@ -55,7 +55,7 @@ export function Switcher({ views, activeKey, onPick, onAdd, onClose }: SwitcherP
                       } as React.CSSProperties
                     }
                   >
-                    <Creature species={view.species} stage={view.stage} size={36} />
+                    <PetThumb view={view} size={36} />
                   </span>
                   <span style={{ flex: 1, minWidth: 0 }}>
                     <span style={{ display: 'block' }}>{view.title}</span>

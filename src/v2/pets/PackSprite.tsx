@@ -4,6 +4,8 @@ import type { LiveFrame, LivePack } from '../../lib/petpackStore'
 
 const POSE_ORDER: Record<string, readonly PackState[]> = {
   stand: ['stand', 'look'],
+  // 卡片里的「原地踏步」：人不动，播走路的序列帧
+  strut: ['walk', 'run'],
   walk: ['walk', 'run'],
   sit: ['sit'],
   sleep: ['sleep'],
