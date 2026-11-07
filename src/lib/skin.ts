@@ -49,14 +49,14 @@ export type ResolvedTexture = Exclude<TextureStyle, 'auto'>
  *   夜航        'Baloo 2', ui-rounded  → round（和软糖撞了，见下）
  *   像素        'Silkscreen'             → pixel
  *
- * 夜航原本也是 Baloo：两套包共用同一个字形，四套包里只有它没有自己的笔迹。
- * 现在把夜航改到 hand —— 深色、发光、深夜独处的那套，用手写比用圆体更像它的气质，
- * 四套包也就各自有了各自的字体。
+ * 夜航原本也是 Baloo，和软糖共用同一个字形，四套包里只有它没有自己的笔迹。
+ * 现在四套各给一套：软糖圆体、纸本手写（纸张 + 手写更像纸感）、夜航细衬线
+ * （深色发光配衬线更安静）、像素体。
  */
 export const NUM_AUTO: Record<SkinPack, ResolvedNum> = {
   jelly: 'round',
-  paper: 'serif',
-  night: 'hand',
+  paper: 'hand',
+  night: 'serif',
   pixel: 'pixel',
 }
 

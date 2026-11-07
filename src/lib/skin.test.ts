@@ -21,12 +21,12 @@ test('软糖 auto → 圆体（proto.css --font-num 是 Baloo 2 / ui-rounded）'
   assert.equal(resolveNum('jelly', 'auto'), 'round')
 })
 
-test('纸本 auto → 衬线（--font-num: Instrument Serif）', () => {
-  assert.equal(resolveNum('paper', 'auto'), 'serif')
+test('纸本 auto → 手写（纸感 + 手写更配；衬线留给夜航）', () => {
+  assert.equal(resolveNum('paper', 'auto'), 'hand')
 })
 
-test('夜航 auto → 手写（四套包各有一种笔迹，深色那套用圆体会和软糖撞车）', () => {
-  assert.equal(resolveNum('night', 'auto'), 'hand')
+test('夜航 auto → 衬线（四套包各有一种笔迹；细衬线配深色更安静）', () => {
+  assert.equal(resolveNum('night', 'auto'), 'serif')
 })
 
 test('像素 auto → 像素体（--font-num: Silkscreen）', () => {

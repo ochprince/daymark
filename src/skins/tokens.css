@@ -25,6 +25,7 @@
   --accent-2: var(--h-coral-2);
   --accent-ink: #2b2638;
   --font-ui: 'PingFang SC', -apple-system, 'Hiragino Sans GB', 'Microsoft YaHei', sans-serif;
+  --font-fine: var(--font-ui);
   --font-title: var(--font-ui);
   --font-num: 'Baloo 2', ui-rounded, 'SF Pro Rounded', var(--font-ui);
   --font-cute: 'ZCOOL KuaiLe', var(--font-ui);
@@ -105,6 +106,7 @@
   --accent-2: #000000;
   --accent-ink: #fbf9f4;
   --font-ui: 'PingFang SC', -apple-system, sans-serif;
+  --font-fine: var(--font-ui);
   --font-title: 'Songti SC', 'STSong', 'Noto Serif SC', serif;
   --font-num: 'Instrument Serif', 'Times New Roman', serif;
   --font-cute: 'Songti SC', 'STSong', serif;
@@ -185,6 +187,7 @@
   --accent-2: #7d5cff;
   --accent-ink: #0f1233;
   --font-ui: 'PingFang SC', -apple-system, sans-serif;
+  --font-fine: var(--font-ui);
   --font-title: var(--font-ui);
   --font-num: 'Baloo 2', ui-rounded, var(--font-ui);
   --font-cute: 'ZCOOL KuaiLe', var(--font-ui);
@@ -267,6 +270,7 @@
   --accent-2: #b04a2c;
   --accent-ink: #1f2a1a;
   --font-ui: 'PingFang SC', -apple-system, sans-serif;
+  --font-fine: var(--font-ui);
   --font-title: 'Silkscreen', var(--font-ui);
   --font-num: 'Silkscreen', 'Courier New', monospace;
   --font-cute: var(--font-ui);
