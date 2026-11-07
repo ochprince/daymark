@@ -3,6 +3,7 @@
  * 当前选中的是「卡片里的小伙伴」还是某个包，记在 localStorage。
  */
 import { compilePetPack, packImageNames, type PackFacing, type PackFrame, type PackSpec, type PackState } from './petpack'
+import { isPetPackEntry, readZip } from './zip'
 
 export const CARD_PACK_ID = 'card'
 const ACTIVE_KEY = 'daymark.petpack.active'
@@ -107,7 +108,7 @@ type Snapshot = { activeId: string; packs: PetPackMeta[] }
 
 export type ImportResult =
   | { ok: true; name: string; id: string }
-  | { ok: false; error: 'empty' | 'nostand' | 'toobig' | 'toomany' }
+  | { ok: false; error: 'empty' | 'nostand' | 'toobig' | 'toomany' | 'badzip' }
 
 const listeners = new Set<() => void>()
 let snapshot: Snapshot = { activeId: readActive(), packs: [] }
@@ -245,7 +246,34 @@ function folderName(files: File[]): string {
   return best || '萌宠包'
 }
 
+function isZipFile(file: File): boolean {
+  return /\.zip$/i.test(file.name) || file.type === 'application/zip' || file.type === 'application/x-zip-compressed'
+}
+
+function fileFromZipEntry(path: string, data: Uint8Array): File {
+  const name = path.split('/').pop() || path
+  const file = new File([data.slice()], name, { type: /\.png$/i.test(name) ? 'image/png' : 'application/xml' })
+  Object.defineProperty(file, 'webkitRelativePath', { value: path })
+  return file
+}
+
 export async function importPetPack(files: File[]): Promise<ImportResult> {
+  if (files.length === 1 && isZipFile(files[0])) {
+    const zip = files[0]
+    if (zip.size > MAX_BYTES) return { ok: false, error: 'toobig' }
+    const unpacked = await readZip(new Uint8Array(await zip.arrayBuffer()), {
+      maxBytes: MAX_BYTES,
+      include: isPetPackEntry,
+    })
+    if (!unpacked.ok) return unpacked
+    const extracted = unpacked.entries.map((entry) => fileFromZipEntry(entry.path, entry.data))
+    const title = zip.name.replace(/\.zip$/i, '').trim() || folderName(extracted)
+    return savePetPack(extracted, title)
+  }
+  return savePetPack(files, folderName(files))
+}
+
+async function savePetPack(files: File[], name: string): Promise<ImportResult> {
   const pngs = files.filter((file) => /\.png$/i.test(file.name))
   if (!pngs.length) return { ok: false, error: 'empty' }
   const bytes = pngs.reduce((sum, file) => sum + file.size, 0)
@@ -267,7 +295,7 @@ export async function importPetPack(files: File[]): Promise<ImportResult> {
   const thumb = images['shime1.png'] ? 'shime1.png' : images['stand01.png'] ? 'stand01.png' : spec.states.stand?.[0].img || ''
   const row: StoredPack = {
     id: crypto.randomUUID(),
-    name: folderName(files),
+    name,
     createdAt: Date.now(),
     thumb,
     spec,

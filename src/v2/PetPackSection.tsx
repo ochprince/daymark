@@ -94,7 +94,7 @@ export function PetPackSection({
         <input
           ref={inputRef}
           type="file"
-          multiple
+          accept=".zip,application/zip,application/x-zip-compressed"
           style={{ display: 'none' }}
           onChange={(event) => {
             const files = event.target.files ? Array.from(event.target.files) : []
@@ -109,7 +109,6 @@ export function PetPackSection({
               onToast(t('dress.pets.imported', { name: result.name }))
             })
           }}
-          {...{ webkitdirectory: '', directory: '' }}
         />
       </div>
       {picking ? (
