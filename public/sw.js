@@ -4,7 +4,7 @@
  */
 /* 缓存名跟着发布走：旧版本缓存的静态资源在 activate 里一次清掉。
  * 一直写死 v1 的话，activate 里那行 filter 永远筛不出东西，缓存只增不减。 */
-const CACHE = 'daymark-v2026-11-04'
+const CACHE = 'daymark-v2026-11-07'
 const SHELL = ['./', './index.html', './manifest.webmanifest', './favicon.svg']
 
 self.addEventListener('install', (event) => {

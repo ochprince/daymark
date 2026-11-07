@@ -74,6 +74,7 @@ export function PetPackSection({
               <span>{pack.name}</span>
               <small className="li-sub">{describe(pack)}</small>
             </button>
+            {pack.builtin ? null : (
             <button
               className="petpack-remove"
               type="button"
@@ -89,6 +90,7 @@ export function PetPackSection({
             >
               {t('dress.pets.remove')}
             </button>
+            )}
           </div>
         ))}
         <button className="li" type="button" onClick={() => inputRef.current?.click()}>

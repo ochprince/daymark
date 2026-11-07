@@ -19,6 +19,69 @@ export type PetPackMeta = {
   frameCount: number
   dance: boolean
   hug: boolean
+  /** 跟 App 一起发出去的，删不掉，也不用导入 */
+  builtin?: boolean
+}
+
+/**
+ * 随 App 一起发的萌宠包（public/packs/<dir>）：第二套默认萌宠走这里。
+ * 资源不塞进 JS，按 BASE_URL 拼路径直接引用，和导入包共用同一套解析/渲染。
+ */
+export type BuiltinPack = {
+  id: string
+  name: string
+  /** public/ 下的目录 */
+  dir: string
+  /** 列表里的缩略图，相对 dir */
+  thumb: string
+}
+
+export const BUILTIN_PACKS: readonly BuiltinPack[] = [
+  { id: 'builtin:blue', name: 'Blue', dir: 'packs/blue', thumb: 'img/stand01.png' },
+]
+
+const builtinSpecs = new Map<string, PackSpec>()
+
+/** public 下的资源地址；GitHub Pages 是 /daymark/ 这种子路径，别写死 / */
+function assetUrl(relative: string): string {
+  const env = (import.meta as { env?: { BASE_URL?: string } }).env
+  const base = env?.BASE_URL ?? '/'
+  return `${base.endsWith('/') ? base : `${base}/`}${relative}`
+}
+
+async function loadBuiltin(pack: BuiltinPack): Promise<void> {
+  if (builtinSpecs.has(pack.id)) return
+  if (typeof fetch !== 'function') return
+  try {
+    const [xml, list] = await Promise.all([
+      fetch(assetUrl(`${pack.dir}/actions.xml`))
+        .then((response) => (response.ok ? response.text() : null))
+        .catch(() => null),
+      fetch(assetUrl(`${pack.dir}/manifest.json`))
+        .then((response) => (response.ok ? (response.json() as Promise<{ images?: string[] }>) : null))
+        .catch(() => null),
+    ])
+    const files = Array.isArray(list?.images) ? list.images : []
+    const spec = compilePetPack(xml, files)
+    if (spec) builtinSpecs.set(pack.id, spec)
+  } catch {
+    /* 拉不到就当这次没有内置包，界面上少一项，不报错 */
+  }
+}
+
+function builtinMeta(pack: BuiltinPack): PetPackMeta | null {
+  const spec = builtinSpecs.get(pack.id)
+  if (!spec) return null
+  return {
+    id: pack.id,
+    name: pack.name,
+    createdAt: 0,
+    builtin: true,
+    thumbUrl: assetUrl(`${pack.dir}/${pack.thumb}`),
+    frameCount: packImageNames(spec).length,
+    dance: !!spec.states.dance?.length,
+    hug: !!spec.states.hug?.length,
+  }
 }
 
 export type LiveFrame = { src: string; durMs: number }
@@ -132,7 +195,9 @@ function metaOf(row: StoredPack): PetPackMeta {
 function publish(rows: StoredPack[], activeId = snapshot.activeId) {
   const previous = thumbUrls
   thumbUrls = []
-  const packs = rows.map(metaOf)
+  // 内置包排在前面：不用导入，装好就能选
+  const builtin = BUILTIN_PACKS.map(builtinMeta).filter((meta): meta is PetPackMeta => meta !== null)
+  const packs = [...builtin, ...rows.map(metaOf)]
   const known = new Set(packs.map((pack) => pack.id))
   const nextActive = activeId !== CARD_PACK_ID && !known.has(activeId) ? CARD_PACK_ID : activeId
   if (nextActive !== activeId) writeActive(nextActive)
@@ -142,7 +207,8 @@ function publish(rows: StoredPack[], activeId = snapshot.activeId) {
 
 export function loadPetPacks(): Promise<void> {
   if (!loading) {
-    loading = readAll()
+    loading = Promise.all(BUILTIN_PACKS.map(loadBuiltin))
+      .then(() => readAll())
       .then((rows) => publish(rows, readActive()))
       .catch(() => {
         loading = null
@@ -219,6 +285,7 @@ export async function importPetPack(files: File[]): Promise<ImportResult> {
 }
 
 export async function removePetPack(id: string): Promise<void> {
+  if (BUILTIN_PACKS.some((pack) => pack.id === id)) return
   const rows = (await readAll()).filter((row) => row.id !== id)
   if (typeof indexedDB !== 'undefined') {
     const db = await openDb()
@@ -260,6 +327,21 @@ export async function retainLivePack(id: string): Promise<LivePack | null> {
   if (cached) {
     cached.n += 1
     return cached.pack
+  }
+  const builtin = BUILTIN_PACKS.find((pack) => pack.id === id)
+  if (builtin) {
+    if (!builtinSpecs.has(id)) await loadBuiltin(builtin)
+    const spec = builtinSpecs.get(id)
+    if (!spec) return null
+    const live: LivePack = {
+      id,
+      name: builtin.name,
+      facing: spec.facing === 'right' ? 'right' : 'left',
+      authored: spec.authored ?? [],
+      frames: framesOf(spec, (name) => assetUrl(`${builtin.dir}/img/${name}`)),
+    }
+    liveCache.set(id, { pack: live, n: 1, urls: [] })
+    return live
   }
   const row = await readOne(id)
   if (!row) return null
