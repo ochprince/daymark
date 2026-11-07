@@ -584,6 +584,11 @@ export function StageCard({
    * 自己那句收回时不重新亮，否则会闪两下。
    */
   const [bubbleOn, setBubbleOn] = useState(true)
+  /*
+   * 气泡上真正显示的字：只在「亮起来」那一刻更新。
+   * 自己那句收回时显示的字不跟着变，否则淡出的那 0.34 秒会闪一下原来的状态句。
+   */
+  const [displayed, setDisplayed] = useState(line)
   const bubbleTimer = useRef<number | null>(null)
   const prevAmbient = useRef<string | null>(null)
   useEffect(() => {
@@ -599,6 +604,7 @@ export function StageCard({
       setBubbleOn(false)
       return
     }
+    setDisplayed(line)
     setBubbleOn(true)
     if (bubbleTimer.current !== null) window.clearTimeout(bubbleTimer.current)
     bubbleTimer.current = window.setTimeout(() => {
@@ -655,7 +661,7 @@ export function StageCard({
         {/* 它出门了，卡片里就不该还留着它刚才说的话 */}
         {petAway ? null : (
           <div className={`bubble${bubbleOn ? '' : ' gone'}`} aria-live="polite">
-            {line}
+            {displayed}
           </div>
         )}
         <div
