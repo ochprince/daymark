@@ -27,7 +27,6 @@
 
 [data-num='round'] {
   --font-ui: 'Baloo 2 Variable', 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif;
-  --font-fine: var(--font-ui);
   --font-title: var(--font-ui);
   --font-num: 'Baloo 2 Variable', ui-rounded, 'SF Pro Rounded', sans-serif;
   --font-cute: var(--font-ui);
@@ -35,7 +34,6 @@
 }
 [data-num='serif'] {
   --font-ui: 'Instrument Serif', 'Songti SC', 'Noto Serif SC', 'STSong', serif;
-  --font-fine: 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif;
   --font-title: var(--font-ui);
   --font-num: 'Instrument Serif', Georgia, serif;
   --font-cute: var(--font-ui);
@@ -43,7 +41,6 @@
 }
 [data-num='pixel'] {
   --font-ui: 'Silkscreen', 'Ark Pixel', ui-monospace, monospace;
-  --font-fine: 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif;
   --font-title: var(--font-ui);
   --font-num: 'Silkscreen', 'Ark Pixel', ui-monospace, monospace;
   --font-cute: var(--font-ui);
@@ -51,7 +48,6 @@
 }
 [data-num='hand'] {
   --font-ui: 'ZCOOL KuaiLe', 'Caveat', 'Kaiti SC', cursive;
-  --font-fine: 'PingFang SC', -apple-system, 'Hiragino Sans GB', sans-serif;
   --font-title: var(--font-ui);
   --font-num: 'Caveat', 'ZCOOL KuaiLe', cursive;
   --font-cute: var(--font-ui);
