@@ -198,6 +198,7 @@ export function DressPage({
       <div className="card opt">
         <div className="opt-h">
           <span>{t('dress.num')}</span>
+          <small>{t('dress.num.hint')}</small>
         </div>
         <div className="numopts">
           {NUM_STYLES.map((style) => (
@@ -417,11 +418,15 @@ function openDoc(file: string): void {
   window.location.assign(`${base}${file}`)
 }
 
+/**
+ * 选项里的那个「8」用真字体写——以前写的是系统兜底（ui-rounded / SFMono），
+ * 于是四个选项看起来差不多，用户根本看不出选的是什么。
+ */
 function numPreview(style: NumStyle): CSSProperties {
-  if (style === 'serif') return { fontFamily: 'Georgia, "Songti SC", serif' }
-  if (style === 'pixel') return { fontFamily: 'ui-monospace, "SFMono-Regular", monospace', letterSpacing: '-1px' }
-  if (style === 'hand') return { fontFamily: '"Kaiti SC", "Bradley Hand", cursive' }
-  if (style === 'round') return { fontFamily: 'ui-rounded, "SF Pro Rounded", system-ui' }
+  if (style === 'serif') return { fontFamily: '"Instrument Serif", Georgia, serif', fontStyle: 'italic' }
+  if (style === 'pixel') return { fontFamily: '"Silkscreen", "Ark Pixel", monospace', letterSpacing: '0' }
+  if (style === 'hand') return { fontFamily: '"Caveat", "ZCOOL KuaiLe", cursive' }
+  if (style === 'round') return { fontFamily: '"Baloo 2 Variable", ui-rounded, system-ui' }
   return {}
 }
 

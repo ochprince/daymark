@@ -235,20 +235,40 @@
   resolved "https://registry.npmmirror.com/@capacitor/status-bar/-/status-bar-6.0.3.tgz"
   integrity sha512-nFlgSmtx6Zwaw0tEvZgQsWHBeOfWWB/AvEoCApopLT4mHkBVoSrwkLvy2PjZs5wxCbsmqvQczr3XCyTwaDZVQg==
 
-"@esbuild/darwin-arm64@0.21.5":
+"@esbuild/linux-x64@0.21.5":
   version "0.21.5"
-  resolved "https://registry.npmmirror.com/@esbuild/darwin-arm64/-/darwin-arm64-0.21.5.tgz"
-  integrity sha512-DwqXqZyuk5AiWWf3UfLiRDJ5EDd49zg6O9wclZ7kUMv2WRFr4HKjXp/5t8JZ11QbQfUS6/cRCKGwYhtNAY88kQ==
+  resolved "https://registry.npmmirror.com/@esbuild/linux-x64/-/linux-x64-0.21.5.tgz"
+  integrity sha512-1rYdTpyv03iycF1+BhzrzQJCdOuAOtaqHTWJZCWvijKD2N5Xu0TtVC8/+1faWqcP9iBCWOmjmhoH94dH82BxPQ==
 
-"@esbuild/darwin-arm64@0.28.2":
+"@esbuild/linux-x64@0.28.2":
   version "0.28.2"
-  resolved "https://registry.npmmirror.com/@esbuild/darwin-arm64/-/darwin-arm64-0.28.2.tgz"
-  integrity sha512-n4KqkOQrraxHJcgjM1RvwbigfQKIKJVpM7xp+KsxiyUSrRdIXnt73VhrPAx0fV44hgfmIVKjxMN9J1t5jySVkw==
+  resolved "https://registry.npmmirror.com/@esbuild/linux-x64/-/linux-x64-0.28.2.tgz"
+  integrity sha512-4xTZr1FUmSoQW4XIWmit3tzQrUTZM+N3P0XV8xROKYF50XfI7xeO90+1bZvNwxIufQ9hDQVRJH5YhgPVF8A/HQ==
+
+"@fontsource-variable/baloo-2@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.npmmirror.com/@fontsource-variable/baloo-2/-/baloo-2-5.3.0.tgz"
+  integrity sha512-F7UfemLyAzp22LWRuy0IumnAPy/us+H5sxlDUsJ5a6LxinGf1BZaauL5kxBiLkvsfvoQWpY7DuUZ7GSdz+cR7g==
 
 "@fontsource-variable/inter@^5.1.1":
   version "5.3.0"
   resolved "https://registry.npmmirror.com/@fontsource-variable/inter/-/inter-5.3.0.tgz"
   integrity sha512-OupL48va4JNofb97w6NYeF9S7W/kHNKM0Er8Dem5nqi4jeOLrVJDoE8tZEpnMJmtkvNbB1EIPPwHcdkF6b1oUA==
+
+"@fontsource/caveat@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.npmmirror.com/@fontsource/caveat/-/caveat-5.3.0.tgz"
+  integrity sha512-eHTfzQxFSW9ABERRLNruHoNJmKed2J7pqTUc5lp4a4POMgXGKpxmWj3d9Hz10kmAg6iuTTLe6UagbA4bnsmfQw==
+
+"@fontsource/instrument-serif@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.npmmirror.com/@fontsource/instrument-serif/-/instrument-serif-5.3.0.tgz"
+  integrity sha512-mDiaIg0u67sYV59fie92Wz4sM8UiVlbL7fLxnFPCKkX15DMASEnQTREbaP5S5/3DCcsoAOcQ0sV9E4AeY4QqYQ==
+
+"@fontsource/silkscreen@^5.3.0":
+  version "5.3.0"
+  resolved "https://registry.npmmirror.com/@fontsource/silkscreen/-/silkscreen-5.3.0.tgz"
+  integrity sha512-M1NQ3LQH0LFNvyFPd/piHEGMImPPtpLglNnLC6Vdcq9kL0jNIOtTQmksAWCc4enbDnw1OnIpZtjNEfRqYm/QmA==
 
 "@fontsource/zcool-kuaile@^5.3.0":
   version "5.3.0"
@@ -398,15 +418,20 @@
     "@jridgewell/resolve-uri" "^3.1.0"
     "@jridgewell/sourcemap-codec" "^1.4.14"
 
+"@napi-rs/lzma-linux-x64-gnu@1.5.1":
+  version "1.5.1"
+  resolved "https://registry.npmmirror.com/@napi-rs/lzma-linux-x64-gnu/-/lzma-linux-x64-gnu-1.5.1.tgz"
+  integrity sha512-oTXEIha4SsuXdTA4Iyskj0kpdx2yVXdhd75c2v3xGrHFfVMsbhTPZU/nMPL4sWKo4pBHm3aucLaqGlF696dTyQ==
+
 "@rolldown/pluginutils@1.0.0-beta.27":
   version "1.0.0-beta.27"
   resolved "https://registry.npmmirror.com/@rolldown/pluginutils/-/pluginutils-1.0.0-beta.27.tgz"
   integrity sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==
 
-"@rollup/rollup-darwin-arm64@4.63.5":
+"@rollup/rollup-linux-x64-gnu@4.63.5":
   version "4.63.5"
-  resolved "https://registry.npmmirror.com/@rollup/rollup-darwin-arm64/-/rollup-darwin-arm64-4.63.5.tgz"
-  integrity sha512-wlJEERGfeuHeBavCL2qVnNacOK43NDoZM4sjkeRPymd04OAE9T1zBqDJgmZ+CIsPTYKwdzpUC8vmOw84dwY4Tg==
+  resolved "https://registry.npmmirror.com/@rollup/rollup-linux-x64-gnu/-/rollup-linux-x64-gnu-4.63.5.tgz"
+  integrity sha512-3W9bTFcQNJn71cSJVM9RKIiZOy8DO/XLDii8Uv/Pm6WKqDRj7JV3ZfuXIEfyuy5LXpIzAbB/1M4Ukp9GKNa7nA==
 
 "@types/babel__core@^7.20.5":
   version "7.20.5"
@@ -755,11 +780,6 @@ fs.realpath@^1.0.0:
   version "1.0.0"
   resolved "https://registry.npmmirror.com/fs.realpath/-/fs.realpath-1.0.0.tgz"
   integrity sha512-OO0pH2lK6a0hZnAdau5ItzHPI6pUlvI7jMVnxUQRtw4owF2wk8lOSabtGDCTP4Ggrg2MbGnWO9X8K1t4+fGMDw==
-
-fsevents@~2.3.2, fsevents@~2.3.3:
-  version "2.3.3"
-  resolved "https://registry.npmmirror.com/fsevents/-/fsevents-2.3.3.tgz"
-  integrity sha512-5xoDfX+fL7faATnagmWPpbFtwh/R77WmMMqqHGS65C3vvB0YHrgF+B1YmZ3441tMj5n63k0212XNoJwzlhffQw==
 
 gensync@^1.0.0-beta.2:
   version "1.0.0-beta.2"
