@@ -53,6 +53,21 @@ export function bubbleLine(view: ItemView, ctx: LineContext = {}): string {
   return t('line.habit.idle')
 }
 
+/**
+ * 隔一会儿自己冒出来的一句。
+ *
+ * 卡片上的气泡原来只跟着状态走：不点它就一直那句。给一份按类型分的小池子，
+ * 每次挑一句和上一句不一样的，安静、不催人，也不抢「刚记完 / 刚摸完」那些话。
+ */
+export function ambientLine(view: ItemView, previous: string | null = null): string {
+  const prefix =
+    view.kind === 'since' ? 'line.ambient.since' : view.kind === 'countdown' ? 'line.ambient.countdown' : 'line.ambient.habit'
+  const pool = [1, 2, 3, 4].map((n) => t(`${prefix}.${n}` as Parameters<typeof t>[0]))
+  const usable = pool.filter((text) => text && text !== previous)
+  const list = usable.length ? usable : pool
+  return list[Math.floor(Math.random() * list.length)]
+}
+
 /** 记录之后的一句话（多次型会说出第几次） */
 export function lineAfterLog(view: ItemView): string {
   return bubbleLine(view, { justLogged: true })

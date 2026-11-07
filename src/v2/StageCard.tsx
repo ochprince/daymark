@@ -9,7 +9,7 @@ import { nextStageAt, stageFills, stageOf } from '../lib/growth'
 import { t } from '../lib/i18n'
 import type { MessageKey } from '../lib/i18n'
 import type { ItemView } from '../lib/itemview'
-import { bubbleLine } from '../lib/lines'
+import { ambientLine, bubbleLine } from '../lib/lines'
 import { getPhotoUrl } from '../lib/photos'
 import { playSfx } from '../lib/sfx'
 import { PhotoBackdrop } from './PhotoBackdrop'
@@ -525,13 +525,55 @@ export function StageCard({
     '--c2': `var(--h-${view.color}-2)`,
   } as CSSProperties
 
+  /*
+   * 隔一会儿自己换一句：不点它，气泡也偶尔换口风。
+   * 只在安安静静待着的时候换（出门了、睡着了、正在兴奋/串门/回来都不插嘴），
+   * 换上去停 9 秒再回到跟状态走的那句，免得副行信息被一直盖住。
+   */
+  const [ambient, setAmbient] = useState<string | null>(null)
+  // 上一句说过什么：收回去之后再轮到时，别再挑到一模一样的
+  const lastAmbient = useRef<string | null>(null)
+  const quiet = !petAway && !asleep && !hyped && !guest && !back && !charging
+  useEffect(() => {
+    setAmbient(null)
+    if (!quiet) return undefined
+    let tick = 0
+    let hold = 0
+    const schedule = (first: boolean) => {
+      tick = window.setTimeout(
+        () => {
+          if (!document.hidden) {
+            const next = ambientLine(view, lastAmbient.current)
+            lastAmbient.current = next
+            setAmbient(next)
+            hold = window.setTimeout(() => setAmbient(null), 9000)
+          }
+          schedule(false)
+        },
+        first ? 14000 + Math.random() * 9000 : 20000 + Math.random() * 20000,
+      )
+    }
+    schedule(true)
+    return () => {
+      window.clearTimeout(tick)
+      window.clearTimeout(hold)
+    }
+  }, [
+    quiet,
+    view.key,
+    view.kind,
+    view.mood,
+    view.kind === 'habit' ? view.count : 0,
+    view.kind === 'habit' ? 0 : view.days,
+  ])
+
   const line = hyped
     ? t(visitor ? 'pet.say.playHost' : 'pet.say.frenzy')
     : guest
       ? t('pet.say.visitor')
       : back
       ? t('pet.say.back')
-      : (overrideLine ?? bubbleLine(view))
+      : (overrideLine ?? ambient ?? bubbleLine(view))
   const nextStage = nextStageAt(view.growth)
   const rest = nextStage === null ? 0 : nextStage - view.growth
   const nextName = nextStage === null ? '' : stageName(view.species, stageOf(nextStage))
@@ -731,10 +773,16 @@ function NumberBlock({ view }: { view: ItemView }) {
     unit = t('unit.timesShort')
   }
 
-  // 副行只放工具信息（日期）；成长已经在成长条里说过了，同一屏不重复第二遍
+  /*
+   * 副行只放工具信息（日期）；成长已经在成长条里说过了，同一屏不重复第二遍。
+   * 满 31 天才会有「x 个月 y 天」那一段，短于一个月时是空串——直接拼会让
+   * 小字后面吊着一个孤零零的「·」（第 0 天的卡片就是这样），所以先筛空再连。
+   */
   const sub =
     view.kind === 'since'
-      ? `${formatDate(view.event.startedAt)} · ${formatSpan(view.event.startedAt, Date.now()) || ''}`.trim()
+      ? [formatDate(view.event.startedAt), formatSpan(view.event.startedAt, Date.now())]
+          .filter(Boolean)
+          .join(' · ')
       : view.kind === 'countdown'
         ? formatDate(view.next)
         : ''
