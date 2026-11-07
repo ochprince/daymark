@@ -67,8 +67,8 @@ App 与 Widget Extension / Live Activity Extension 通过 **App Group**（建议
   原生对应 `supportedFamilies` × 三种 `entry` 视图；**不要**为 9 种组合写 9 个 Provider。
 - 习惯类的环形按钮就是 iOS 17 的 Interactive Widget：`Button(intent: LogHabitIntent(id:))`。
   点击后 `AppIntent` 直接写 App Group 并 `WidgetCenter.shared.reloadTimelines(ofKind:)`。
-- 小号免费 / 中号免费 / 大号 Pro 的商业分层在原生侧用 `Widget` 的 `configuration` + entitlement 判断，
-  Web 原型不做拦截，只做视觉。
+- 商业分层按个数，不按尺寸：免费 1 个小组件，小 / 中 / 大任选；订阅可以再放多个。
+  口径见 `docs/plan-v6-v3.md` 第四节。Web 原型不做拦截，只做视觉。
 - 空态（`data = null`）文案 `sys.empty`，原生显示同一句 + 一枚蛋形态小伙伴。
 
 ### 3.2 灵动岛 `DynamicIsland.tsx`
