@@ -884,6 +884,7 @@ export function AppV2() {
             setSheet(null)
             notify(message)
           }}
+          onToast={notify}
           onHatched={(info) => {
             // 第一次建东西才播孵化，后续都直接落回今天页
             if (hasHatched()) return

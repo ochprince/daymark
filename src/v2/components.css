@@ -523,7 +523,28 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .type-card:active { transform: translateY(2px); box-shadow: none; }
 .type-card .tc-art { width: 72px; height: 72px; border-radius: 20px; background: color-mix(in oklab, var(--c) 35%, var(--surface)); display: grid; place-items: center; flex: none; }
 .type-card h4 { margin: 0; font-size: 17px; font-weight: 800; }
-.type-card p { margin: 2px 0 0; font-size: 13px; color: var(--ink2); }
+.type-card p { margin: 2px 0 0; font-size: 13px; color: var(--ink2); line-height: 1.45; }
+/* 小纸条和另外三类同一张卡：格子里放一张缩小的纸条，而不是面团 */
+.type-card .tc-slip {
+  position: relative;
+  width: 40px;
+  height: 46px;
+  border-radius: 3px;
+  background: var(--paper, #fffaf0);
+  border: var(--bw) solid var(--line);
+  box-shadow: var(--pop-sm);
+}
+.type-card .tc-slip::before {
+  content: '';
+  position: absolute;
+  top: -6px;
+  left: 50%;
+  width: 22px;
+  height: 9px;
+  margin-left: -11px;
+  background: color-mix(in oklab, var(--h-lemon) 75%, white);
+  transform: rotate(-4deg);
+}
 .link-row { display: flex; justify-content: center; gap: 6px; margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--ink2); border: 0; background: transparent; width: 100%; padding: 10px; }
 .field { margin-bottom: 16px; }
 .field label { display: block; font-size: 13px; font-weight: 700; color: var(--ink2); margin-bottom: 8px; }
@@ -545,7 +566,7 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .photo-pick .thumb { width: 54px; height: 54px; border-radius: 14px; overflow: hidden; background: var(--hair); display: grid; place-items: center; flex: none; }
 .photo-pick small { display: block; font-weight: 500; color: var(--ink3); font-size: 12px; }
 .eggs { display: flex; justify-content: space-between; align-items: flex-end; margin: 10px -6px 4px; height: 128px; }
-.egg-btn { border: 0; background: transparent; padding: 0; transition: transform 0.3s var(--ease-pop); position: relative; }
+.egg-btn { width: 70px; display: grid; place-items: end center; border: 0; background: transparent; padding: 0; transition: transform 0.3s var(--ease-pop); position: relative; }
 .egg-btn .cr { animation: wobble 2.4s ease-in-out infinite; transform-origin: 50% 90%; }
 .egg-btn:nth-child(2) .cr { animation-delay: 0.3s; }
 .egg-btn:nth-child(3) .cr { animation-delay: 0.6s; }
@@ -556,9 +577,30 @@ button { font: inherit; color: inherit; cursor: pointer; }
 .egg-info { text-align: center; margin: 22px 0 18px; }
 .egg-info h4 { margin: 0; font-size: 20px; font-weight: 800; font-family: var(--font-cute); }
 .egg-info p { margin: 4px 0 0; color: var(--ink2); font-size: 14px; }
-.steps-dots { display: flex; gap: 5px; }
+.steps-dots { display: flex; gap: 5px; align-items: center; }
 .steps-dots i { width: 6px; height: 6px; border-radius: 9px; background: var(--ink3); opacity: 0.35; }
 .steps-dots i.on { width: 18px; opacity: 1; background: var(--ink); }
+.add-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; margin-bottom: 8px; min-height: 36px; }
+.add-back { display: inline-flex; align-items: center; gap: 0; justify-self: start; border: 0; background: transparent; padding: 0; font-weight: 700; font-size: 14px; color: var(--ink2); }
+.add-back svg { width: 18px; height: 18px; }
+.add-top .x { justify-self: end; }
+.add-note { margin: 8px 2px 0; font-size: 12.5px; color: var(--ink3); font-weight: 500; }
+.add-photo {
+  display: flex; align-items: center; gap: 12px; padding: 10px; border-radius: 18px;
+  border: var(--bw) dashed var(--ink3); background: transparent; width: 100%;
+  text-align: left; font-weight: 700; color: inherit; position: relative;
+}
+.add-photo.on { border-style: solid; border-color: var(--line); background: var(--surface); }
+.add-photo .thumb { width: 54px; height: 54px; border-radius: 14px; overflow: hidden; background: var(--hair); display: grid; place-items: center; flex: none; color: var(--ink2); }
+.add-photo .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.add-photo small { display: block; font-weight: 500; color: var(--ink3); font-size: 12px; margin-top: 2px; }
+.add-photo input {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+.field .date-box { width: 100%; margin-top: 10px; }
+.egg-rec { position: absolute; top: -22px; left: 50%; transform: translateX(-50%); font-size: 10.5px; font-weight: 800; padding: 1px 7px; border-radius: 99px; background: var(--ink); color: var(--bg); white-space: nowrap; }
+.egg-grow { font-size: 12.5px !important; color: var(--ink3) !important; margin-top: 6px !important; }
 
 /* 孵化 */
 .hatch { position: absolute; inset: 0; background: var(--bg); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 60px 30px 50px; text-align: center; animation: fade 0.3s; }
@@ -1113,22 +1155,6 @@ button { font: inherit; color: inherit; cursor: pointer; }
   .cr-wrap .cr.nuzzle { animation: none; }
 }
 
-
-/* 新建第一步底部：「从节日里挑一个」 */
-.add-fest {
-  width: 100%;
-  margin-top: 10px;
-  padding: 12px;
-  border: var(--bw, 2px) dashed var(--hair, rgba(43, 38, 56, 0.28));
-  border-radius: 18px;
-  background: transparent;
-  color: var(--ink2);
-  font: inherit;
-  font-size: 14px;
-  font-weight: 700;
-  text-align: center;
-}
-.add-fest:active { transform: translateY(1px); }
 
 /* 节日面板 */
 .fest-sheet { max-height: calc(100% - 56px); overflow-y: auto; }

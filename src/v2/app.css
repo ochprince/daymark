@@ -148,37 +148,6 @@ body {
   line-height: 1.65;
 }
 
-/* 新建面板 */
-.add-kinds {
-  display: grid;
-  gap: 10px;
-  margin: 6px 0 4px;
-}
-
-.add-kind {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  align-items: flex-start;
-  padding: 15px 16px;
-  border-radius: var(--r3);
-  border: var(--bw) solid var(--line);
-  background: var(--surface);
-  box-shadow: var(--pop-sm);
-  text-align: left;
-}
-
-.add-kind b {
-  font-size: 16px;
-  font-weight: 800;
-}
-
-.add-kind span {
-  font-size: 13px;
-  color: var(--ink2);
-  font-weight: 500;
-}
-
 /* 免费版看不到的那几本书：压暗但保留形状，让人知道它在那儿 */
 .spine.locked {
   filter: grayscale(0.75) brightness(0.92);
