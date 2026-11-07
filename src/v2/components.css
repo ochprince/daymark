@@ -319,6 +319,20 @@ button { font: inherit; color: inherit; cursor: pointer; }
 /* 说完收起：留白不塌（气泡是绝对定位的），只淡出并轻轻上飘一点 */
 .bubble { transition: opacity 0.34s ease, transform 0.34s ease; }
 .bubble.gone { opacity: 0; transform: translateY(-6px) scale(0.96); pointer-events: none; }
+/*
+ * 卡片里的气泡挂在它嘴边上，不是压在它头上。
+ * 它站在空地正中、脑袋在偏下的位置：气泡原本贴着右上角，底边正好横穿过头顶，
+ * 看起来像把它的头切掉一截。改成靠左、缩窄，尾巴尖朝右下指着它的脸。
+ */
+.sc-hero > .bubble {
+  top: 8px; max-width: 52%; padding: 8px 12px; font-size: 13px;
+  border-radius: 18px 18px 6px 18px;
+}
+.sc-hero > .bubble::after {
+  left: auto; right: -2px;
+  border-left: 0; border-right: var(--bw) solid var(--line);
+  border-radius: 0 0 14px 0; transform: skewX(-30deg); transform-origin: top right;
+}
 
 .sc-num { display: flex; align-items: baseline; justify-content: center; gap: 6px; margin-top: 8px; }
 .sc-num .lead, .sc-num .unit { font-size: 16px; font-weight: 700; color: var(--ink2); }

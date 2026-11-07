@@ -660,7 +660,7 @@ export function StageCard({
       <div className="sc-hero">
         {/* 它出门了，卡片里就不该还留着它刚才说的话 */}
         {petAway ? null : (
-          <div className={`bubble${bubbleOn ? '' : ' gone'}`} aria-live="polite">
+          <div className={`bubble left${bubbleOn ? '' : ' gone'}`} aria-live="polite">
             {displayed}
           </div>
         )}
