@@ -373,25 +373,28 @@ export function MuseumPage({ collection, pro, onUpgrade, onNotify }: MuseumPageP
               </div>
             ) : null}
 
-            <div className="bp-chapters">
-              <div className="bp-ch-h">{chapterTitle(opened)}</div>
-              {opened.chapters.length === 0 ? (
-                <p className="bp-ch-empty">{chapterEmpty(opened)}</p>
-              ) : (
-                <div className={`bp-ch-wrap${moreChapters ? ' more' : ''}`}>
-                <div className="bp-ch-list" ref={chapterListRef} onScroll={syncMoreChapters}>
-                  {opened.chapters.map((chapter, index) => (
-                    <div className="bp-ch" key={chapter.key}>
-                      <b>{chapter.days > 0 ? t('unit.day', { n: chapter.days }) : '★'}</b>
-                      <span>{formatDate(chapter.endedAt)}</span>
-                      {chapter.line ? <small>{chapter.line}</small> : null}
-                      {opened.chapters.length > 1 ? <i>{opened.chapters.length - index}</i> : null}
+            {/* 习惯不分章：日历已在上面，不再空挂一块「记过的日子」解释产品设计 */}
+            {opened.kind !== 'habit' ? (
+              <div className="bp-chapters">
+                <div className="bp-ch-h">{chapterTitle(opened)}</div>
+                {opened.chapters.length === 0 ? (
+                  <p className="bp-ch-empty">{chapterEmpty(opened)}</p>
+                ) : (
+                  <div className={`bp-ch-wrap${moreChapters ? ' more' : ''}`}>
+                    <div className="bp-ch-list" ref={chapterListRef} onScroll={syncMoreChapters}>
+                      {opened.chapters.map((chapter, index) => (
+                        <div className="bp-ch" key={chapter.key}>
+                          <b>{chapter.days > 0 ? t('unit.day', { n: chapter.days }) : '★'}</b>
+                          <span>{formatDate(chapter.endedAt)}</span>
+                          {chapter.line ? <small>{chapter.line}</small> : null}
+                          {opened.chapters.length > 1 ? <i>{opened.chapters.length - index}</i> : null}
+                        </div>
+                      ))}
                     </div>
-                  ))}
-                </div>
-                </div>
-              )}
-            </div>
+                  </div>
+                )}
+              </div>
+            ) : null}
 
             <div className="bp-dates">
               <Creature
@@ -485,16 +488,14 @@ function Shelf({
   )
 }
 
-/** 章节区标题：按种类说人话——倒数日是「到过的日子」，打卡不分章 */
+/** 章节区标题：倒数日是「到过的日子」，坚持是翻过的章节（习惯整块不渲染） */
 function chapterTitle(book: ShelfBook): string {
   if (book.kind === 'countdown') return t('museum.book.countdownTitle')
-  if (book.kind === 'habit') return t('museum.book.habitTitle')
   if (book.chapters.length > 0) return t('museum.book.past', { n: book.chapters.length })
   return t('museum.book.sinceTitle')
 }
 
 function chapterEmpty(book: ShelfBook): string {
-  if (book.kind === 'habit') return t('museum.book.noneHabit')
   if (book.kind === 'countdown') return t('museum.book.noneCountdown')
   return t('museum.book.none')
 }
