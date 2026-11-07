@@ -148,9 +148,6 @@ function useSystemDark(): boolean {
   return dark
 }
 
-/** 宠物色相：跟着物种走，和实验室里一致 */
-const PET_HUE: Partial<Record<PetArtSpecies, number>> = { sprout: 4, moon: 2, drop: 3, star: 0, post: 1 }
-
 function useApplyReduceMotion() {
   const prefs = useSyncExternalStore(subscribePrefs, getPrefs)
   useEffect(() => {
@@ -303,11 +300,12 @@ export function AppV2() {
         prev ?? {
           species: focus.species as PetArtSpecies,
           stage: focus.stage as PetStage,
-          hue: PET_HUE[focus.species as PetArtSpecies] ?? 4,
+          // 跟档案里设的颜色走，不要掉回物种默认色（萌芽默认绿会盖掉石板灰等）
+          hue: focus.color,
         },
     )
     setOutFrom((prev) => prev ?? focus.key)
-  }, [focus?.key, focus?.species, focus?.stage, petOut])
+  }, [focus?.key, focus?.species, focus?.stage, focus?.color, petOut])
 
   /**
    * 上次出门那张卡被删了：回来的落点不存在了。
@@ -698,7 +696,7 @@ export function AppV2() {
         <PetLayer
           species={(outPet?.species ?? focus.species) as PetArtSpecies}
           stage={outPet?.stage ?? focus.stage}
-          hue={outPet?.hue ?? PET_HUE[focus.species] ?? 4}
+          hue={outPet?.hue ?? focus.color}
           size={92}
           out={petOut}
           onOut={setPetOut}
