@@ -458,23 +458,29 @@ export function AppV2() {
     })
   }, [focus, checkBadges])
 
+  /**
+   * 收进藏馆只写一次。
+   * 以前写在 setState 的更新函数里，开发模式下那函数会被再跑一遍，
+   * 同一次点击就落成两张一模一样的纸条。
+   */
+  const keepingNote = useRef(false)
   const openNote = useCallback(() => {
+    keepingNote.current = false
     const state = getCollection()
     setNoteOpen({ text: nextNoteText(state), n: state.notes.length + 1 })
-    setNoteReady(false)
   }, [])
 
   const keepNote = useCallback(() => {
-    setNoteOpen((open) => {
-      if (!open) return null
-      const now = Date.now()
-      const from = focus ? t(`creature.${focus.species}` as MessageKey) : t('creature.sprout')
-      addNote({ id: `note-${now}`, text: open.text, from, at: now })
-      collectionStore.patch({ notesThisWeek: bumpWeek(getCollection().notesThisWeek, now) })
-      notify(t('note.saved'))
-      return null
-    })
-  }, [focus, notify])
+    if (keepingNote.current || !noteOpen) return
+    keepingNote.current = true
+    const now = Date.now()
+    const from = focus ? t(`creature.${focus.species}` as MessageKey) : t('creature.sprout')
+    addNote({ id: `note-${now}`, text: noteOpen.text, from, at: now })
+    collectionStore.patch({ notesThisWeek: bumpWeek(getCollection().notesThisWeek, now) })
+    notify(t('note.saved'))
+    setNoteOpen(null)
+    setNoteReady(false)
+  }, [noteOpen, focus, notify])
 
   const onPoke = useCallback(() => {
     if (!focus) return
